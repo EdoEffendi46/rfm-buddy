@@ -5,7 +5,7 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
 import { maskPhone } from "@/lib/mask";
-import { formatTime, formatRupiah, formatDate, relativeDay, daysBetween } from "@/lib/format";
+import { formatTime, formatRupiah, formatDate, relativeDay } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
@@ -57,7 +57,7 @@ function orderStatusLabel(s: OrderStatus) {
 export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) {
   const { agent, role } = useAuth();
   const store = useConversations();
-  const { customers, enriched, services, templates, tags, agents } = useCustomers();
+  const { customers, enriched, templates, tags, agents } = useCustomers();
 
   const [search, setSearch] = useState("");
   const [statusTab, setStatusTab] = useState("all");
@@ -925,9 +925,3 @@ function ScoreRow({ label, score }: { label: string; score: number }) {
     </div>
   );
 }
-
-// silence unused
-void daysBetween;
-void services;
-void formatRupiah;
-function services() { return null; }
