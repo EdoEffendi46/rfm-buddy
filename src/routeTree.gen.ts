@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as HomeRouteImport } from './routes/home'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChatCustomerIdRouteImport } from './routes/chat.$customerId'
 
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
@@ -28,34 +29,42 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatCustomerIdRoute = ChatCustomerIdRouteImport.update({
+  id: '/$customerId',
+  path: '/$customerId',
+  getParentRoute: () => ChatRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/chat': typeof ChatRoute
+  '/chat': typeof ChatRouteWithChildren
   '/home': typeof HomeRoute
+  '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/chat': typeof ChatRoute
+  '/chat': typeof ChatRouteWithChildren
   '/home': typeof HomeRoute
+  '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/chat': typeof ChatRoute
+  '/chat': typeof ChatRouteWithChildren
   '/home': typeof HomeRoute
+  '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/home'
+  fullPaths: '/' | '/chat' | '/home' | '/chat/$customerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/home'
-  id: '__root__' | '/' | '/chat' | '/home'
+  to: '/' | '/chat' | '/home' | '/chat/$customerId'
+  id: '__root__' | '/' | '/chat' | '/home' | '/chat/$customerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ChatRoute: typeof ChatRoute
+  ChatRoute: typeof ChatRouteWithChildren
   HomeRoute: typeof HomeRoute
 }
 
@@ -82,12 +91,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat/$customerId': {
+      id: '/chat/$customerId'
+      path: '/$customerId'
+      fullPath: '/chat/$customerId'
+      preLoaderRoute: typeof ChatCustomerIdRouteImport
+      parentRoute: typeof ChatRoute
+    }
   }
 }
 
+interface ChatRouteChildren {
+  ChatCustomerIdRoute: typeof ChatCustomerIdRoute
+}
+
+const ChatRouteChildren: ChatRouteChildren = {
+  ChatCustomerIdRoute: ChatCustomerIdRoute,
+}
+
+const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ChatRoute: ChatRoute,
+  ChatRoute: ChatRouteWithChildren,
   HomeRoute: HomeRoute,
 }
 export const routeTree = rootRouteImport
