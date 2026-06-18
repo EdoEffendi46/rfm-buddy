@@ -9,38 +9,154 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as HomeRouteImport } from './routes/home'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CustomersRouteImport } from './routes/customers'
+import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ChatCustomerIdRouteImport } from './routes/chat.$customerId'
 
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HomeRoute = HomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomersRoute = CustomersRouteImport.update({
+  id: '/customers',
+  path: '/customers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChatRoute = ChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChatCustomerIdRoute = ChatCustomerIdRouteImport.update({
+  id: '/$customerId',
+  path: '/$customerId',
+  getParentRoute: () => ChatRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRouteWithChildren
+  '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
+  '/home': typeof HomeRoute
+  '/settings': typeof SettingsRoute
+  '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/chat': typeof ChatRouteWithChildren
+  '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
+  '/home': typeof HomeRoute
+  '/settings': typeof SettingsRoute
+  '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/chat': typeof ChatRouteWithChildren
+  '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
+  '/home': typeof HomeRoute
+  '/settings': typeof SettingsRoute
+  '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/customers'
+    | '/dashboard'
+    | '/home'
+    | '/settings'
+    | '/chat/$customerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/chat'
+    | '/customers'
+    | '/dashboard'
+    | '/home'
+    | '/settings'
+    | '/chat/$customerId'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/customers'
+    | '/dashboard'
+    | '/home'
+    | '/settings'
+    | '/chat/$customerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ChatRoute: typeof ChatRouteWithChildren
+  CustomersRoute: typeof CustomersRoute
+  DashboardRoute: typeof DashboardRoute
+  HomeRoute: typeof HomeRoute
+  SettingsRoute: typeof SettingsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/home': {
+      id: '/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/customers': {
+      id: '/customers'
+      path: '/customers'
+      fullPath: '/customers'
+      preLoaderRoute: typeof CustomersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/chat': {
+      id: '/chat'
+      path: '/chat'
+      fullPath: '/chat'
+      preLoaderRoute: typeof ChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,22 +164,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chat/$customerId': {
+      id: '/chat/$customerId'
+      path: '/$customerId'
+      fullPath: '/chat/$customerId'
+      preLoaderRoute: typeof ChatCustomerIdRouteImport
+      parentRoute: typeof ChatRoute
+    }
   }
 }
 
+interface ChatRouteChildren {
+  ChatCustomerIdRoute: typeof ChatCustomerIdRoute
+}
+
+const ChatRouteChildren: ChatRouteChildren = {
+  ChatCustomerIdRoute: ChatCustomerIdRoute,
+}
+
+const ChatRouteWithChildren = ChatRoute._addFileChildren(ChatRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ChatRoute: ChatRouteWithChildren,
+  CustomersRoute: CustomersRoute,
+  DashboardRoute: DashboardRoute,
+  HomeRoute: HomeRoute,
+  SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
