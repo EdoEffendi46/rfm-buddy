@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as HomeRouteImport } from './routes/home'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as IndexRouteImport } from './routes/index'
@@ -18,6 +19,11 @@ import { Route as ChatCustomerIdRouteImport } from './routes/chat.$customerId'
 const HomeRoute = HomeRouteImport.update({
   id: '/home',
   path: '/home',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CustomersRoute = CustomersRouteImport.update({
@@ -45,6 +51,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteWithChildren
   '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
   '/home': typeof HomeRoute
   '/chat/$customerId': typeof ChatCustomerIdRoute
 }
@@ -52,6 +59,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteWithChildren
   '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
   '/home': typeof HomeRoute
   '/chat/$customerId': typeof ChatCustomerIdRoute
 }
@@ -60,21 +68,42 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/chat': typeof ChatRouteWithChildren
   '/customers': typeof CustomersRoute
+  '/dashboard': typeof DashboardRoute
   '/home': typeof HomeRoute
   '/chat/$customerId': typeof ChatCustomerIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/chat' | '/customers' | '/home' | '/chat/$customerId'
+  fullPaths:
+    | '/'
+    | '/chat'
+    | '/customers'
+    | '/dashboard'
+    | '/home'
+    | '/chat/$customerId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/chat' | '/customers' | '/home' | '/chat/$customerId'
-  id: '__root__' | '/' | '/chat' | '/customers' | '/home' | '/chat/$customerId'
+  to:
+    | '/'
+    | '/chat'
+    | '/customers'
+    | '/dashboard'
+    | '/home'
+    | '/chat/$customerId'
+  id:
+    | '__root__'
+    | '/'
+    | '/chat'
+    | '/customers'
+    | '/dashboard'
+    | '/home'
+    | '/chat/$customerId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ChatRoute: typeof ChatRouteWithChildren
   CustomersRoute: typeof CustomersRoute
+  DashboardRoute: typeof DashboardRoute
   HomeRoute: typeof HomeRoute
 }
 
@@ -85,6 +114,13 @@ declare module '@tanstack/react-router' {
       path: '/home'
       fullPath: '/home'
       preLoaderRoute: typeof HomeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/customers': {
@@ -132,6 +168,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ChatRoute: ChatRouteWithChildren,
   CustomersRoute: CustomersRoute,
+  DashboardRoute: DashboardRoute,
   HomeRoute: HomeRoute,
 }
 export const routeTree = rootRouteImport
