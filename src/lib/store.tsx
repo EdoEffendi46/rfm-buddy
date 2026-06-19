@@ -46,6 +46,8 @@ interface StoreState {
 
   saveNotes: (id: string, notes: string) => void;
 
+  setCadenceOverride: (id: string, days: number | null) => void;
+
   // Templates
   addTemplate: (text: string) => void;
   updateTemplate: (id: string, text: string) => void;
@@ -196,6 +198,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setCustomers((p) => p.map((c) => (c.id === id ? { ...c, notes } : c)));
   }, []);
 
+  const setCadenceOverride = useCallback((id: string, days: number | null) => {
+    setCustomers((p) =>
+      p.map((c) =>
+        c.id === id ? { ...c, cadenceOverrideDays: days ?? undefined } : c,
+      ),
+    );
+  }, []);
+
   const addTemplate = useCallback((text: string) => {
     setTemplates((p) => (p.length >= 20 ? p : [...p, { id: genId("t"), text }]));
   }, []);
@@ -275,6 +285,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addCustomerTag,
     removeCustomerTag,
     saveNotes,
+    setCadenceOverride,
     addTemplate,
     updateTemplate,
     deleteTemplate,
