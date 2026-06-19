@@ -1,10 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useConversations } from "@/hooks/useConversations";
 import { SEGMENT_META } from "@/lib/rfm";
-import { formatRupiah, formatDate } from "@/lib/format";
+import { formatRupiah, formatDateLong } from "@/lib/format";
+import { maskPhone } from "@/lib/mask";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -12,7 +14,8 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend,
 } from "recharts";
 import type { RFMSegment } from "@/types";
-import { toast } from "sonner";
+import { AlertTriangle, Crown, Clock, MessageSquare, Users, Settings as SettingsIcon, ArrowRight } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — ChatCRM" }] }),
@@ -21,8 +24,17 @@ export const Route = createFileRoute("/dashboard")({
 
 function DashboardPage() {
   const navigate = useNavigate();
+  const { agent, role } = useAuth();
   const { enriched, agents } = useCustomers();
   const { conversations } = useConversations();
+  const isSupervisor = role === "supervisor";
+
+  const myEnriched = isSupervisor
+    ? enriched
+    : enriched.filter((e) => e.customer.assignedAgentId === agent?.id);
+  const myConvs = isSupervisor
+    ? conversations
+    : conversations.filter((c) => c.customer.assignedAgentId === agent?.id);
 
   const segmentData = useMemo(() => {
     const map: Record<string, number> = {};
@@ -54,8 +66,13 @@ function DashboardPage() {
     return months.map((m) => ({ month: m.label, total: totals[m.key] }));
   }, [enriched]);
 
-  const openConvs = conversations.filter((c) => c.customer.conversationStatus === "open").length;
-  const awaitingReply = conversations.filter((c) => c.unreadCount > 0).length;
+  const openConvs = myConvs.filter((c) => c.customer.conversationStatus === "open").length;
+  const awaitingReply = myConvs.filter((c) => c.unreadCount > 0).length;
+  const slaBreach = myConvs.filter((c) => {
+    if (c.unreadCount === 0) return false;
+    const last = new Date(c.customer.lastMessageAt ?? Date.now()).getTime();
+    return Date.now() - last > 2 * 60 * 60 * 1000;
+  }).length;
   const championsCount = segmentData.find((s) => s.segment === "champions")?.value ?? 0;
   const atRiskCount = segmentData.find((s) => s.segment === "at_risk")?.value ?? 0;
 
@@ -80,22 +97,64 @@ function DashboardPage() {
   const topCLV = [...enriched].sort((a, b) => b.clv.clv12months - a.clv.clv12months).slice(0, 5);
 
   return (
-    <AppShell supervisorOnly>
+    <AppShell>
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard & Analitik</h1>
-          <p className="text-sm text-slate-500">Ringkasan performa CS, segmentasi RFM, dan tren pengeluaran.</p>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <div className="text-xs text-slate-500">{formatDateLong(new Date().toISOString())}</div>
+            <h1 className="text-2xl font-bold tracking-tight">Halo, {agent?.name} 👋</h1>
+            <p className="text-sm text-slate-500">
+              {isSupervisor ? "Ringkasan performa tim, segmentasi RFM & follow-up." : "Ringkasan customer & percakapan yang ditugaskan untukmu."}
+            </p>
+          </div>
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${isSupervisor ? "bg-amber-100 text-amber-700" : "bg-sky-100 text-sky-700"}`}>
+            {isSupervisor ? "Supervisor" : "CS"}
+          </span>
+        </div>
+
+        {/* Alert Banners */}
+        <div className="space-y-2">
+          {isSupervisor && atRiskCount > 0 && (
+            <button onClick={() => navigate({ to: "/customers" })} className="flex w-full items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-left text-red-800 hover:bg-red-100">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
+              <div className="text-sm"><span className="font-semibold">🚨 {atRiskCount} customer At Risk</span> — terakhir order &gt;60 hari. Segera follow up.</div>
+            </button>
+          )}
+          {isSupervisor && championsCount > 0 && (
+            <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-violet-50 p-4 text-violet-800">
+              <Crown className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
+              <div className="text-sm"><span className="font-semibold">👑 {championsCount} customer Champions</span> — pastikan tetap dijaga relasinya.</div>
+            </div>
+          )}
+          {slaBreach > 0 && (
+            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
+              <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div className="text-sm"><span className="font-semibold">⏰ {slaBreach} percakapan</span> menunggu balasan &gt;2 jam (SLA breach).</div>
+            </div>
+          )}
         </div>
 
         {/* KPI */}
         <div className="grid gap-4 md:grid-cols-4">
-          <Kpi title="Total Customer" value={enriched.length.toString()} sub={`${enriched.filter((e) => e.rfm.segment === "new").length} baru bulan ini`} />
-          <Kpi title="Open Conversations" value={openConvs.toString()} sub={`${awaitingReply} belum dibalas`} />
-          <Kpi title="Champions 👑" value={championsCount.toString()} sub={`${Math.round((championsCount / enriched.length) * 100)}% dari total customer`} color="#7C3AED" />
-          <Kpi title="At Risk ⚠️" value={atRiskCount.toString()} sub="Perlu follow up segera" color="#EF4444" />
+          {isSupervisor ? (
+            <>
+              <Kpi title="Total Customer" value={enriched.length.toString()} sub={`${enriched.filter((e) => e.rfm.segment === "new").length} baru bulan ini`} />
+              <Kpi title="Open Conversations" value={openConvs.toString()} sub={`${awaitingReply} belum dibalas`} />
+              <Kpi title="Champions 👑" value={championsCount.toString()} sub={`${Math.round((championsCount / Math.max(enriched.length,1)) * 100)}% dari total`} color="#7C3AED" />
+              <Kpi title="At Risk ⚠️" value={atRiskCount.toString()} sub="Perlu follow up segera" color="#EF4444" />
+            </>
+          ) : (
+            <>
+              <Kpi title="Customer Saya" value={myEnriched.length.toString()} sub="Ditugaskan untukmu" />
+              <Kpi title="Chat Terbuka" value={openConvs.toString()} sub={`${awaitingReply} belum dibalas`} />
+              <Kpi title="Resolved Hari Ini" value={myConvs.filter((c) => c.customer.conversationStatus === "resolved").length.toString()} sub="Percakapan selesai" color="#22C55E" />
+              <Kpi title="Avg Response" value="~4 mnt" sub="Target SLA: 30 mnt" color="#3B82F6" />
+            </>
+          )}
         </div>
 
-        {/* Charts */}
+        {/* Charts — Supervisor only */}
+        {isSupervisor && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-sm font-semibold">Distribusi Segment RFM</div>
@@ -133,8 +192,10 @@ function DashboardPage() {
             </div>
           </div>
         </div>
+        )}
 
         {/* Follow Up */}
+        {isSupervisor && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold">🚨 Customer Prioritas Follow Up</div>
@@ -165,7 +226,7 @@ function DashboardPage() {
                     return (
                       <tr key={e.customer.id} className="border-t border-slate-100">
                         <td className="py-2 font-medium">{e.customer.name}</td>
-                        <td className="font-mono text-xs">{e.customer.phone}</td>
+                        <td className="font-mono text-xs">{maskPhone(e.customer.phone, role)}</td>
                         <td><SegmentBadge segment={e.rfm.segment} /></td>
                         <td className="text-right font-mono text-xs">{e.rfm.total}/15</td>
                         <td className="text-right font-mono text-xs">{e.rfm.recencyDays}</td>
@@ -191,8 +252,10 @@ function DashboardPage() {
             </TabsContent>
           </Tabs>
         </div>
+        )}
 
         {/* CS Performance */}
+        {isSupervisor && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-sm font-semibold">Performa CS</div>
@@ -235,6 +298,14 @@ function DashboardPage() {
             </table>
           </div>
         </div>
+        )}
+
+        {/* Quick links */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <QuickLink to="/chat" icon={<MessageSquare className="h-5 w-5 text-emerald-600" />} bg="bg-emerald-100" title="Chat Inbox" stat={`${openConvs} percakapan terbuka`} cta="Buka Inbox" />
+          <QuickLink to="/customers" icon={<Users className="h-5 w-5 text-sky-600" />} bg="bg-sky-100" title="Customer" stat={`${myEnriched.length} customer`} cta="Lihat Customer" />
+          <QuickLink to="/settings" icon={<SettingsIcon className="h-5 w-5 text-slate-600" />} bg="bg-slate-100" title="Pengaturan" stat="Profil, tim, template" cta="Buka Pengaturan" />
+        </div>
       </div>
     </AppShell>
   );
@@ -247,5 +318,20 @@ function Kpi({ title, value, sub, color = "#0F172A" }: { title: string; value: s
       <div className="mt-1 text-3xl font-bold" style={{ color }}>{value}</div>
       <div className="mt-1 text-xs text-slate-500">{sub}</div>
     </div>
+  );
+}
+
+function QuickLink({ to, icon, bg, title, stat, cta }: { to: string; icon: React.ReactNode; bg: string; title: string; stat: string; cta: string }) {
+  return (
+    <Link to={to} className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+      <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${bg}`}>{icon}</div>
+      <div className="flex-1">
+        <div className="font-semibold text-slate-900">{title}</div>
+        <div className="text-xs text-slate-500">{stat}</div>
+      </div>
+      <div className="flex items-center gap-1 text-sm font-semibold text-emerald-600 group-hover:gap-2 transition-all">
+        {cta}<ArrowRight className="h-4 w-4" />
+      </div>
+    </Link>
   );
 }
