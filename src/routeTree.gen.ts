@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
-import { Route as HomeRouteImport } from './routes/home'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CustomersRouteImport } from './routes/customers'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -20,11 +19,6 @@ import { Route as ChatCustomerIdRouteImport } from './routes/chat.$customerId'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -58,7 +52,6 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRouteWithChildren
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRoute
-  '/home': typeof HomeRoute
   '/settings': typeof SettingsRoute
   '/chat/$customerId': typeof ChatCustomerIdRoute
 }
@@ -67,7 +60,6 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRouteWithChildren
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRoute
-  '/home': typeof HomeRoute
   '/settings': typeof SettingsRoute
   '/chat/$customerId': typeof ChatCustomerIdRoute
 }
@@ -77,7 +69,6 @@ export interface FileRoutesById {
   '/chat': typeof ChatRouteWithChildren
   '/customers': typeof CustomersRoute
   '/dashboard': typeof DashboardRoute
-  '/home': typeof HomeRoute
   '/settings': typeof SettingsRoute
   '/chat/$customerId': typeof ChatCustomerIdRoute
 }
@@ -88,7 +79,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/customers'
     | '/dashboard'
-    | '/home'
     | '/settings'
     | '/chat/$customerId'
   fileRoutesByTo: FileRoutesByTo
@@ -97,7 +87,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/customers'
     | '/dashboard'
-    | '/home'
     | '/settings'
     | '/chat/$customerId'
   id:
@@ -106,7 +95,6 @@ export interface FileRouteTypes {
     | '/chat'
     | '/customers'
     | '/dashboard'
-    | '/home'
     | '/settings'
     | '/chat/$customerId'
   fileRoutesById: FileRoutesById
@@ -116,7 +104,6 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRouteWithChildren
   CustomersRoute: typeof CustomersRoute
   DashboardRoute: typeof DashboardRoute
-  HomeRoute: typeof HomeRoute
   SettingsRoute: typeof SettingsRoute
 }
 
@@ -127,13 +114,6 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -189,19 +169,8 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRouteWithChildren,
   CustomersRoute: CustomersRoute,
   DashboardRoute: DashboardRoute,
-  HomeRoute: HomeRoute,
   SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
