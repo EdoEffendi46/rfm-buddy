@@ -59,6 +59,8 @@ export interface Customer {
   snoozeUntil?: string;
   conversationTags: string[];
   segmentHistory: SegmentHistoryEntry[];
+  /** Manual cadence override (days between orders) set by CS/Admin. */
+  cadenceOverrideDays?: number;
 }
 
 export interface Message {

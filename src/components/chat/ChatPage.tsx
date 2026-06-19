@@ -4,8 +4,9 @@ import { useConversations } from "@/hooks/useConversations";
 import { useCustomers } from "@/hooks/useCustomers";
 import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
+import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
 import { maskPhone } from "@/lib/mask";
-import { formatTime, formatRupiah, formatDate, relativeDay } from "@/lib/format";
+import { formatTime, formatRupiah, formatDate, relativeDay, relativeTime, minutesBetween } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, Send, Zap, Tag as TagIcon, Paperclip, MoreVertical, Clock,
-  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X,
+  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -62,6 +63,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
   const [search, setSearch] = useState("");
   const [statusTab, setStatusTab] = useState("all");
   const [segmentTab, setSegmentTab] = useState<"all" | RFMSegment>("all");
+  const [sortKey, setSortKey] = useState<"waiting" | "newest">("waiting");
   const [selectedId, setSelectedId] = useState<string | null>(initialCustomerId ?? null);
   const [inputMode, setInputMode] = useState<"text" | "internal_note">("text");
   const [draft, setDraft] = useState("");
@@ -116,11 +118,20 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
       );
     }
     return list.sort((a, b) => {
+      if (sortKey === "waiting") {
+        // Longest awaiting agent reply first (customer was last sender)
+        const waitOf = (c: typeof a) => {
+          const lm = c.lastMessage;
+          if (!lm || lm.senderId !== c.customer.id) return -1; // already replied → sink
+          return Date.now() - new Date(lm.timestamp).getTime();
+        };
+        return waitOf(b) - waitOf(a);
+      }
       const at = a.lastMessage?.timestamp ?? "";
       const bt = b.lastMessage?.timestamp ?? "";
       return bt.localeCompare(at);
     });
-  }, [store.conversations, role, agent, statusTab, segmentTab, enriched, search]);
+  }, [store.conversations, role, agent, statusTab, segmentTab, enriched, search, sortKey]);
 
   const statusCounts = useMemo(() => {
     const base = store.conversations.filter(
@@ -175,6 +186,17 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               className="h-9 pl-9"
             />
           </div>
+          <div className="mt-2">
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as "waiting" | "newest")}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="waiting">⏱ Menunggu Terlama</SelectItem>
+                <SelectItem value="newest">🕒 Terbaru</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="scrollbar-thin mt-3 flex gap-1.5 overflow-x-auto pb-1">
             {STATUS_TABS.map((t) => (
               <button
@@ -225,15 +247,54 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               const rfm = calculateRFM(c.customer);
               const isSelected = c.customer.id === selectedId;
               const ag = agents.find((a) => a.id === c.customer.assignedAgentId);
+              const lm = c.lastMessage;
+              const customerIsLastSender = !!lm && lm.senderId === c.customer.id;
+              const isUnread = c.unreadCount > 0;
+              const status = c.customer.conversationStatus;
+              // Build metadata line
+              let metaIcon = "";
+              let metaText = "";
+              let metaCls = "text-slate-400";
+              if (status === "snoozed") {
+                metaIcon = "💤";
+                metaText = c.customer.snoozeUntil
+                  ? `Snooze · ${relativeTime(c.customer.snoozeUntil)} lagi`
+                  : "Snooze";
+                metaCls = "text-amber-600";
+              } else if (status === "resolved") {
+                metaIcon = "✓✓";
+                metaText = lm
+                  ? `Diselesaikan oleh ${lm.senderName} · ${relativeTime(lm.timestamp)} lalu`
+                  : "Diselesaikan";
+                metaCls = "text-slate-400";
+              } else if (customerIsLastSender && lm) {
+                const mins = Math.round((Date.now() - new Date(lm.timestamp).getTime()) / 60000);
+                metaIcon = "⏱";
+                metaText = `Menunggu balasan · ${relativeTime(lm.timestamp)}`;
+                metaCls = mins > 60 ? "text-red-600 font-semibold" : "text-amber-600";
+              } else if (lm) {
+                metaIcon = "✓";
+                metaText = `Dibalas oleh ${lm.senderName} · ${relativeTime(lm.timestamp)} lalu`;
+                metaCls = "text-emerald-600";
+              } else {
+                metaText = "Belum ada pesan";
+              }
               return (
                 <button
                   key={c.customer.id}
                   onClick={() => setSelectedId(c.customer.id)}
                   className={cn(
-                    "flex w-full gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors",
-                    isSelected ? "border-l-2 border-l-emerald-500 bg-emerald-50/60" : "hover:bg-slate-50",
+                    "relative flex w-full gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors",
+                    isSelected
+                      ? "border-l-2 border-l-emerald-500 bg-emerald-50/60"
+                      : isUnread && customerIsLastSender
+                        ? "bg-emerald-50/40 hover:bg-emerald-50/70"
+                        : "hover:bg-slate-50",
                   )}
                 >
+                  {isUnread && customerIsLastSender && !isSelected && (
+                    <span className="absolute left-0 top-0 h-full w-1 bg-emerald-500" />
+                  )}
                   <Avatar
                     name={c.customer.name}
                     color={SEGMENT_META[rfm.segment].color}
@@ -242,20 +303,26 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <div className="truncate text-sm font-semibold text-slate-900">
+                      <div
+                        className={cn(
+                          "truncate text-sm text-slate-900",
+                          isUnread && customerIsLastSender ? "font-bold" : "font-medium",
+                        )}
+                      >
                         {c.customer.name}
                       </div>
-                      <div className="ml-2 shrink-0 font-mono text-[10px] text-slate-400">
+                      <div className="ml-2 flex shrink-0 items-center gap-1 font-mono text-[10px] text-slate-400">
+                        {isUnread && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        )}
                         {c.lastMessage ? formatTime(c.lastMessage.timestamp) : ""}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="truncate text-xs text-slate-500">
-                        {c.customer.conversationStatus === "snoozed" && (
-                          <span className="mr-1 inline-flex items-center gap-0.5 text-amber-600">
-                            <Clock className="h-3 w-3" /> Snoozed
-                          </span>
-                        )}
+                      <div className={cn(
+                        "truncate text-xs",
+                        isUnread && customerIsLastSender ? "text-slate-800" : "text-slate-500",
+                      )}>
                         {c.lastMessage?.content ?? "Belum ada pesan"}
                       </div>
                       {c.unreadCount > 0 && (
@@ -263,6 +330,10 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                           {c.unreadCount}
                         </span>
                       )}
+                    </div>
+                    <div className={cn("mt-0.5 truncate text-[11px]", metaCls)}>
+                      {metaIcon && <span className="mr-1">{metaIcon}</span>}
+                      {metaText}
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       {ag && (
@@ -398,6 +469,40 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 </DropdownMenu>
               </div>
             </div>
+            {/* Conversation context bar */}
+            {selectedConv && selectedConv.messages.length > 0 && (() => {
+              const msgs = selectedConv.messages;
+              const first = msgs[0];
+              // average response time = avg minutes between a customer msg and the next agent msg
+              const gaps: number[] = [];
+              for (let i = 1; i < msgs.length; i++) {
+                const prev = msgs[i - 1], cur = msgs[i];
+                if (
+                  prev.type === "text" && cur.type === "text" &&
+                  prev.senderId === selectedCustomer.id && cur.senderId !== selectedCustomer.id
+                ) {
+                  gaps.push(minutesBetween(prev.timestamp, cur.timestamp));
+                }
+              }
+              const avg = gaps.length
+                ? Math.round(gaps.reduce((s, g) => s + g, 0) / gaps.length)
+                : null;
+              return (
+                <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-1.5 text-[11px] text-slate-500">
+                  <span>Percakapan dimulai {formatDate(first.timestamp)}</span>
+                  <span className="text-slate-300">·</span>
+                  <span>{msgs.length} pesan</span>
+                  {avg !== null && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      <span>Respon rata-rata: <span className="font-semibold text-slate-700">
+                        {avg < 60 ? `${avg} menit` : `${(avg / 60).toFixed(1)} jam`}
+                      </span></span>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Tags row */}
             {selectedCustomer.conversationTags.length > 0 && (
@@ -658,7 +763,15 @@ function MessagesList({
             </span>
           </div>
           <div className="mt-2 space-y-2">
-            {g.items.map((m) => {
+            {g.items.map((m, idx) => {
+              const prev = idx > 0 ? g.items[idx - 1] : null;
+              const isAgentMsg = m.senderId !== customerId && m.type === "text";
+              const prevIsCustomer = prev && prev.senderId === customerId && prev.type === "text";
+              const gapMin =
+                isAgentMsg && prevIsCustomer
+                  ? minutesBetween(prev.timestamp, m.timestamp)
+                  : 0;
+              const showGap = gapMin >= 30;
               if (m.type === "internal_note") {
                 return (
                   <div key={m.id} className="mx-auto max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 p-3">
@@ -672,7 +785,15 @@ function MessagesList({
               }
               const isAgent = m.senderId !== customerId;
               return (
-                <div key={m.id} className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
+                <div key={m.id}>
+                  {showGap && (
+                    <div className="my-2 flex items-center justify-center gap-2 text-[10px] text-slate-400">
+                      <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
+                      — dibalas setelah {gapMin < 60 ? `${gapMin} menit` : `${(gapMin / 60).toFixed(1)} jam`} —
+                      <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
+                    </div>
+                  )}
+                  <div className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
                       "max-w-[70%] rounded-lg p-2.5 text-sm shadow-sm",
@@ -694,7 +815,10 @@ function MessagesList({
                       <span>{formatTime(m.timestamp)}</span>
                       {isAgent && (
                         m.readStatus === "read" ? (
-                          <CheckCheck className="h-3 w-3 text-sky-200" />
+                          <>
+                            <CheckCheck className="h-3 w-3 text-sky-200" />
+                            <span className="text-emerald-50/80" title="Dibaca">· Dibaca</span>
+                          </>
                         ) : m.readStatus === "delivered" ? (
                           <CheckCheck className="h-3 w-3" />
                         ) : (
@@ -702,6 +826,7 @@ function MessagesList({
                         )
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               );
@@ -746,6 +871,7 @@ function CustomerSidePanel({
   const lastP = customer.purchases.length
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
+  const cadence = cadenceFor(customer.purchases, customer.cadenceOverrideDays);
 
   return (
     <aside className="scrollbar-thin w-[300px] overflow-y-auto border-l border-slate-200 bg-white p-4">
@@ -778,6 +904,11 @@ function CustomerSidePanel({
           Estimasi CLV 12 bln: {formatRupiah(clv.clv12months)}
         </div>
         <div className="text-[10px] text-slate-400">Berdasarkan pola pembelian historis</div>
+      </div>
+
+      {/* Cadence card */}
+      <div className="mt-3">
+        <CadenceCard customer={customer} cadence={cadence} />
       </div>
 
       {/* Stats */}
@@ -922,6 +1053,143 @@ function ScoreRow({ label, score }: { label: string; score: number }) {
         ))}
       </div>
       <span className="ml-auto font-mono text-slate-500">{score}/5</span>
+    </div>
+  );
+}
+
+function CadenceCard({
+  customer,
+  cadence,
+}: {
+  customer: Customer;
+  cadence: CadenceResult;
+}) {
+  const store = useConversations();
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState(
+    customer.cadenceOverrideDays ? String(customer.cadenceOverrideDays) : "",
+  );
+  const confColor =
+    cadence.confidence === "high"
+      ? "bg-emerald-500"
+      : cadence.confidence === "medium"
+        ? "bg-amber-500"
+        : "bg-slate-300";
+  const confText =
+    cadence.confidence === "high"
+      ? "Tinggi"
+      : cadence.confidence === "medium"
+        ? "Sedang"
+        : "Rendah";
+  const labelText = CADENCE_LABEL_TEXT[cadence.label];
+  const days = cadence.daysUntilPredicted;
+  let predictionTone = "text-slate-600";
+  let predictionMsg: string | null = null;
+  if (days !== null && cadence.predictedNextOrderDate) {
+    if (days < 0) {
+      predictionTone = "text-red-700 font-semibold";
+      predictionMsg = `⚠️ Sudah lewat ${Math.abs(days)} hari dari biasanya — pertimbangkan follow up`;
+    } else if (days <= 3) {
+      predictionTone = "text-amber-700 font-semibold";
+      predictionMsg = `🔔 Diperkirakan order dalam ${days === 0 ? "hari ini" : `${days} hari`}`;
+    }
+  }
+  return (
+    <div className="rounded-xl border border-slate-200 p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+          <CalendarClock className="h-3.5 w-3.5" /> Siklus Pembelian
+        </div>
+        <span
+          className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+          title={`Konsistensi pola: ${confText}`}
+        >
+          <span className={cn("mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle", confColor)} />
+          {labelText}
+        </span>
+      </div>
+      <div className="mt-1.5 text-xs text-slate-600">
+        {cadence.avgDaysBetweenOrders === null ? (
+          <span className="text-slate-400 italic">Belum cukup data (butuh ≥2 pembelian)</span>
+        ) : cadence.isManualOverride ? (
+          <>
+            <span>Sistem: tiap {cadence.avgDaysBetweenOrders} hari</span>
+            <span className="mx-1 text-slate-300">·</span>
+            <span className="font-semibold text-emerald-700">
+              Manual: tiap {cadence.manualOverrideDays} hari
+            </span>
+          </>
+        ) : (
+          <>Rata-rata tiap <span className="font-semibold text-slate-800">{cadence.avgDaysBetweenOrders} hari</span></>
+        )}
+      </div>
+      {cadence.predictedNextOrderDate && (
+        <div className={cn("mt-1 text-xs", predictionTone)}>
+          Prediksi order berikutnya: {formatDate(cadence.predictedNextOrderDate)}
+        </div>
+      )}
+      {predictionMsg && (
+        <div className={cn("mt-1 text-[11px]", predictionTone)}>{predictionMsg}</div>
+      )}
+      <div className="mt-2">
+        {editing ? (
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="hari"
+              className="h-7 w-20 text-xs"
+            />
+            <Button
+              size="sm"
+              className="h-7 bg-emerald-600 px-2 text-xs text-white hover:bg-emerald-700"
+              onClick={() => {
+                const n = parseInt(input, 10);
+                store.setCadenceOverride(customer.id, isNaN(n) || n <= 0 ? null : n);
+                setEditing(false);
+                toast.success("Siklus manual disimpan");
+              }}
+            >
+              Simpan
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={() => {
+                setEditing(false);
+                setInput(customer.cadenceOverrideDays ? String(customer.cadenceOverrideDays) : "");
+              }}
+            >
+              Batal
+            </Button>
+            {customer.cadenceOverrideDays && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs text-red-600"
+                onClick={() => {
+                  store.setCadenceOverride(customer.id, null);
+                  setInput("");
+                  setEditing(false);
+                  toast.success("Override dihapus");
+                }}
+              >
+                Hapus
+              </Button>
+            )}
+          </div>
+        ) : (
+          <button
+            className="text-[11px] font-medium text-emerald-700 hover:underline"
+            onClick={() => setEditing(true)}
+          >
+            ✎ Edit Manual
+          </button>
+        )}
+      </div>
     </div>
   );
 }

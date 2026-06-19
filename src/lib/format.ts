@@ -46,3 +46,25 @@ export function isoHoursAgo(hours: number, base = new Date("2026-06-18T10:00:00Z
   d.setHours(d.getHours() - hours);
   return d.toISOString();
 }
+
+/**
+ * Returns a short Indonesian relative duration like "5 menit", "2 jam",
+ * "3 hari" representing the gap between `iso` and now (or `now`).
+ * Always positive; caller decides if it means "ago" or "from now".
+ */
+export function relativeTime(iso: string, now = new Date()): string {
+  const diffMs = Math.abs(now.getTime() - new Date(iso).getTime());
+  const mins = Math.floor(diffMs / 60000);
+  if (mins < 1) return "baru saja";
+  if (mins < 60) return `${mins} menit`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs} jam`;
+  const days = Math.floor(hrs / 24);
+  if (days < 30) return `${days} hari`;
+  const months = Math.floor(days / 30);
+  return `${months} bulan`;
+}
+
+export function minutesBetween(a: string, b: string): number {
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
+}

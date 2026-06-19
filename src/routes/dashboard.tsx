@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useConversations } from "@/hooks/useConversations";
 import { SEGMENT_META } from "@/lib/rfm";
-import { formatRupiah, formatDateLong } from "@/lib/format";
+import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
+import { formatRupiah, formatDateLong, formatDate } from "@/lib/format";
 import { maskPhone } from "@/lib/mask";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend,
 } from "recharts";
 import type { RFMSegment } from "@/types";
-import { AlertTriangle, Crown, Clock, MessageSquare, Users, Settings as SettingsIcon, ArrowRight } from "lucide-react";
+import { AlertTriangle, Crown, Clock, MessageSquare, Users, Settings as SettingsIcon, ArrowRight, CalendarClock } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -76,6 +77,25 @@ function DashboardPage() {
   const championsCount = segmentData.find((s) => s.segment === "champions")?.value ?? 0;
   const atRiskCount = segmentData.find((s) => s.segment === "at_risk")?.value ?? 0;
 
+  // Cadence-based follow-up (personalized, separate from RFM)
+  const cadenceFollowUp = useMemo(
+    () =>
+      myEnriched
+        .filter((e) => e.cadence.daysUntilPredicted !== null)
+        .map((e) => ({
+          ...e,
+          status:
+            e.cadence.daysUntilPredicted! < 0
+              ? ("overdue" as const)
+              : e.cadence.daysUntilPredicted! <= 3
+                ? ("due_soon" as const)
+                : ("on_track" as const),
+        }))
+        .sort((a, b) => (a.cadence.daysUntilPredicted ?? 0) - (b.cadence.daysUntilPredicted ?? 0)),
+    [myEnriched],
+  );
+  const overdueCount = cadenceFollowUp.filter((e) => e.status === "overdue").length;
+
   const followUpList = useMemo(
     () => enriched.filter((e) => e.rfm.segment === "at_risk" || e.rfm.segment === "dormant"),
     [enriched],
@@ -131,6 +151,17 @@ function DashboardPage() {
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="text-sm"><span className="font-semibold">⏰ {slaBreach} percakapan</span> menunggu balasan &gt;2 jam (SLA breach).</div>
             </div>
+          )}
+          {overdueCount > 0 && (
+            <a
+              href="#cadence-followup"
+              className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left text-amber-800 hover:bg-amber-100"
+            >
+              <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div className="text-sm">
+                <span className="font-semibold">🔔 {overdueCount} customer</span> melewati siklus order biasanya — peluang follow up proaktif.
+              </div>
+            </a>
           )}
         </div>
 
@@ -255,6 +286,78 @@ function DashboardPage() {
         )}
 
         {/* CS Performance */}
+        {isSupervisor && (
+        <div id="cadence-followup" className="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold">
+              <CalendarClock className="h-4 w-4 text-amber-600" />
+              🔔 Customer Perlu Di-follow Up (Berdasarkan Siklus)
+            </div>
+            <div className="text-xs text-slate-500">
+              {overdueCount} overdue · berbeda dengan At Risk RFM — ini berdasarkan pola personal per customer
+            </div>
+          </div>
+          <table className="mt-3 w-full text-sm">
+            <thead className="text-xs text-slate-500">
+              <tr>
+                <th className="text-left">Nama</th>
+                <th className="text-left">Segment (RFM)</th>
+                <th className="text-left">Siklus</th>
+                <th className="text-left">Terakhir Order</th>
+                <th className="text-left">Prediksi</th>
+                <th className="text-left">Status</th>
+                <th className="text-left">CS</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cadenceFollowUp.slice(0, 10).map((e) => {
+                const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
+                const lastP = e.customer.purchases.length
+                  ? e.customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
+                  : null;
+                const statusBadge =
+                  e.status === "overdue"
+                    ? <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-semibold text-red-700">Overdue {Math.abs(e.cadence.daysUntilPredicted!)}d</span>
+                    : e.status === "due_soon"
+                      ? <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">Due {e.cadence.daysUntilPredicted}d</span>
+                      : <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">On Track</span>;
+                return (
+                  <tr key={e.customer.id} className="border-t border-slate-100">
+                    <td className="py-2 font-medium">{e.customer.name}</td>
+                    <td><SegmentBadge segment={e.rfm.segment} /></td>
+                    <td className="text-xs">
+                      {CADENCE_LABEL_TEXT[e.cadence.label]}
+                      <span className="ml-1 font-mono text-[10px] text-slate-400">
+                        (~{e.cadence.avgDaysBetweenOrders}d)
+                      </span>
+                    </td>
+                    <td className="font-mono text-xs">{lastP ? formatDate(lastP.date) : "-"}</td>
+                    <td className="font-mono text-xs">
+                      {e.cadence.predictedNextOrderDate ? formatDate(e.cadence.predictedNextOrderDate) : "-"}
+                    </td>
+                    <td>{statusBadge}</td>
+                    <td className="text-xs">{ag?.name ?? "-"}</td>
+                    <td className="text-right">
+                      <Button
+                        size="sm"
+                        className="h-7 bg-[#25D366] text-xs text-white hover:bg-[#128C7E]"
+                        onClick={() => navigate({ to: "/chat/$customerId", params: { customerId: e.customer.id } })}
+                      >
+                        Follow Up
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
+              {cadenceFollowUp.length === 0 && (
+                <tr><td colSpan={8} className="py-4 text-center text-xs text-slate-400">Belum ada customer dengan data siklus yang cukup.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        )}
+
         {isSupervisor && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
