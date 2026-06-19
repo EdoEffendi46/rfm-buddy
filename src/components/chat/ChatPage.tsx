@@ -63,6 +63,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
   const [search, setSearch] = useState("");
   const [statusTab, setStatusTab] = useState("all");
   const [segmentTab, setSegmentTab] = useState<"all" | RFMSegment>("all");
+  const [sortKey, setSortKey] = useState<"waiting" | "newest">("waiting");
   const [selectedId, setSelectedId] = useState<string | null>(initialCustomerId ?? null);
   const [inputMode, setInputMode] = useState<"text" | "internal_note">("text");
   const [draft, setDraft] = useState("");
@@ -117,11 +118,20 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
       );
     }
     return list.sort((a, b) => {
+      if (sortKey === "waiting") {
+        // Longest awaiting agent reply first (customer was last sender)
+        const waitOf = (c: typeof a) => {
+          const lm = c.lastMessage;
+          if (!lm || lm.senderId !== c.customer.id) return -1; // already replied → sink
+          return Date.now() - new Date(lm.timestamp).getTime();
+        };
+        return waitOf(b) - waitOf(a);
+      }
       const at = a.lastMessage?.timestamp ?? "";
       const bt = b.lastMessage?.timestamp ?? "";
       return bt.localeCompare(at);
     });
-  }, [store.conversations, role, agent, statusTab, segmentTab, enriched, search]);
+  }, [store.conversations, role, agent, statusTab, segmentTab, enriched, search, sortKey]);
 
   const statusCounts = useMemo(() => {
     const base = store.conversations.filter(
