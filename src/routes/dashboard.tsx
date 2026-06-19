@@ -153,6 +153,17 @@ function DashboardPage() {
               <div className="text-sm"><span className="font-semibold">⏰ {slaBreach} percakapan</span> menunggu balasan &gt;2 jam (SLA breach).</div>
             </div>
           )}
+          {overdueCount > 0 && (
+            <a
+              href="#cadence-followup"
+              className="flex w-full items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-left text-amber-800 hover:bg-amber-100"
+            >
+              <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
+              <div className="text-sm">
+                <span className="font-semibold">🔔 {overdueCount} customer</span> melewati siklus order biasanya — peluang follow up proaktif.
+              </div>
+            </a>
+          )}
         </div>
 
         {/* KPI */}
