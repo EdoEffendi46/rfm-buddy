@@ -186,6 +186,17 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               className="h-9 pl-9"
             />
           </div>
+          <div className="mt-2">
+            <Select value={sortKey} onValueChange={(v) => setSortKey(v as "waiting" | "newest")}>
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="waiting">⏱ Menunggu Terlama</SelectItem>
+                <SelectItem value="newest">🕒 Terbaru</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="scrollbar-thin mt-3 flex gap-1.5 overflow-x-auto pb-1">
             {STATUS_TABS.map((t) => (
               <button
