@@ -69,8 +69,8 @@ function DashboardPage() {
   const openConvs = myConvs.filter((c) => c.customer.conversationStatus === "open").length;
   const awaitingReply = myConvs.filter((c) => c.unreadCount > 0).length;
   const slaBreach = myConvs.filter((c) => {
-    if (c.unreadCount === 0) return false;
-    const last = new Date(c.customer.lastMessageAt ?? Date.now()).getTime();
+    if (c.unreadCount === 0 || !c.lastMessage) return false;
+    const last = new Date(c.lastMessage.timestamp).getTime();
     return Date.now() - last > 2 * 60 * 60 * 1000;
   }).length;
   const championsCount = segmentData.find((s) => s.segment === "champions")?.value ?? 0;
