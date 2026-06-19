@@ -1,5 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { Home, MessageSquare, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { MessageSquare, Users, BarChart3, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/hooks/useConversations";
 import { AgentAvatar } from "@/components/Avatar";
@@ -14,7 +14,7 @@ function NavItem({
   active,
 }: {
   to: string;
-  icon: typeof Home;
+  icon: typeof MessageSquare;
   label: string;
   badge?: number;
   active: boolean;
@@ -56,7 +56,7 @@ export function Sidebar() {
         CC
       </div>
       <nav className="flex flex-1 flex-col items-center gap-2">
-        <NavItem to="/home" icon={Home} label="Home" active={pathname === "/home"} />
+        <NavItem to="/dashboard" icon={BarChart3} label="Dashboard" active={pathname === "/dashboard"} />
         <NavItem
           to="/chat"
           icon={MessageSquare}
@@ -65,9 +65,6 @@ export function Sidebar() {
           badge={unread}
         />
         <NavItem to="/customers" icon={Users} label="Customer" active={pathname === "/customers"} />
-        {role === "supervisor" && (
-          <NavItem to="/dashboard" icon={BarChart3} label="Dashboard" active={pathname === "/dashboard"} />
-        )}
         <NavItem to="/settings" icon={Settings} label="Pengaturan" active={pathname === "/settings"} />
       </nav>
       <div className="flex flex-col items-center gap-3">
