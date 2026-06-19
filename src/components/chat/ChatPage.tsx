@@ -1036,3 +1036,140 @@ function ScoreRow({ label, score }: { label: string; score: number }) {
     </div>
   );
 }
+
+function CadenceCard({
+  customer,
+  cadence,
+}: {
+  customer: Customer;
+  cadence: CadenceResult;
+}) {
+  const store = useConversations();
+  const [editing, setEditing] = useState(false);
+  const [input, setInput] = useState(
+    customer.cadenceOverrideDays ? String(customer.cadenceOverrideDays) : "",
+  );
+  const confColor =
+    cadence.confidence === "high"
+      ? "bg-emerald-500"
+      : cadence.confidence === "medium"
+        ? "bg-amber-500"
+        : "bg-slate-300";
+  const confText =
+    cadence.confidence === "high"
+      ? "Tinggi"
+      : cadence.confidence === "medium"
+        ? "Sedang"
+        : "Rendah";
+  const labelText = CADENCE_LABEL_TEXT[cadence.label];
+  const days = cadence.daysUntilPredicted;
+  let predictionTone = "text-slate-600";
+  let predictionMsg: string | null = null;
+  if (days !== null && cadence.predictedNextOrderDate) {
+    if (days < 0) {
+      predictionTone = "text-red-700 font-semibold";
+      predictionMsg = `⚠️ Sudah lewat ${Math.abs(days)} hari dari biasanya — pertimbangkan follow up`;
+    } else if (days <= 3) {
+      predictionTone = "text-amber-700 font-semibold";
+      predictionMsg = `🔔 Diperkirakan order dalam ${days === 0 ? "hari ini" : `${days} hari`}`;
+    }
+  }
+  return (
+    <div className="rounded-xl border border-slate-200 p-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-700">
+          <CalendarClock className="h-3.5 w-3.5" /> Siklus Pembelian
+        </div>
+        <span
+          className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
+          title={`Konsistensi pola: ${confText}`}
+        >
+          <span className={cn("mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle", confColor)} />
+          {labelText}
+        </span>
+      </div>
+      <div className="mt-1.5 text-xs text-slate-600">
+        {cadence.avgDaysBetweenOrders === null ? (
+          <span className="text-slate-400 italic">Belum cukup data (butuh ≥2 pembelian)</span>
+        ) : cadence.isManualOverride ? (
+          <>
+            <span>Sistem: tiap {cadence.avgDaysBetweenOrders} hari</span>
+            <span className="mx-1 text-slate-300">·</span>
+            <span className="font-semibold text-emerald-700">
+              Manual: tiap {cadence.manualOverrideDays} hari
+            </span>
+          </>
+        ) : (
+          <>Rata-rata tiap <span className="font-semibold text-slate-800">{cadence.avgDaysBetweenOrders} hari</span></>
+        )}
+      </div>
+      {cadence.predictedNextOrderDate && (
+        <div className={cn("mt-1 text-xs", predictionTone)}>
+          Prediksi order berikutnya: {formatDate(cadence.predictedNextOrderDate)}
+        </div>
+      )}
+      {predictionMsg && (
+        <div className={cn("mt-1 text-[11px]", predictionTone)}>{predictionMsg}</div>
+      )}
+      <div className="mt-2">
+        {editing ? (
+          <div className="flex items-center gap-1">
+            <Input
+              type="number"
+              min={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="hari"
+              className="h-7 w-20 text-xs"
+            />
+            <Button
+              size="sm"
+              className="h-7 bg-emerald-600 px-2 text-xs text-white hover:bg-emerald-700"
+              onClick={() => {
+                const n = parseInt(input, 10);
+                store.setCadenceOverride(customer.id, isNaN(n) || n <= 0 ? null : n);
+                setEditing(false);
+                toast.success("Siklus manual disimpan");
+              }}
+            >
+              Simpan
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="h-7 px-2 text-xs"
+              onClick={() => {
+                setEditing(false);
+                setInput(customer.cadenceOverrideDays ? String(customer.cadenceOverrideDays) : "");
+              }}
+            >
+              Batal
+            </Button>
+            {customer.cadenceOverrideDays && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 text-xs text-red-600"
+                onClick={() => {
+                  store.setCadenceOverride(customer.id, null);
+                  setInput("");
+                  setEditing(false);
+                  toast.success("Override dihapus");
+                }}
+              >
+                Hapus
+              </Button>
+            )}
+          </div>
+        ) : (
+          <button
+            className="text-[11px] font-medium text-emerald-700 hover:underline"
+            onClick={() => setEditing(true)}
+          >
+            ✎ Edit Manual
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
