@@ -247,15 +247,54 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               const rfm = calculateRFM(c.customer);
               const isSelected = c.customer.id === selectedId;
               const ag = agents.find((a) => a.id === c.customer.assignedAgentId);
+              const lm = c.lastMessage;
+              const customerIsLastSender = !!lm && lm.senderId === c.customer.id;
+              const isUnread = c.unreadCount > 0;
+              const status = c.customer.conversationStatus;
+              // Build metadata line
+              let metaIcon = "";
+              let metaText = "";
+              let metaCls = "text-slate-400";
+              if (status === "snoozed") {
+                metaIcon = "💤";
+                metaText = c.customer.snoozeUntil
+                  ? `Snooze · ${relativeTime(c.customer.snoozeUntil)} lagi`
+                  : "Snooze";
+                metaCls = "text-amber-600";
+              } else if (status === "resolved") {
+                metaIcon = "✓✓";
+                metaText = lm
+                  ? `Diselesaikan oleh ${lm.senderName} · ${relativeTime(lm.timestamp)} lalu`
+                  : "Diselesaikan";
+                metaCls = "text-slate-400";
+              } else if (customerIsLastSender && lm) {
+                const mins = Math.round((Date.now() - new Date(lm.timestamp).getTime()) / 60000);
+                metaIcon = "⏱";
+                metaText = `Menunggu balasan · ${relativeTime(lm.timestamp)}`;
+                metaCls = mins > 60 ? "text-red-600 font-semibold" : "text-amber-600";
+              } else if (lm) {
+                metaIcon = "✓";
+                metaText = `Dibalas oleh ${lm.senderName} · ${relativeTime(lm.timestamp)} lalu`;
+                metaCls = "text-emerald-600";
+              } else {
+                metaText = "Belum ada pesan";
+              }
               return (
                 <button
                   key={c.customer.id}
                   onClick={() => setSelectedId(c.customer.id)}
                   className={cn(
-                    "flex w-full gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors",
-                    isSelected ? "border-l-2 border-l-emerald-500 bg-emerald-50/60" : "hover:bg-slate-50",
+                    "relative flex w-full gap-3 border-b border-slate-100 px-3 py-3 text-left transition-colors",
+                    isSelected
+                      ? "border-l-2 border-l-emerald-500 bg-emerald-50/60"
+                      : isUnread && customerIsLastSender
+                        ? "bg-emerald-50/40 hover:bg-emerald-50/70"
+                        : "hover:bg-slate-50",
                   )}
                 >
+                  {isUnread && customerIsLastSender && !isSelected && (
+                    <span className="absolute left-0 top-0 h-full w-1 bg-emerald-500" />
+                  )}
                   <Avatar
                     name={c.customer.name}
                     color={SEGMENT_META[rfm.segment].color}
@@ -264,20 +303,26 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <div className="truncate text-sm font-semibold text-slate-900">
+                      <div
+                        className={cn(
+                          "truncate text-sm text-slate-900",
+                          isUnread && customerIsLastSender ? "font-bold" : "font-medium",
+                        )}
+                      >
                         {c.customer.name}
                       </div>
-                      <div className="ml-2 shrink-0 font-mono text-[10px] text-slate-400">
+                      <div className="ml-2 flex shrink-0 items-center gap-1 font-mono text-[10px] text-slate-400">
+                        {isUnread && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        )}
                         {c.lastMessage ? formatTime(c.lastMessage.timestamp) : ""}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="truncate text-xs text-slate-500">
-                        {c.customer.conversationStatus === "snoozed" && (
-                          <span className="mr-1 inline-flex items-center gap-0.5 text-amber-600">
-                            <Clock className="h-3 w-3" /> Snoozed
-                          </span>
-                        )}
+                      <div className={cn(
+                        "truncate text-xs",
+                        isUnread && customerIsLastSender ? "text-slate-800" : "text-slate-500",
+                      )}>
                         {c.lastMessage?.content ?? "Belum ada pesan"}
                       </div>
                       {c.unreadCount > 0 && (
@@ -285,6 +330,10 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                           {c.unreadCount}
                         </span>
                       )}
+                    </div>
+                    <div className={cn("mt-0.5 truncate text-[11px]", metaCls)}>
+                      {metaIcon && <span className="mr-1">{metaIcon}</span>}
+                      {metaText}
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       {ag && (
