@@ -851,6 +851,7 @@ function CustomerSidePanel({
   const lastP = customer.purchases.length
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
+  const cadence = cadenceFor(customer.purchases, customer.cadenceOverrideDays);
 
   return (
     <aside className="scrollbar-thin w-[300px] overflow-y-auto border-l border-slate-200 bg-white p-4">
@@ -883,6 +884,11 @@ function CustomerSidePanel({
           Estimasi CLV 12 bln: {formatRupiah(clv.clv12months)}
         </div>
         <div className="text-[10px] text-slate-400">Berdasarkan pola pembelian historis</div>
+      </div>
+
+      {/* Cadence card */}
+      <div className="mt-3">
+        <CadenceCard customer={customer} cadence={cadence} />
       </div>
 
       {/* Stats */}
