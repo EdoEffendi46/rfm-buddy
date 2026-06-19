@@ -407,6 +407,7 @@ function CustomerDetailModal({
   onOpenChat: (id: string) => void;
 }) {
   const { customer, rfm, clv } = enriched;
+  const cad = enriched.cadence;
   const { saveNotes } = useCustomers();
   const [notes, setNotes] = useState(customer.notes);
   const meta = SEGMENT_META[rfm.segment];
@@ -447,6 +448,53 @@ function CustomerDetailModal({
               <div className="font-semibold">💰 CLV</div>
               <div>Total Spent: <span className="font-semibold">{formatRupiah(clv.totalSpent)}</span></div>
               <div className="text-xs text-slate-500">Estimasi 12 bln: {formatRupiah(clv.clv12months)}</div>
+            </div>
+            <div className="rounded-xl border border-slate-200 p-3 text-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <CalendarClock className="h-4 w-4 text-emerald-600" /> Siklus Pembelian
+                </div>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                  {CADENCE_LABEL_TEXT[cad.label]} · Konsistensi {cad.confidence === "high" ? "Tinggi" : cad.confidence === "medium" ? "Sedang" : "Rendah"}
+                </span>
+              </div>
+              {cad.avgDaysBetweenOrders ? (
+                <div className="mt-1 text-xs text-slate-600">
+                  Rata-rata tiap <span className="font-semibold">{cad.avgDaysBetweenOrders} hari</span>
+                  {cad.isManualOverride && (
+                    <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-700">
+                      Manual: {cad.manualOverrideDays}d
+                    </span>
+                  )}
+                </div>
+              ) : (
+                <div className="mt-1 text-xs text-slate-400 italic">Belum cukup data</div>
+              )}
+              {cad.predictedNextOrderDate && (
+                <div className={cn(
+                  "mt-1 text-xs",
+                  cad.daysUntilPredicted! < 0
+                    ? "text-red-700 font-semibold"
+                    : cad.daysUntilPredicted! <= 3
+                      ? "text-amber-700 font-semibold"
+                      : "text-slate-600",
+                )}>
+                  Prediksi order berikutnya: {formatDate(cad.predictedNextOrderDate)}
+                  {cad.daysUntilPredicted! < 0 && ` · Overdue ${Math.abs(cad.daysUntilPredicted!)} hari`}
+                  {cad.daysUntilPredicted! >= 0 && cad.daysUntilPredicted! <= 3 && ` · Due ${cad.daysUntilPredicted} hari`}
+                </div>
+              )}
+              {cad.gaps.length > 0 && (
+                <div className="mt-2 text-[11px] text-slate-500">
+                  Pola gap:{" "}
+                  {cad.gaps.map((g, i) => (
+                    <span key={i}>
+                      <span className="font-mono">{`Order ${i + 1}→${i + 2}: ${g} hari`}</span>
+                      {i < cad.gaps.length - 1 && <span className="mx-1 text-slate-300">·</span>}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <p className="text-xs text-slate-600">{meta.description}</p>
           </TabsContent>
