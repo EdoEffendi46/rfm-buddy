@@ -469,6 +469,40 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 </DropdownMenu>
               </div>
             </div>
+            {/* Conversation context bar */}
+            {selectedConv && selectedConv.messages.length > 0 && (() => {
+              const msgs = selectedConv.messages;
+              const first = msgs[0];
+              // average response time = avg minutes between a customer msg and the next agent msg
+              const gaps: number[] = [];
+              for (let i = 1; i < msgs.length; i++) {
+                const prev = msgs[i - 1], cur = msgs[i];
+                if (
+                  prev.type === "text" && cur.type === "text" &&
+                  prev.senderId === selectedCustomer.id && cur.senderId !== selectedCustomer.id
+                ) {
+                  gaps.push(minutesBetween(prev.timestamp, cur.timestamp));
+                }
+              }
+              const avg = gaps.length
+                ? Math.round(gaps.reduce((s, g) => s + g, 0) / gaps.length)
+                : null;
+              return (
+                <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-1.5 text-[11px] text-slate-500">
+                  <span>Percakapan dimulai {formatDate(first.timestamp)}</span>
+                  <span className="text-slate-300">·</span>
+                  <span>{msgs.length} pesan</span>
+                  {avg !== null && (
+                    <>
+                      <span className="text-slate-300">·</span>
+                      <span>Respon rata-rata: <span className="font-semibold text-slate-700">
+                        {avg < 60 ? `${avg} menit` : `${(avg / 60).toFixed(1)} jam`}
+                      </span></span>
+                    </>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Tags row */}
             {selectedCustomer.conversationTags.length > 0 && (
