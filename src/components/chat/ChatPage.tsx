@@ -4,8 +4,9 @@ import { useConversations } from "@/hooks/useConversations";
 import { useCustomers } from "@/hooks/useCustomers";
 import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
+import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
 import { maskPhone } from "@/lib/mask";
-import { formatTime, formatRupiah, formatDate, relativeDay } from "@/lib/format";
+import { formatTime, formatRupiah, formatDate, relativeDay, relativeTime, minutesBetween } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, Send, Zap, Tag as TagIcon, Paperclip, MoreVertical, Clock,
-  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X,
+  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
