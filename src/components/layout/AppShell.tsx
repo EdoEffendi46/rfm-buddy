@@ -19,7 +19,7 @@ export function AppShell({
     if (!agent) {
       router.navigate({ to: "/" });
     } else if (supervisorOnly && role !== "supervisor") {
-      router.navigate({ to: "/home" });
+      router.navigate({ to: "/dashboard" });
     }
   }, [agent, role, supervisorOnly, router]);
 
