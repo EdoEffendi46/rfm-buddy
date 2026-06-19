@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { SEGMENT_META } from "@/lib/rfm";
+import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
 import { maskPhone } from "@/lib/mask";
 import { formatDate, formatRupiah } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
@@ -18,7 +19,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X } from "lucide-react";
+import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { RFMSegment, Customer } from "@/types";
@@ -38,7 +39,7 @@ const SEGMENT_FILTERS: { id: "all" | RFMSegment; label: string }[] = [
   { id: "dormant", label: "Dormant 😴" },
 ];
 
-type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name";
+type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdue";
 
 function CustomersPage() {
   const { role } = useAuth();
@@ -67,6 +68,11 @@ function CustomersPage() {
         case "rfm": return b.rfm.total - a.rfm.total;
         case "clv": return b.clv.clv12months - a.clv.clv12months;
         case "name": return a.customer.name.localeCompare(b.customer.name);
+        case "cadence_overdue": {
+          const av = a.cadence.daysUntilPredicted ?? 99999;
+          const bv = b.cadence.daysUntilPredicted ?? 99999;
+          return av - bv; // most overdue (most negative) first
+        }
       }
     });
     return list;
@@ -111,6 +117,7 @@ function CustomersPage() {
                 <SelectItem value="monetary">Total Pembelian</SelectItem>
                 <SelectItem value="rfm">RFM Score</SelectItem>
                 <SelectItem value="clv">CLV</SelectItem>
+                <SelectItem value="cadence_overdue">Paling Overdue (Siklus)</SelectItem>
                 <SelectItem value="name">Nama</SelectItem>
               </SelectContent>
             </Select>
@@ -161,6 +168,8 @@ function CustomersPage() {
                     <th className="px-3 py-2 text-left">No HP</th>
                     <th className="px-3 py-2 text-left">Segment</th>
                     <th className="px-3 py-2 text-left">RFM</th>
+                    <th className="px-3 py-2 text-left">Siklus</th>
+                    <th className="px-3 py-2 text-left">Prediksi Order</th>
                     <th className="px-3 py-2 text-right">CLV Est.</th>
                     <th className="px-3 py-2 text-right">Pembelian</th>
                     <th className="px-3 py-2 text-left">Terakhir</th>
@@ -174,6 +183,16 @@ function CustomersPage() {
                     const lastP = e.customer.purchases.length
                       ? e.customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
                       : null;
+                    const cad = e.cadence;
+                    const days = cad.daysUntilPredicted;
+                    const predCls =
+                      days === null
+                        ? "text-slate-400"
+                        : days < 0
+                          ? "text-red-600 font-semibold"
+                          : days <= 3
+                            ? "text-amber-600 font-semibold"
+                            : "text-slate-600";
                     return (
                       <tr key={e.customer.id} className="border-t border-slate-100 hover:bg-slate-50">
                         <td className="px-3 py-2 text-slate-400">{i + 1}</td>
@@ -199,6 +218,29 @@ function CustomersPage() {
                             </div>
                             <span className="font-mono text-xs">{e.rfm.total}/15</span>
                           </div>
+                        </td>
+                        <td className="px-3 py-2 text-xs">
+                          <div className="inline-flex flex-col">
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+                              {CADENCE_LABEL_TEXT[cad.label]}
+                            </span>
+                            <span className="mt-0.5 font-mono text-[10px] text-slate-400">
+                              {cad.avgDaysBetweenOrders ? `~${cad.avgDaysBetweenOrders}d` : "—"}
+                            </span>
+                          </div>
+                        </td>
+                        <td className={cn("px-3 py-2 text-xs font-mono", predCls)}>
+                          {cad.predictedNextOrderDate ? (
+                            <>
+                              {formatDate(cad.predictedNextOrderDate)}
+                              {days !== null && days < 0 && (
+                                <div className="text-[10px]">Overdue {Math.abs(days)}d</div>
+                              )}
+                              {days !== null && days >= 0 && days <= 3 && (
+                                <div className="text-[10px]">Due {days}d</div>
+                              )}
+                            </>
+                          ) : "—"}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-xs">{formatRupiah(e.clv.clv12months)}</td>
                         <td className="px-3 py-2 text-right font-mono text-xs">{e.rfm.frequency}x</td>
