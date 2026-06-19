@@ -763,7 +763,15 @@ function MessagesList({
             </span>
           </div>
           <div className="mt-2 space-y-2">
-            {g.items.map((m) => {
+            {g.items.map((m, idx) => {
+              const prev = idx > 0 ? g.items[idx - 1] : null;
+              const isAgentMsg = m.senderId !== customerId && m.type === "text";
+              const prevIsCustomer = prev && prev.senderId === customerId && prev.type === "text";
+              const gapMin =
+                isAgentMsg && prevIsCustomer
+                  ? minutesBetween(prev.timestamp, m.timestamp)
+                  : 0;
+              const showGap = gapMin >= 30;
               if (m.type === "internal_note") {
                 return (
                   <div key={m.id} className="mx-auto max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 p-3">
@@ -777,7 +785,15 @@ function MessagesList({
               }
               const isAgent = m.senderId !== customerId;
               return (
-                <div key={m.id} className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
+                <div key={m.id}>
+                  {showGap && (
+                    <div className="my-2 flex items-center justify-center gap-2 text-[10px] text-slate-400">
+                      <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
+                      — dibalas setelah {gapMin < 60 ? `${gapMin} menit` : `${(gapMin / 60).toFixed(1)} jam`} —
+                      <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
+                    </div>
+                  )}
+                  <div className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
                   <div
                     className={cn(
                       "max-w-[70%] rounded-lg p-2.5 text-sm shadow-sm",
@@ -799,7 +815,10 @@ function MessagesList({
                       <span>{formatTime(m.timestamp)}</span>
                       {isAgent && (
                         m.readStatus === "read" ? (
-                          <CheckCheck className="h-3 w-3 text-sky-200" />
+                          <>
+                            <CheckCheck className="h-3 w-3 text-sky-200" />
+                            <span className="text-emerald-50/80" title="Dibaca">· Dibaca</span>
+                          </>
                         ) : m.readStatus === "delivered" ? (
                           <CheckCheck className="h-3 w-3" />
                         ) : (
@@ -807,6 +826,7 @@ function MessagesList({
                         )
                       )}
                     </div>
+                  </div>
                   </div>
                 </div>
               );
