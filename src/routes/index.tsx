@@ -33,14 +33,14 @@ function LoginPage() {
   const [selected, setSelected] = useState<string>(AGENTS[0].id);
 
   useEffect(() => {
-    if (currentAgent) router.navigate({ to: "/home" });
+    if (currentAgent) router.navigate({ to: "/dashboard" });
   }, [currentAgent, router]);
 
   const handleLogin = () => {
     const agent = AGENTS.find((a) => a.id === selected)!;
     login(agent.id);
     toast.success(`Selamat datang, ${agent.name}!`);
-    router.navigate({ to: "/home" });
+    router.navigate({ to: "/dashboard" });
   };
 
   return (
