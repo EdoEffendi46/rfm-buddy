@@ -5,7 +5,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useConversations } from "@/hooks/useConversations";
 import { SEGMENT_META } from "@/lib/rfm";
+import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
 import { formatRupiah, formatDateLong } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import { maskPhone } from "@/lib/mask";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +16,7 @@ import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, Legend,
 } from "recharts";
 import type { RFMSegment } from "@/types";
-import { AlertTriangle, Crown, Clock, MessageSquare, Users, Settings as SettingsIcon, ArrowRight } from "lucide-react";
+import { AlertTriangle, Crown, Clock, MessageSquare, Users, Settings as SettingsIcon, ArrowRight, CalendarClock } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/dashboard")({
@@ -75,6 +77,25 @@ function DashboardPage() {
   }).length;
   const championsCount = segmentData.find((s) => s.segment === "champions")?.value ?? 0;
   const atRiskCount = segmentData.find((s) => s.segment === "at_risk")?.value ?? 0;
+
+  // Cadence-based follow-up (personalized, separate from RFM)
+  const cadenceFollowUp = useMemo(
+    () =>
+      myEnriched
+        .filter((e) => e.cadence.daysUntilPredicted !== null)
+        .map((e) => ({
+          ...e,
+          status:
+            e.cadence.daysUntilPredicted! < 0
+              ? ("overdue" as const)
+              : e.cadence.daysUntilPredicted! <= 3
+                ? ("due_soon" as const)
+                : ("on_track" as const),
+        }))
+        .sort((a, b) => (a.cadence.daysUntilPredicted ?? 0) - (b.cadence.daysUntilPredicted ?? 0)),
+    [myEnriched],
+  );
+  const overdueCount = cadenceFollowUp.filter((e) => e.status === "overdue").length;
 
   const followUpList = useMemo(
     () => enriched.filter((e) => e.rfm.segment === "at_risk" || e.rfm.segment === "dormant"),
