@@ -381,6 +381,27 @@ function CustomersPage() {
             setDetailId(null);
             navigate({ to: "/chat/$customerId", params: { customerId: id } });
           }}
+          agents={agents}
+          currentAgentId={agent?.id ?? ""}
+          onShare={(input) => {
+            createManualShare(input);
+            toast.success("Akses dibagikan");
+          }}
+          onRevoke={(customerId, shareId) => {
+            revokeManualShare(customerId, shareId);
+            toast.success("Akses dicabut");
+          }}
+          onPhoneViewed={(c) => {
+            if (hasPermission(role, "view_all_customers")) {
+              logAudit({
+                action: "phone_viewed_full",
+                targetType: "customer",
+                targetId: c.id,
+                targetLabel: c.name,
+                details: "Membuka detail customer (no HP penuh terlihat)",
+              });
+            }
+          }}
         />
       )}
 
