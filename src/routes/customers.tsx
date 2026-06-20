@@ -13,6 +13,7 @@ import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
 import { formatDate, formatRupiah } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
+import { SegmentIcon } from "@/components/SegmentIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,7 +24,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock } from "lucide-react";
+import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock, Users } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -48,12 +49,9 @@ export const Route = createFileRoute("/customers")({
 
 const SEGMENT_FILTERS: { id: "all" | RFMSegment; label: string }[] = [
   { id: "all", label: "Semua" },
-  { id: "champions", label: "Champions 👑" },
-  { id: "loyal", label: "Loyal 🔥" },
-  { id: "promising", label: "Promising 🌱" },
-  { id: "at_risk", label: "At Risk ⚠️" },
-  { id: "new", label: "New 🆕" },
-  { id: "dormant", label: "Dormant 😴" },
+  ...(["champions", "loyal", "promising", "at_risk", "new", "dormant"] as RFMSegment[]).map(
+    (id) => ({ id, label: SEGMENT_META[id].label }),
+  ),
 ];
 
 type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdue";
@@ -155,9 +153,7 @@ function CustomersPage() {
             </div>
           </div>
           <div className="scrollbar-thin mt-3 flex gap-1.5 overflow-x-auto pb-1">
-            {SEGMENT_FILTERS.map((s) => {
-              const color = s.id === "all" ? "#64748B" : SEGMENT_META[s.id].color;
-              return (
+            {SEGMENT_FILTERS.map((s) => (
                 <button
                   key={s.id}
                   onClick={() => setSegment(s.id)}
@@ -166,12 +162,15 @@ function CustomersPage() {
                     segment === s.id ? "border-slate-400 bg-slate-100" : "border-slate-200 bg-white hover:bg-slate-50",
                   )}
                 >
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                  {s.id === "all" ? (
+                    <Users className="h-3 w-3 shrink-0 text-slate-500" aria-hidden />
+                  ) : (
+                    <SegmentIcon segment={s.id} />
+                  )}
                   {s.label}
                   <span className="opacity-60">{segmentCounts[s.id] ?? 0}</span>
                 </button>
-              );
-            })}
+              ))}
           </div>
         </div>
 
@@ -226,7 +225,7 @@ function CustomersPage() {
                             <span className="font-medium">{e.customer.name}</span>
                             {share && (
                               <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700" title={`Dibagikan oleh ${sharedBy?.name ?? ""}`}>
-                                🔗 Dibagikan oleh {sharedBy?.name ?? "—"}
+                                Dibagikan · {sharedBy?.name ?? "-"}
                               </span>
                             )}
                           </div>
@@ -525,7 +524,7 @@ function CustomerDetailModal({
               <ScoreCard label="Monetary" score={rfm.m} desc={formatRupiah(rfm.monetary)} />
             </div>
             <div className="rounded-xl bg-slate-50 p-3 text-sm">
-              <div className="font-semibold">💰 CLV</div>
+              <div className="font-semibold">CLV</div>
               <div>Total Spent: <span className="font-semibold">{formatRupiah(clv.totalSpent)}</span></div>
               <div className="text-xs text-slate-500">Estimasi 12 bln: {formatRupiah(clv.clv12months)}</div>
             </div>

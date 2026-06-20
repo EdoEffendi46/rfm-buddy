@@ -12,6 +12,7 @@ import { isTeamView, ROLE_DISPLAY } from "@/lib/permissions";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
 import { useStore } from "@/lib/store";
 import { SegmentBadge } from "@/components/SegmentBadge";
+import { SegmentIcon } from "@/components/SegmentIcon";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -127,7 +128,7 @@ function DashboardPage() {
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="text-xs text-slate-500">{formatDateLong(new Date().toISOString())}</div>
-            <h1 className="text-2xl font-bold tracking-tight">Halo, {agent?.name} 👋</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Halo, {agent?.name}</h1>
             <p className="text-sm text-slate-500">
               {roleDisplay.dashboardSubtitle}
             </p>
@@ -142,19 +143,19 @@ function DashboardPage() {
           {teamView && atRiskCount > 0 && (
             <button onClick={() => navigate({ to: "/customers" })} className="flex w-full items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-left text-red-800 hover:bg-red-100">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
-              <div className="text-sm"><span className="font-semibold">🚨 {atRiskCount} customer At Risk</span> — terakhir order &gt;60 hari. Segera follow up.</div>
+              <div className="text-sm"><span className="font-semibold">{atRiskCount} customer At Risk</span> - terakhir order &gt;60 hari. Segera follow up.</div>
             </button>
           )}
           {teamView && championsCount > 0 && (
             <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-violet-50 p-4 text-violet-800">
               <Crown className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
-              <div className="text-sm"><span className="font-semibold">👑 {championsCount} customer Champions</span> — pastikan tetap dijaga relasinya.</div>
+              <div className="text-sm"><span className="font-semibold">{championsCount} customer Champions</span> - pastikan tetap dijaga relasinya.</div>
             </div>
           )}
           {slaBreach > 0 && (
             <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
-              <div className="text-sm"><span className="font-semibold">⏰ {slaBreach} percakapan</span> menunggu balasan &gt;2 jam (SLA breach).</div>
+              <div className="text-sm"><span className="font-semibold">{slaBreach} percakapan</span> menunggu balasan &gt;2 jam (SLA breach).</div>
             </div>
           )}
           {overdueCount > 0 && (
@@ -164,7 +165,7 @@ function DashboardPage() {
             >
               <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="text-sm">
-                <span className="font-semibold">🔔 {overdueCount} customer</span> melewati siklus order biasanya — peluang follow up proaktif.
+                <span className="font-semibold">{overdueCount} customer</span> melewati siklus order biasanya - peluang follow up proaktif.
               </div>
             </a>
           )}
@@ -176,8 +177,8 @@ function DashboardPage() {
             <>
               <Kpi title="Total Customer" value={enriched.length.toString()} sub={`${enriched.filter((e) => e.rfm.segment === "new").length} baru bulan ini`} />
               <Kpi title="Open Conversations" value={openConvs.toString()} sub={`${awaitingReply} belum dibalas`} />
-              <Kpi title="Champions 👑" value={championsCount.toString()} sub={`${Math.round((championsCount / Math.max(enriched.length,1)) * 100)}% dari total`} color="#7C3AED" />
-              <Kpi title="At Risk ⚠️" value={atRiskCount.toString()} sub="Perlu follow up segera" color="#EF4444" />
+              <Kpi title="Champions" value={championsCount.toString()} sub={`${Math.round((championsCount / Math.max(enriched.length,1)) * 100)}% dari total`} color="#7C3AED" />
+              <Kpi title="At Risk" value={atRiskCount.toString()} sub="Perlu follow up segera" color="#EF4444" />
             </>
           ) : (
             <>
@@ -207,7 +208,7 @@ function DashboardPage() {
             <div className="mt-2 grid grid-cols-2 gap-1 text-xs">
               {segmentData.map((s) => (
                 <div key={s.segment} className="flex items-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: s.color }} />
+                  <SegmentIcon segment={s.segment} />
                   <span>{s.name}</span>
                   <span className="ml-auto font-mono">{s.value} ({Math.round((s.value / enriched.length) * 100)}%)</span>
                 </div>
@@ -234,7 +235,7 @@ function DashboardPage() {
         {teamView && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
-            <div className="text-sm font-semibold">🚨 Customer Prioritas Follow Up</div>
+            <div className="text-sm font-semibold">Customer Prioritas Follow Up</div>
           </div>
           <Tabs value={followTab} onValueChange={(v) => setFollowTab(v as any)} className="mt-2">
             <TabsList>
@@ -296,10 +297,10 @@ function DashboardPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold">
               <CalendarClock className="h-4 w-4 text-amber-600" />
-              🔔 Customer Perlu Di-follow Up (Berdasarkan Siklus)
+              Customer Perlu Di-follow Up (Berdasarkan Siklus)
             </div>
             <div className="text-xs text-slate-500">
-              {overdueCount} overdue · berbeda dengan At Risk RFM — ini berdasarkan pola personal per customer
+              {overdueCount} overdue · berbeda dengan At Risk RFM - ini berdasarkan pola personal per customer
             </div>
           </div>
           <table className="mt-3 w-full text-sm">
@@ -387,7 +388,7 @@ function DashboardPage() {
 
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-semibold">💰 CLV Overview</div>
+              <div className="text-sm font-semibold">CLV Overview</div>
               <div className="text-xs text-slate-500">Total: <span className="font-semibold">{formatRupiah(totalCLV)}</span></div>
             </div>
             <table className="mt-2 w-full text-sm">

@@ -75,41 +75,35 @@ export function calculateRFM(customer: Customer, now: Date = NOW): RFMResult {
 
 export const SEGMENT_META: Record<
   RFMSegment,
-  { label: string; icon: string; color: string; description: string }
+  { label: string; color: string; description: string }
 > = {
   champions: {
     label: "Champions",
-    icon: "👑",
     color: "#7C3AED",
-    description: "Customer terbaik — sering order, nilai tinggi, transaksi baru.",
+    description: "Customer terbaik - sering order, nilai tinggi, transaksi baru.",
   },
   loyal: {
     label: "Loyal",
-    icon: "🔥",
     color: "#F97316",
     description: "Pelanggan setia dengan frekuensi tinggi.",
   },
   promising: {
     label: "Promising",
-    icon: "🌱",
     color: "#3B82F6",
     description: "Baru aktif, potensi tumbuh jadi loyal.",
   },
   at_risk: {
     label: "At Risk",
-    icon: "⚠️",
     color: "#EF4444",
-    description: "Pernah aktif namun mulai jauh — perlu follow up segera.",
+    description: "Pernah aktif namun mulai jauh - perlu follow up segera.",
   },
   new: {
     label: "New",
-    icon: "🆕",
     color: "#22C55E",
     description: "Customer baru, transaksi pertama dalam minggu ini.",
   },
   dormant: {
     label: "Dormant",
-    icon: "😴",
     color: "#94A3B8",
     description: "Tidak ada transaksi dalam waktu lama.",
   },
@@ -119,5 +113,5 @@ export function getSegmentColor(s: RFMSegment) {
   return SEGMENT_META[s].color;
 }
 export function getSegmentLabel(s: RFMSegment) {
-  return `${SEGMENT_META[s].icon} ${SEGMENT_META[s].label}`;
+  return SEGMENT_META[s].label;
 }

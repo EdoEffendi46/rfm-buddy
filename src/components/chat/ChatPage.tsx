@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/hooks/useConversations";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -11,6 +11,7 @@ import { useStore } from "@/lib/store";
 import { formatTime, formatRupiah, formatDate, relativeDay, relativeTime, minutesBetween } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
+import { SegmentIcon } from "@/components/SegmentIcon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, Send, Zap, Tag as TagIcon, Paperclip, MoreVertical, Clock,
-  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock,
+  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock, Moon, Pencil, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -45,12 +46,9 @@ const STATUS_TABS: { id: string; label: string }[] = [
 
 const SEGMENT_TABS: { id: "all" | RFMSegment; label: string }[] = [
   { id: "all", label: "All" },
-  { id: "champions", label: "Champions 👑" },
-  { id: "loyal", label: "Loyal 🔥" },
-  { id: "promising", label: "Promising 🌱" },
-  { id: "at_risk", label: "At Risk ⚠️" },
-  { id: "new", label: "New 🆕" },
-  { id: "dormant", label: "Dormant 😴" },
+  ...(["champions", "loyal", "promising", "at_risk", "new", "dormant"] as RFMSegment[]).map(
+    (id) => ({ id, label: SEGMENT_META[id].label }),
+  ),
 ];
 
 function orderStatusLabel(s: OrderStatus) {
@@ -192,8 +190,8 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="waiting">⏱ Menunggu Terlama</SelectItem>
-                <SelectItem value="newest">🕒 Terbaru</SelectItem>
+                <SelectItem value="waiting">Menunggu terlama</SelectItem>
+                <SelectItem value="newest">Terbaru</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -215,9 +213,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
             ))}
           </div>
           <div className="scrollbar-thin mt-2 flex gap-1.5 overflow-x-auto pb-1">
-            {SEGMENT_TABS.map((t) => {
-              const color = t.id === "all" ? "#64748B" : SEGMENT_META[t.id].color;
-              return (
+            {SEGMENT_TABS.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setSegmentTab(t.id)}
@@ -228,12 +224,15 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                       : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
                   )}
                 >
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color }} />
+                  {t.id === "all" ? (
+                    <Users className="h-3 w-3 shrink-0 text-slate-500" aria-hidden />
+                  ) : (
+                    <SegmentIcon segment={t.id} />
+                  )}
                   {t.label}
                   <span className="opacity-60">{segmentCounts[t.id] ?? 0}</span>
                 </button>
-              );
-            })}
+              ))}
           </div>
         </div>
 
@@ -252,28 +251,28 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               const isUnread = c.unreadCount > 0;
               const status = c.customer.conversationStatus;
               // Build metadata line
-              let metaIcon = "";
+              let metaIcon: ReactNode = null;
               let metaText = "";
               let metaCls = "text-slate-400";
               if (status === "snoozed") {
-                metaIcon = "💤";
+                metaIcon = <Moon className="mr-1 inline h-3 w-3" />;
                 metaText = c.customer.snoozeUntil
                   ? `Snooze · ${relativeTime(c.customer.snoozeUntil)} lagi`
                   : "Snooze";
                 metaCls = "text-amber-600";
               } else if (status === "resolved") {
-                metaIcon = "✓✓";
+                metaIcon = <CheckCheck className="mr-1 inline h-3 w-3" />;
                 metaText = lm
                   ? `Diselesaikan oleh ${lm.senderName} · ${relativeTime(lm.timestamp)} lalu`
                   : "Diselesaikan";
                 metaCls = "text-slate-400";
               } else if (customerIsLastSender && lm) {
                 const mins = Math.round((Date.now() - new Date(lm.timestamp).getTime()) / 60000);
-                metaIcon = "⏱";
+                metaIcon = <Clock className="mr-1 inline h-3 w-3" />;
                 metaText = `Menunggu balasan · ${relativeTime(lm.timestamp)}`;
                 metaCls = mins > 60 ? "text-red-600 font-semibold" : "text-amber-600";
               } else if (lm) {
-                metaIcon = "✓";
+                metaIcon = <CheckIcon className="mr-1 inline h-3 w-3" />;
                 metaText = `Dibalas oleh ${lm.senderName} · ${relativeTime(lm.timestamp)} lalu`;
                 metaCls = "text-emerald-600";
               } else {
@@ -331,8 +330,8 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                         </span>
                       )}
                     </div>
-                    <div className={cn("mt-0.5 truncate text-[11px]", metaCls)}>
-                      {metaIcon && <span className="mr-1">{metaIcon}</span>}
+                    <div className={cn("mt-0.5 flex items-center truncate text-[11px]", metaCls)}>
+                      {metaIcon}
                       {metaText}
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
@@ -428,9 +427,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="high">🔴 Tinggi</SelectItem>
-                    <SelectItem value="normal">⚪ Normal</SelectItem>
-                    <SelectItem value="low">🔵 Rendah</SelectItem>
+                    <SelectItem value="high">Tinggi</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="low">Rendah</SelectItem>
                   </SelectContent>
                 </Select>
                 <DropdownMenu>
@@ -539,7 +538,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     inputMode === "text" ? "bg-emerald-100 text-emerald-700" : "text-slate-500 hover:bg-slate-100",
                   )}
                 >
-                  💬 Balas
+                  Balas
                 </button>
                 <button
                   onClick={() => setInputMode("internal_note")}
@@ -548,7 +547,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     inputMode === "internal_note" ? "bg-amber-100 text-amber-700" : "text-slate-500 hover:bg-slate-100",
                   )}
                 >
-                  📝 Catatan Internal
+                  Catatan Internal
                 </button>
               </div>
               <Textarea
@@ -786,7 +785,7 @@ function MessagesList({
               if (m.type === "internal_note") {
                 return (
                   <div key={m.id} className="mx-auto max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <div className="text-[10px] font-semibold uppercase text-amber-700">📝 Catatan Internal</div>
+                    <div className="text-[10px] font-semibold uppercase text-amber-700">Catatan Internal</div>
                     <div className="mt-1 text-sm italic text-amber-900">{m.content}</div>
                     <div className="mt-1 text-right font-mono text-[10px] text-amber-600">
                       {m.senderName} · {formatTime(m.timestamp)}
@@ -800,7 +799,7 @@ function MessagesList({
                   {showGap && (
                     <div className="my-2 flex items-center justify-center gap-2 text-[10px] text-slate-400">
                       <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
-                      — dibalas setelah {gapMin < 60 ? `${gapMin} menit` : `${(gapMin / 60).toFixed(1)} jam`} —
+                      - dibalas setelah {gapMin < 60 ? `${gapMin} menit` : `${(gapMin / 60).toFixed(1)} jam`} -
                       <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
                     </div>
                   )}
@@ -911,7 +910,7 @@ function CustomerSidePanel({
 
       {/* CLV */}
       <div className="mt-3 rounded-xl border border-slate-200 p-3">
-        <div className="text-xs font-semibold text-slate-700">💰 Nilai Customer</div>
+        <div className="text-xs font-semibold text-slate-700">Nilai Customer</div>
         <div className="mt-1 text-sm">
           Total Spent: <span className="font-semibold">{formatRupiah(clv.totalSpent)}</span>
         </div>
@@ -952,12 +951,12 @@ function CustomerSidePanel({
       )}
       {rfm.segment === "dormant" && (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          😴 Tidak ada transaksi selama {rfm.recencyDays} hari.
+          <SegmentIcon segment="dormant" className="mb-1 inline" /> Tidak ada transaksi selama {rfm.recencyDays} hari.
         </div>
       )}
       {rfm.segment === "champions" && (
         <div className="mt-3 rounded-xl border border-violet-200 bg-violet-50 p-3 text-xs text-violet-800">
-          <Crown className="mb-1 inline h-3.5 w-3.5" /> Customer terbaik — jaga hubungan ini.
+          <Crown className="mb-1 inline h-3.5 w-3.5" /> Customer terbaik - jaga hubungan ini.
         </div>
       )}
 
@@ -1011,7 +1010,7 @@ function CustomerSidePanel({
       {customer.segmentHistory.length > 0 && (
         <details className="mt-4">
           <summary className="cursor-pointer text-xs font-semibold text-slate-700">
-            📊 Riwayat Perubahan Segment
+            Riwayat Perubahan Segment
           </summary>
           <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-3">
             {customer.segmentHistory.map((h, i) => (
@@ -1048,7 +1047,7 @@ function CustomerSidePanel({
           rows={3}
           className={cn("mt-1 text-xs", !canEdit && "bg-slate-50 text-slate-600")}
         />
-        <div className="mt-1 text-[10px] text-slate-400">🔒 Hanya terlihat oleh tim internal</div>
+        <div className="mt-1 text-[10px] text-slate-400">Hanya terlihat oleh tim internal</div>
       </div>
     </aside>
   );
@@ -1107,10 +1106,10 @@ function CadenceCard({
   if (days !== null && cadence.predictedNextOrderDate) {
     if (days < 0) {
       predictionTone = "text-red-700 font-semibold";
-      predictionMsg = `⚠️ Sudah lewat ${Math.abs(days)} hari dari biasanya — pertimbangkan follow up`;
+      predictionMsg = `Sudah lewat ${Math.abs(days)} hari dari biasanya - pertimbangkan follow up`;
     } else if (days <= 3) {
       predictionTone = "text-amber-700 font-semibold";
-      predictionMsg = `🔔 Diperkirakan order dalam ${days === 0 ? "hari ini" : `${days} hari`}`;
+      predictionMsg = `Diperkirakan order dalam ${days === 0 ? "hari ini" : `${days} hari`}`;
     }
   }
   return (
@@ -1152,7 +1151,7 @@ function CadenceCard({
       )}
       <div className="mt-2">
         {!canEdit ? (
-          <p className="text-[11px] text-slate-400">Akses lihat saja — siklus manual tidak bisa diedit.</p>
+          <p className="text-[11px] text-slate-400">Akses lihat saja - siklus manual tidak bisa diedit.</p>
         ) : editing ? (
           <div className="flex items-center gap-1">
             <Input
@@ -1204,10 +1203,12 @@ function CadenceCard({
           </div>
         ) : (
           <button
-            className="text-[11px] font-medium text-emerald-700 hover:underline"
+            type="button"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-700 hover:underline"
             onClick={() => setEditing(true)}
           >
-            ✎ Edit Manual
+            <Pencil className="h-3 w-3" />
+            Edit manual
           </button>
         )}
       </div>

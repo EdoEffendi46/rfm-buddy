@@ -14,7 +14,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Lock, Plus, Trash2, Edit2, Check, X, Info, ShieldAlert, ClipboardList, ShieldCheck, History, CreditCard, Download, FileDown, Search as SearchIcon, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  Lock, Plus, Trash2, Edit2, Check, X, Info, ShieldAlert, ClipboardList, ShieldCheck, History,
+  CreditCard, Download, FileDown, Search as SearchIcon, ChevronDown, ChevronRight, User, Users,
+  Zap, Tag, Wrench, RefreshCw, Timer, Clock, CheckCircle, type LucideIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
@@ -36,22 +40,22 @@ type Section =
   | "audit_log" | "export_approval" | "role_history"
   | "billing" | "export_data" | "about";
 
-const SECTIONS: { id: Section; label: string; icon: string; requires?: Permission | "owner_only" | "sup_or_owner" }[] = [
-  { id: "profile", label: "Profil Saya", icon: "👤" },
-  { id: "agents", label: "Manajemen Agent", icon: "👥", requires: "manage_agents" },
-  { id: "templates", label: "Template Balasan", icon: "⚡" },
-  { id: "tags", label: "Tags", icon: "🏷️" },
-  { id: "services", label: "Layanan & Produk", icon: "🛠️" },
-  { id: "workflow", label: "Status & Workflow", icon: "🔄" },
-  { id: "sla", label: "SLA & Notifikasi", icon: "⏱️", requires: "manage_sla_notifications" },
-  { id: "hours", label: "Jam Operasional", icon: "🕐", requires: "manage_business_hours" },
-  { id: "field_visibility", label: "Visibilitas Field", icon: "🔐", requires: "manage_field_visibility_rules" },
-  { id: "audit_log", label: "Audit Log", icon: "📋", requires: "view_audit_log" },
-  { id: "export_approval", label: "Persetujuan Export", icon: "✅", requires: "approve_export_requests" },
-  { id: "role_history", label: "Riwayat Perubahan Role", icon: "👤", requires: "view_permission_history" },
-  { id: "billing", label: "Billing & Subscription", icon: "💳", requires: "manage_billing" },
-  { id: "export_data", label: "Export Data", icon: "📤", requires: "export_data" },
-  { id: "about", label: "Tentang Aplikasi", icon: "ℹ️" },
+const SECTIONS: { id: Section; label: string; icon: LucideIcon; requires?: Permission | "owner_only" | "sup_or_owner" }[] = [
+  { id: "profile", label: "Profil Saya", icon: User },
+  { id: "agents", label: "Manajemen Agent", icon: Users, requires: "manage_agents" },
+  { id: "templates", label: "Template Balasan", icon: Zap },
+  { id: "tags", label: "Tags", icon: Tag },
+  { id: "services", label: "Layanan & Produk", icon: Wrench },
+  { id: "workflow", label: "Status & Workflow", icon: RefreshCw },
+  { id: "sla", label: "SLA & Notifikasi", icon: Timer, requires: "manage_sla_notifications" },
+  { id: "hours", label: "Jam Operasional", icon: Clock, requires: "manage_business_hours" },
+  { id: "field_visibility", label: "Visibilitas Field", icon: ShieldCheck, requires: "manage_field_visibility_rules" },
+  { id: "audit_log", label: "Audit Log", icon: ClipboardList, requires: "view_audit_log" },
+  { id: "export_approval", label: "Persetujuan Export", icon: CheckCircle, requires: "approve_export_requests" },
+  { id: "role_history", label: "Riwayat Perubahan Role", icon: History, requires: "view_permission_history" },
+  { id: "billing", label: "Billing & Subscription", icon: CreditCard, requires: "manage_billing" },
+  { id: "export_data", label: "Export Data", icon: Download, requires: "export_data" },
+  { id: "about", label: "Tentang Aplikasi", icon: Info },
 ];
 
 function SettingsPage() {
@@ -76,7 +80,7 @@ function SettingsPage() {
                     unlocked ? "text-slate-600 hover:bg-slate-50" : "text-slate-400 hover:bg-slate-50",
                   )}
                 >
-                  <span>{s.icon}</span>
+                  <s.icon className="h-4 w-4 shrink-0" />
                   <span className="flex-1">{s.label}</span>
                   {!unlocked && <Lock className="h-3.5 w-3.5" />}
                 </button>
@@ -548,7 +552,7 @@ function FieldVisibilitySection() {
   const [hideFrom, setHideFrom] = useState<Role>("cs");
   const [pattern, setPattern] = useState<"phone" | "currency_range" | "full_hide">("currency_range");
   return (
-    <Card title="🔐 Visibilitas Field">
+    <Card title="Visibilitas Field">
       <p className="mb-3 text-xs text-slate-500">
         Atur field mana yang disembunyikan atau dimasked untuk role tertentu. Saat ini <b>phone</b> ter-enforce penuh di seluruh UI; aturan lain bersifat illustrative dan akan diterapkan setelah backend siap.
       </p>
@@ -565,7 +569,7 @@ function FieldVisibilitySection() {
               <td className="text-xs">{r.maskPattern}</td>
               <td className="text-right">
                 {r.locked ? (
-                  <span className="text-[10px] text-slate-400" title="Aturan inti tidak dapat dihapus">🔒 Core</span>
+                  <span className="text-[10px] text-slate-400" title="Aturan inti tidak dapat dihapus">Core</span>
                 ) : (
                   <Button size="sm" variant="ghost" onClick={() => { deleteFieldRule(r.id); toast.success("Aturan dihapus"); }}>
                     <Trash2 className="h-4 w-4 text-red-500" />
@@ -667,7 +671,7 @@ function AuditLogSection() {
   };
 
   return (
-    <Card title="📋 Audit Log">
+    <Card title="Audit Log">
       <div className="mb-3 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">
         Retensi log: <b>90 hari</b>. {isOwner ? "Anda melihat semua aktivitas seluruh workspace." : "Anda melihat aktivitas tim Anda (kecuali aksi Owner-only)."}
       </div>
@@ -742,7 +746,7 @@ function ExportApprovalSection() {
   const pending = exportRequests.filter((r) => r.status === "pending");
   const history = exportRequests.filter((r) => r.status !== "pending");
   return (
-    <Card title="✅ Persetujuan Export">
+    <Card title="Persetujuan Export">
       <div className="mb-3 text-xs text-slate-500">Permintaan export data dari Supervisor butuh persetujuan Owner sebelum file dirilis.</div>
       <h4 className="mb-2 text-sm font-semibold">Menunggu Persetujuan ({pending.length})</h4>
       <table className="w-full text-sm">
@@ -811,7 +815,7 @@ function RoleHistorySection() {
   const { auditLog } = useStore();
   const rows = auditLog.filter((e) => e.action === "agent_role_changed");
   return (
-    <Card title="👤 Riwayat Perubahan Role">
+    <Card title="Riwayat Perubahan Role">
       <p className="mb-3 text-xs text-slate-500">Daftar perubahan role agent — penting untuk akuntabilitas akses.</p>
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
@@ -841,7 +845,7 @@ function RoleHistorySection() {
 /* ----- Billing ----- */
 function BillingSection() {
   return (
-    <Card title="💳 Billing & Subscription">
+    <Card title="Billing & Subscription">
       <div className="rounded-xl border bg-gradient-to-br from-emerald-50 to-sky-50 p-4">
         <div className="text-xs uppercase text-emerald-700">Plan Aktif</div>
         <div className="text-2xl font-bold">Pro Annual</div>
@@ -872,7 +876,7 @@ function ExportDataSection() {
   const [reason, setReason] = useState("");
   const myRequests = exportRequests.filter((r) => r.requestedByAgentId === currentAgent?.id);
   return (
-    <Card title="📤 Export Data">
+    <Card title="Export Data">
       <p className="mb-3 text-xs text-slate-500">
         {isOwner
           ? "Sebagai Owner, Anda dapat mengekspor langsung tanpa persetujuan. Semua export dicatat di Audit Log."

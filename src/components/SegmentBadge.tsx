@@ -1,4 +1,5 @@
 import { SEGMENT_META } from "@/lib/rfm";
+import { SegmentIcon } from "@/components/SegmentIcon";
 import type { RFMSegment } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,7 @@ export function SegmentBadge({
       )}
       style={{ backgroundColor: meta.color + "1A", color: meta.color }}
     >
-      <span>{meta.icon}</span>
+      <SegmentIcon segment={segment} size={size === "lg" ? "md" : "sm"} />
       <span>{meta.label}</span>
     </span>
   );
