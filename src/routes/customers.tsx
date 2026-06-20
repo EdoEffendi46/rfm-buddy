@@ -486,6 +486,7 @@ function CustomerDetailModal({
             <TabsTrigger value="purchases">Riwayat Pembelian</TabsTrigger>
             <TabsTrigger value="segments">Riwayat Segment</TabsTrigger>
             <TabsTrigger value="notes">Catatan</TabsTrigger>
+            {canShare && <TabsTrigger value="access">Akses & Berbagi</TabsTrigger>}
           </TabsList>
           <TabsContent value="profile" className="space-y-3">
             <div className="flex items-center gap-3">
@@ -605,6 +606,87 @@ function CustomerDetailModal({
               Simpan Catatan
             </Button>
           </TabsContent>
+          {canShare && (
+            <TabsContent value="access" className="space-y-3">
+              <div className="rounded-xl border p-3 text-sm">
+                <div className="text-xs uppercase text-slate-500">Primary CS</div>
+                <div className="font-semibold">{primaryAg?.name ?? "Belum ditugaskan"}</div>
+              </div>
+              <div className="rounded-xl border p-3">
+                <div className="mb-2 text-sm font-semibold">Bagikan ke CS lain</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={shareAgentId} onValueChange={setShareAgentId}>
+                    <SelectTrigger><SelectValue placeholder="Pilih CS" /></SelectTrigger>
+                    <SelectContent>
+                      {csAgents.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={sharePermission} onValueChange={(v) => setSharePermission(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="view">Lihat saja</SelectItem>
+                      <SelectItem value="edit">Bisa edit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={shareDuration} onValueChange={(v) => setShareDuration(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="24h">24 jam</SelectItem>
+                      <SelectItem value="7d">7 hari</SelectItem>
+                      <SelectItem value="permanent">Permanen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input value={shareReason} onChange={(e) => setShareReason(e.target.value)} placeholder="Alasan (contoh: backup saat cuti)" />
+                </div>
+                <Button
+                  className="mt-2 bg-[#25D366] text-white hover:bg-[#128C7E]"
+                  disabled={!shareAgentId || !shareReason.trim()}
+                  onClick={() => {
+                    const expiresAt =
+                      shareDuration === "permanent" ? undefined :
+                      shareDuration === "24h" ? new Date(Date.now() + 24 * 3600 * 1000).toISOString() :
+                      new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+                    onShare({
+                      customerId: customer.id,
+                      sharedWithAgentId: shareAgentId,
+                      permission: sharePermission,
+                      reason: shareReason.trim(),
+                      expiresAt,
+                    });
+                    setShareReason("");
+                  }}
+                >
+                  Bagikan Akses
+                </Button>
+              </div>
+              <div className="rounded-xl border p-3">
+                <div className="mb-2 text-sm font-semibold">Akses aktif ({activeShares.length})</div>
+                {activeShares.length === 0 ? (
+                  <div className="text-xs text-slate-500">Belum ada akses manual yang aktif.</div>
+                ) : (
+                  <ul className="space-y-2">
+                    {activeShares.map((s) => {
+                      const a = agents.find((x) => x.id === s.sharedWithAgentId);
+                      const by = agents.find((x) => x.id === s.sharedByAgentId);
+                      return (
+                        <li key={s.id} className="flex items-center justify-between rounded border bg-slate-50 p-2 text-xs">
+                          <div>
+                            <div className="font-semibold">{a?.name ?? "—"} · <span className="text-slate-500">{s.permission === "edit" ? "Bisa edit" : "Lihat saja"}</span></div>
+                            <div className="text-slate-500">
+                              {s.reason} · oleh {by?.name ?? "—"} · {s.expiresAt ? `expires ${formatDate(s.expiresAt)}` : "permanen"}
+                            </div>
+                          </div>
+                          <Button size="sm" variant="ghost" onClick={() => onRevoke(customer.id, s.id)}>
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
         <DialogFooter>
           <Button onClick={() => onOpenChat(customer.id)} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
