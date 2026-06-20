@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "db:test": "bun run scripts/test-supabase-connection.ts",
+    "db:seed": "bun run scripts/seed-supabase.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

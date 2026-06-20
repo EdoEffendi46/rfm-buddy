@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type {
   Agent,
   Customer,
@@ -23,8 +23,14 @@ import { DEFAULT_TAGS, DEFAULT_TEMPLATES, SERVICES } from "@/data/services";
 import { INITIAL_AUDIT_LOG } from "@/data/auditLog";
 import { INITIAL_EXPORT_REQUESTS } from "@/data/exportRequests";
 import { DEFAULT_FIELD_RULES } from "@/lib/fieldVisibility";
+import * as db from "@/lib/supabase/persist";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+
+const USE_SUPABASE = db.isSupabaseConfigured();
 
 interface StoreState {
+  isLoading: boolean;
+  usesSupabase: boolean;
   agents: Agent[];
   currentAgentId: string | null;
   currentAgent: Agent | null;
@@ -106,16 +112,51 @@ function genId(prefix = "id") {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [agents, setAgents] = useState<Agent[]>(AGENTS);
-  const [currentAgentId, setCurrentAgentId] = useState<string | null>(null);
-  const [customers, setCustomers] = useState<Customer[]>(CUSTOMERS);
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES);
-  const [services, setServices] = useState<Service[]>(SERVICES);
-  const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES);
-  const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
-  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOG);
-  const [exportRequests, setExportRequests] = useState<ExportRequest[]>(INITIAL_EXPORT_REQUESTS);
-  const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(DEFAULT_FIELD_RULES);
+  const [isLoading, setIsLoading] = useState(USE_SUPABASE);
+  const [agents, setAgents] = useState<Agent[]>(USE_SUPABASE ? [] : AGENTS);
+  const [currentAgentId, setCurrentAgentId] = useState<string | null>(() => db.loadSessionAgentId());
+  const [customers, setCustomers] = useState<Customer[]>(USE_SUPABASE ? [] : CUSTOMERS);
+  const [messages, setMessages] = useState<Message[]>(USE_SUPABASE ? [] : INITIAL_MESSAGES);
+  const [services, setServices] = useState<Service[]>(USE_SUPABASE ? [] : SERVICES);
+  const [templates, setTemplates] = useState<Template[]>(USE_SUPABASE ? [] : DEFAULT_TEMPLATES);
+  const [tags, setTags] = useState<Tag[]>(USE_SUPABASE ? [] : DEFAULT_TAGS);
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(USE_SUPABASE ? [] : INITIAL_AUDIT_LOG);
+  const [exportRequests, setExportRequests] = useState<ExportRequest[]>(USE_SUPABASE ? [] : INITIAL_EXPORT_REQUESTS);
+  const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(USE_SUPABASE ? [] : DEFAULT_FIELD_RULES);
+
+  useEffect(() => {
+    if (!USE_SUPABASE) return;
+    const client = getSupabaseBrowserClient();
+    if (!client) {
+      setIsLoading(false);
+      return;
+    }
+    db.fetchAppSnapshot(client)
+      .then((snap) => {
+        setAgents(snap.agents);
+        setCustomers(snap.customers);
+        setMessages(snap.messages);
+        setServices(snap.services);
+        setTemplates(snap.templates);
+        setTags(snap.tags);
+        setAuditLog(snap.auditLog);
+        setExportRequests(snap.exportRequests);
+        setFieldRules(snap.fieldRules.length ? snap.fieldRules : DEFAULT_FIELD_RULES);
+      })
+      .catch((err) => {
+        console.warn("[store] Supabase load failed — fallback to seed data", err);
+        setAgents(AGENTS);
+        setCustomers(CUSTOMERS);
+        setMessages(INITIAL_MESSAGES);
+        setServices(SERVICES);
+        setTemplates(DEFAULT_TEMPLATES);
+        setTags(DEFAULT_TAGS);
+        setAuditLog(INITIAL_AUDIT_LOG);
+        setExportRequests(INITIAL_EXPORT_REQUESTS);
+        setFieldRules(DEFAULT_FIELD_RULES);
+      })
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const currentAgent = useMemo(
     () => agents.find((a) => a.id === currentAgentId) ?? null,
@@ -123,17 +164,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   const logAuditRaw = useCallback((actor: Agent | null, entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => {
-    setAuditLog((prev) => [
-      {
-        ...entry,
-        id: genId("al"),
-        timestamp: new Date().toISOString(),
-        actorId: actor?.id ?? "system",
-        actorName: actor?.name ?? "Sistem",
-        actorRole: actor?.role ?? "cs",
-      },
-      ...prev,
-    ]);
+    const full: AuditLogEntry = {
+      ...entry,
+      id: genId("al"),
+      timestamp: new Date().toISOString(),
+      actorId: actor?.id ?? "system",
+      actorName: actor?.name ?? "Sistem",
+      actorRole: actor?.role ?? "cs",
+    };
+    setAuditLog((prev) => [full, ...prev]);
+    db.persistAudit(full);
   }, []);
 
   const logAudit = useCallback(
@@ -145,6 +185,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback((agentId: string) => {
     setCurrentAgentId(agentId);
+    db.saveSessionAgentId(agentId);
     const ag = agents.find((a) => a.id === agentId);
     if (ag) {
       logAuditRaw(ag, {
@@ -156,43 +197,55 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
     }
   }, [agents, logAuditRaw]);
-  const logout = useCallback(() => setCurrentAgentId(null), []);
+  const logout = useCallback(() => {
+    setCurrentAgentId(null);
+    db.saveSessionAgentId(null);
+  }, []);
 
   const sendMessage = useCallback(
     (customerId: string, content: string, type: "text" | "internal_note" = "text") => {
       setMessages((prev) => {
         const agentId = currentAgentId ?? "rina";
         const agent = agents.find((a) => a.id === agentId);
-        return [
-          ...prev,
-          {
-            id: genId("m"),
-            customerId,
-            senderId: agentId,
-            senderName: agent?.name ?? "Agent",
-            content,
-            timestamp: new Date().toISOString(),
-            readStatus: "sent",
-            type,
-          },
-        ];
+        const msg: Message = {
+          id: genId("m"),
+          customerId,
+          senderId: agentId,
+          senderName: agent?.name ?? "Agent",
+          content,
+          timestamp: new Date().toISOString(),
+          readStatus: "sent",
+          type,
+        };
+        db.persistMessage(msg);
+        return [...prev, msg];
       });
     },
     [agents, currentAgentId],
   );
 
   const markRead = useCallback((customerId: string) => {
-    setMessages((prev) =>
-      prev.map((m) =>
+    setMessages((prev) => {
+      const next = prev.map((m) =>
         m.customerId === customerId && m.senderId === customerId
-          ? { ...m, readStatus: "read" }
+          ? { ...m, readStatus: "read" as const }
           : m,
-      ),
-    );
+      );
+      const updated = next.filter(
+        (m, i) => m.readStatus === "read" && prev[i].readStatus !== "read",
+      );
+      if (updated.length) db.persistMessages(updated);
+      return next;
+    });
   }, []);
 
   const updateCustomer = useCallback((id: string, patch: Partial<Customer>) => {
-    setCustomers((prev) => prev.map((c) => (c.id === id ? { ...c, ...patch } : c)));
+    setCustomers((prev) => {
+      const next = prev.map((c) => (c.id === id ? { ...c, ...patch } : c));
+      const updated = next.find((c) => c.id === id);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
   }, []);
 
   const addCustomer = useCallback(
@@ -206,6 +259,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         ],
         conversationTags: [],
       };
+      db.persistCustomer(newC);
       setCustomers((p) => [newC, ...p]);
       return newC;
     },
@@ -214,21 +268,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const setConversationStatus = useCallback(
     (id: string, status: ConversationStatus, snoozeUntil?: string) => {
-      setCustomers((prev) =>
-        prev.map((c) =>
+      setCustomers((prev) => {
+        const next = prev.map((c) =>
           c.id === id
             ? { ...c, conversationStatus: status, snoozeUntil: status === "snoozed" ? snoozeUntil : undefined }
             : c,
-        ),
-      );
+        );
+        const updated = next.find((c) => c.id === id);
+        if (updated) db.persistCustomer(updated);
+        return next;
+      });
     },
     [],
   );
   const setOrderStatus = useCallback((id: string, status: OrderStatus) => {
-    setCustomers((p) => p.map((c) => (c.id === id ? { ...c, orderStatus: status } : c)));
+    setCustomers((p) => {
+      const next = p.map((c) => (c.id === id ? { ...c, orderStatus: status } : c));
+      const updated = next.find((c) => c.id === id);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
   }, []);
   const setPriority = useCallback((id: string, pr: Priority) => {
-    setCustomers((p) => p.map((c) => (c.id === id ? { ...c, priority: pr } : c)));
+    setCustomers((p) => {
+      const next = p.map((c) => (c.id === id ? { ...c, priority: pr } : c));
+      const updated = next.find((c) => c.id === id);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
   }, []);
   const assignCustomer = useCallback((id: string, agentId: string) => {
     setCustomers((p) => {
@@ -246,82 +313,111 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           details: `Reassign dari ${oldAg?.name ?? "—"} ke ${newAg?.name ?? "—"}`,
         });
       }
-      return p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
+      const next = p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
+      const updated = next.find((c) => c.id === id);
+      if (updated) db.persistCustomer(updated);
+      return next;
     });
   }, [agents, currentAgent, logAuditRaw]);
 
+  const patchCustomer = useCallback((id: string, fn: (c: Customer) => Customer) => {
+    setCustomers((p) => {
+      const next = p.map((c) => (c.id === id ? fn(c) : c));
+      const updated = next.find((c) => c.id === id);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
+  }, []);
+
   const addConversationTag = useCallback((id: string, tag: string) => {
-    setCustomers((p) =>
-      p.map((c) =>
-        c.id === id && !c.conversationTags.includes(tag)
-          ? { ...c, conversationTags: [...c.conversationTags, tag] }
-          : c,
-      ),
+    patchCustomer(id, (c) =>
+      c.conversationTags.includes(tag) ? c : { ...c, conversationTags: [...c.conversationTags, tag] },
     );
-  }, []);
+  }, [patchCustomer]);
   const removeConversationTag = useCallback((id: string, tag: string) => {
-    setCustomers((p) =>
-      p.map((c) =>
-        c.id === id ? { ...c, conversationTags: c.conversationTags.filter((t) => t !== tag) } : c,
-      ),
-    );
-  }, []);
+    patchCustomer(id, (c) => ({
+      ...c,
+      conversationTags: c.conversationTags.filter((t) => t !== tag),
+    }));
+  }, [patchCustomer]);
   const addCustomerTag = useCallback((id: string, tag: string) => {
-    setCustomers((p) =>
-      p.map((c) => (c.id === id && !c.tags.includes(tag) ? { ...c, tags: [...c.tags, tag] } : c)),
-    );
-  }, []);
+    patchCustomer(id, (c) => (c.tags.includes(tag) ? c : { ...c, tags: [...c.tags, tag] }));
+  }, [patchCustomer]);
   const removeCustomerTag = useCallback((id: string, tag: string) => {
-    setCustomers((p) =>
-      p.map((c) => (c.id === id ? { ...c, tags: c.tags.filter((t) => t !== tag) } : c)),
-    );
-  }, []);
+    patchCustomer(id, (c) => ({ ...c, tags: c.tags.filter((t) => t !== tag) }));
+  }, [patchCustomer]);
 
   const saveNotes = useCallback((id: string, notes: string) => {
-    setCustomers((p) => p.map((c) => (c.id === id ? { ...c, notes } : c)));
-  }, []);
+    patchCustomer(id, (c) => ({ ...c, notes }));
+  }, [patchCustomer]);
 
   const setCadenceOverride = useCallback((id: string, days: number | null) => {
-    setCustomers((p) =>
-      p.map((c) =>
-        c.id === id ? { ...c, cadenceOverrideDays: days ?? undefined } : c,
-      ),
-    );
-  }, []);
+    patchCustomer(id, (c) => ({
+      ...c,
+      cadenceOverrideDays: days ?? undefined,
+    }));
+  }, [patchCustomer]);
 
   const addTemplate = useCallback((text: string) => {
-    setTemplates((p) => (p.length >= 20 ? p : [...p, { id: genId("t"), text }]));
+    setTemplates((p) => {
+      if (p.length >= 20) return p;
+      const t = { id: genId("t"), text };
+      db.persistTemplate(t);
+      return [...p, t];
+    });
   }, []);
   const updateTemplate = useCallback((id: string, text: string) => {
-    setTemplates((p) => p.map((t) => (t.id === id ? { ...t, text } : t)));
+    setTemplates((p) => {
+      const next = p.map((t) => (t.id === id ? { ...t, text } : t));
+      const updated = next.find((t) => t.id === id);
+      if (updated) db.persistTemplate(updated);
+      return next;
+    });
   }, []);
   const deleteTemplate = useCallback((id: string) => {
     setTemplates((p) => p.filter((t) => t.id !== id));
+    db.persistTemplateDelete(id);
   }, []);
 
   const addService = useCallback((s: Omit<Service, "id">) => {
-    setServices((p) => [...p, { ...s, id: genId("svc") }]);
+    const svc = { ...s, id: genId("svc") };
+    db.persistService(svc);
+    setServices((p) => [...p, svc]);
   }, []);
   const updateService = useCallback((id: string, patch: Partial<Service>) => {
-    setServices((p) => p.map((s) => (s.id === id ? { ...s, ...patch } : s)));
+    setServices((p) => {
+      const next = p.map((s) => (s.id === id ? { ...s, ...patch } : s));
+      const updated = next.find((s) => s.id === id);
+      if (updated) db.persistService(updated);
+      return next;
+    });
   }, []);
   const deleteService = useCallback((id: string) => {
     setServices((p) => p.filter((s) => s.id !== id));
+    db.persistServiceDelete(id);
   }, []);
 
   const addTag = useCallback((t: Omit<Tag, "id">) => {
-    setTags((p) => [...p, { ...t, id: genId("tag") }]);
+    const tag = { ...t, id: genId("tag") };
+    db.persistTag(tag);
+    setTags((p) => [...p, tag]);
   }, []);
   const deleteTag = useCallback((id: string) => {
     setTags((p) => p.filter((t) => t.id !== id));
+    db.persistTagDelete(id);
   }, []);
 
   const toggleAgentOnline = useCallback((id: string) => {
-    setAgents((p) => p.map((a) => (a.id === id ? { ...a, isOnline: !a.isOnline } : a)));
+    setAgents((p) => {
+      const next = p.map((a) => (a.id === id ? { ...a, isOnline: !a.isOnline } : a));
+      const updated = next.find((a) => a.id === id);
+      if (updated) db.persistAgent(updated);
+      return next;
+    });
   }, []);
   const updateAgent = useCallback((id: string, patch: Partial<Agent>) => {
-    setAgents((p) =>
-      p.map((a) =>
+    setAgents((p) => {
+      const next = p.map((a) =>
         a.id === id
           ? {
               ...a,
@@ -336,12 +432,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
                 : a.initials,
             }
           : a,
-      ),
-    );
+      );
+      const updated = next.find((a) => a.id === id);
+      if (updated) db.persistAgent(updated);
+      return next;
+    });
   }, []);
   const addAgent = useCallback((a: Omit<Agent, "id" | "initials">) => {
     const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
     const newAg = { ...a, id: genId("ag"), initials };
+    db.persistAgent(newAg);
     setAgents((p) => [...p, newAg]);
     logAuditRaw(currentAgent, {
       action: "agent_created",
@@ -366,7 +466,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           details: `Role ${ag.name} diubah: ${ag.role} → ${newRole}`,
         });
       }
-      return prev.map((a) => (a.id === id ? { ...a, role: newRole } : a));
+      const next = prev.map((a) => (a.id === id ? { ...a, role: newRole } : a));
+      const updated = next.find((a) => a.id === id);
+      if (updated) db.persistAgent(updated);
+      return next;
     });
   }, [currentAgent, logAuditRaw]);
 
@@ -382,6 +485,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           details: `Agent ${ag.name} dihapus`,
         });
       }
+      db.persistAgentDelete(id);
       return prev.filter((a) => a.id !== id);
     });
   }, [currentAgent, logAuditRaw]);
@@ -395,13 +499,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       createdAt: new Date().toISOString(),
       sharedByAgentId: currentAgent.id,
     };
-    setCustomers((p) =>
-      p.map((c) =>
+    setCustomers((p) => {
+      const next = p.map((c) =>
         c.id === input.customerId
           ? { ...c, manualShares: [...(c.manualShares ?? []), share] }
           : c,
-      ),
-    );
+      );
+      const updated = next.find((c) => c.id === input.customerId);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
     const target = customers.find((c) => c.id === input.customerId);
     const sharedWith = agents.find((a) => a.id === input.sharedWithAgentId);
     logAuditRaw(currentAgent, {
@@ -415,8 +522,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [currentAgent, customers, agents, logAuditRaw]);
 
   const revokeManualShare = useCallback((customerId: string, shareId: string) => {
-    setCustomers((p) =>
-      p.map((c) => {
+    setCustomers((p) => {
+      const next = p.map((c) => {
         if (c.id !== customerId) return c;
         const share = c.manualShares?.find((s) => s.id === shareId);
         const sharedWith = agents.find((a) => a.id === share?.sharedWithAgentId);
@@ -431,8 +538,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           });
         }
         return { ...c, manualShares: (c.manualShares ?? []).filter((s) => s.id !== shareId) };
-      }),
-    );
+      });
+      const updated = next.find((c) => c.id === customerId);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
   }, [agents, currentAgent, logAuditRaw]);
 
   // Export
@@ -447,7 +557,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       reason,
       status: "pending",
     };
-    setExportRequests((p) => [req, ...p]);
+    setExportRequests((p) => {
+      const next = [req, ...p];
+      db.persistExportRequest(req);
+      return next;
+    });
     logAuditRaw(currentAgent, {
       action: "export_requested",
       targetType: "system",
@@ -459,8 +573,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const approveExportRequest = useCallback((id: string, note?: string) => {
     if (!currentAgent) return;
-    setExportRequests((p) =>
-      p.map((r) => {
+    setExportRequests((p) => {
+      const next = p.map((r) => {
         if (r.id !== id) return r;
         logAuditRaw(currentAgent, {
           action: "export_approved",
@@ -469,15 +583,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           targetLabel: `Export ${r.dataType}`,
           details: note ?? "Disetujui Owner",
         });
-        return { ...r, status: "approved", reviewedByAgentId: currentAgent.id, reviewedByName: currentAgent.name, reviewedAt: new Date().toISOString(), reviewNote: note };
-      }),
-    );
+        const updated = {
+          ...r,
+          status: "approved" as const,
+          reviewedByAgentId: currentAgent.id,
+          reviewedByName: currentAgent.name,
+          reviewedAt: new Date().toISOString(),
+          reviewNote: note,
+        };
+        db.persistExportRequest(updated);
+        return updated;
+      });
+      return next;
+    });
   }, [currentAgent, logAuditRaw]);
 
   const denyExportRequest = useCallback((id: string, note: string) => {
     if (!currentAgent) return;
-    setExportRequests((p) =>
-      p.map((r) => {
+    setExportRequests((p) => {
+      const next = p.map((r) => {
         if (r.id !== id) return r;
         logAuditRaw(currentAgent, {
           action: "export_denied",
@@ -486,9 +610,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           targetLabel: `Export ${r.dataType}`,
           details: note,
         });
-        return { ...r, status: "denied", reviewedByAgentId: currentAgent.id, reviewedByName: currentAgent.name, reviewedAt: new Date().toISOString(), reviewNote: note };
-      }),
-    );
+        const updated = {
+          ...r,
+          status: "denied" as const,
+          reviewedByAgentId: currentAgent.id,
+          reviewedByName: currentAgent.name,
+          reviewedAt: new Date().toISOString(),
+          reviewNote: note,
+        };
+        db.persistExportRequest(updated);
+        return updated;
+      });
+      return next;
+    });
   }, [currentAgent, logAuditRaw]);
 
   const exportDataDirect = useCallback((dataType: ExportRequest["dataType"]) => {
@@ -503,7 +637,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // Field rules
   const addFieldRule = useCallback((rule: Omit<FieldVisibilityRule, "id">) => {
-    setFieldRules((p) => [...p, { ...rule, id: genId("fvr") }]);
+    const full = { ...rule, id: genId("fvr") };
+    db.persistFieldRule(full);
+    setFieldRules((p) => [...p, full]);
     logAuditRaw(currentAgent, {
       action: "settings_changed",
       targetType: "system",
@@ -514,10 +650,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [currentAgent, logAuditRaw]);
 
   const deleteFieldRule = useCallback((id: string) => {
-    setFieldRules((p) => p.filter((r) => r.id !== id || r.locked));
+    setFieldRules((p) => {
+      const rule = p.find((r) => r.id === id);
+      if (!rule || rule.locked) return p;
+      db.persistFieldRuleDelete(id);
+      return p.filter((r) => r.id !== id);
+    });
   }, []);
 
   const value: StoreState = {
+    isLoading,
+    usesSupabase: USE_SUPABASE,
     agents,
     currentAgentId,
     currentAgent,
