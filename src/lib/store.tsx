@@ -516,7 +516,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const deleteFieldRule = useCallback((id: string) => {
     setFieldRules((p) => p.filter((r) => r.id !== id || r.locked));
   }, []);
-  }, []);
 
   const value: StoreState = {
     agents,
