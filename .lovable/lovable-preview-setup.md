@@ -1,7 +1,9 @@
-# Lovable Preview — supaya auth & Supabase jalan (seperti lokal)
+# Lovable Preview — supaya auth & Supabase jalan
 
-> **Penyebab #1:** File `.env` di Cursor **tidak** dipakai Lovable Preview.  
-> Secrets harus di-set di **Lovable → Cloud → Secrets**, lalu **rebuild preview**.
+> **Dual backend:** Local = Supabase pribadi (`.env.local`). Lovable = **Cloud**.  
+> Panduan lengkap: [dual-backend-setup.md](./dual-backend-setup.md)
+
+> **Penyebab #1:** `.env.local` **tidak** dibaca Lovable. Secrets via **Cloud → Secrets** + **rebuild preview**.
 
 ---
 

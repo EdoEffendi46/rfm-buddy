@@ -3,27 +3,7 @@
  * Uses Supabase API Keys 2026: publishable (client) + secret (server).
  */
 import { createClient } from "@supabase/supabase-js";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
-
-function loadEnv(): Record<string, string> {
-  const path = resolve(process.cwd(), ".env");
-  const out: Record<string, string> = {};
-  try {
-    const raw = readFileSync(path, "utf8");
-    for (const line of raw.split("\n")) {
-      const t = line.trim();
-      if (!t || t.startsWith("#")) continue;
-      const i = t.indexOf("=");
-      if (i === -1) continue;
-      out[t.slice(0, i).trim()] = t.slice(i + 1).trim();
-    }
-  } catch {
-    console.error("❌ .env not found");
-    process.exit(1);
-  }
-  return out;
-}
+import { loadEnvFile } from "./load-env";
 
 function maskKey(key: string): string {
   if (key.length < 16) return "…";
@@ -35,7 +15,7 @@ function isPlaceholder(value: string | undefined): boolean {
   return value.includes("paste_here") || value.includes("YOUR_") || value.includes("...");
 }
 
-const env = loadEnv();
+const env = loadEnvFile();
 const url = env.VITE_SUPABASE_URL;
 const publishableKey = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const secretKey = env.SUPABASE_SECRET_KEY;

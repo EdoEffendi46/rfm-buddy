@@ -1,9 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-/** Load .env for Bun scripts (not bundled to client). */
-export function loadEnvFile(): Record<string, string> {
-  const path = resolve(process.cwd(), ".env");
+function parseEnvFile(path: string): Record<string, string> {
   const out: Record<string, string> = {};
   const raw = readFileSync(path, "utf8");
   for (const line of raw.split("\n")) {
@@ -13,5 +11,24 @@ export function loadEnvFile(): Record<string, string> {
     if (i === -1) continue;
     out[t.slice(0, i).trim()] = t.slice(i + 1).trim();
   }
+  return out;
+}
+
+/** Load .env + .env.local for Bun scripts (.env.local wins). */
+export function loadEnvFile(): Record<string, string> {
+  const root = process.cwd();
+  const out: Record<string, string> = {};
+
+  const envPath = resolve(root, ".env");
+  if (existsSync(envPath)) Object.assign(out, parseEnvFile(envPath));
+
+  const localPath = resolve(root, ".env.local");
+  if (existsSync(localPath)) Object.assign(out, parseEnvFile(localPath));
+
+  if (!Object.keys(out).length) {
+    console.error("❌ No .env or .env.local found");
+    process.exit(1);
+  }
+
   return out;
 }
