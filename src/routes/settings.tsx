@@ -154,35 +154,47 @@ function ProfileSection() {
 
 function AgentsSection() {
   const { role } = useAuth();
-  const { agents, customers, addAgent } = useStore();
+  const { agents, customers, addAgent, changeAgentRole, deleteAgent } = useStore();
   const [name, setName] = useState("");
-  const [newRole, setNewRole] = useState<"cs" | "supervisor" | "owner">("cs");
+  const [newRole, setNewRole] = useState<Role>("cs");
   const [color, setColor] = useState("#0EA5E9");
-
-  if (role !== "supervisor") {
-    return (
-      <Card title="Manajemen Agent">
-        <div className="flex items-center gap-2 rounded-lg bg-slate-50 p-4 text-sm text-slate-600">
-          <Lock className="h-4 w-4" /> Hanya Supervisor yang dapat mengelola agent.
-        </div>
-      </Card>
-    );
-  }
+  const canDelete = hasPermission(role, "delete_agent_account");
+  const canChangeRole = hasPermission(role, "change_agent_role");
 
   return (
     <Card title="Manajemen Agent">
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th></th><th className="text-left">Nama</th><th className="text-left">Role</th><th className="text-right">Customer</th><th>Status</th></tr>
+          <tr><th></th><th className="text-left">Nama</th><th className="text-left">Role</th><th className="text-right">Customer</th><th>Status</th><th></th></tr>
         </thead>
         <tbody>
           {agents.map((a) => (
             <tr key={a.id} className="border-t border-slate-100">
               <td className="py-2"><AgentAvatar agent={a} size={28} /></td>
               <td>{a.name}</td>
-              <td><span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">{a.role}</span></td>
+              <td>
+                {canChangeRole && a.role !== "owner" ? (
+                  <Select value={a.role} onValueChange={(v) => { changeAgentRole(a.id, v as Role); toast.success(`Role ${a.name} → ${v}`); }}>
+                    <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="cs">CS</SelectItem>
+                      <SelectItem value="supervisor">Supervisor</SelectItem>
+                      {role === "owner" && <SelectItem value="owner">Owner</SelectItem>}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">{a.role}</span>
+                )}
+              </td>
               <td className="text-right font-mono text-xs">{customers.filter((c) => c.assignedAgentId === a.id).length}</td>
               <td className="text-center"><span className={cn("inline-block h-2 w-2 rounded-full", a.isOnline ? "bg-emerald-500" : "bg-slate-300")} /></td>
+              <td className="text-right">
+                {canDelete && a.role !== "owner" && (
+                  <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Hapus akun agent ${a.name}?`)) { deleteAgent(a.id); toast.success("Agent dihapus"); } }}>
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -196,6 +208,7 @@ function AgentsSection() {
             <SelectContent>
               <SelectItem value="cs">CS</SelectItem>
               <SelectItem value="supervisor">Supervisor</SelectItem>
+              {role === "owner" && <SelectItem value="owner">Owner</SelectItem>}
             </SelectContent>
           </Select>
           <div className="flex gap-1">
