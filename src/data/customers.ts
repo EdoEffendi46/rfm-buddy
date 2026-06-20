@@ -281,5 +281,17 @@ export const CUSTOMERS: Customer[] = [
     segmentHistory: [
       { date: isoDaysAgo(6), fromSegment: null, toSegment: "new", reason: "Transaksi pertama via promo" },
     ],
+    manualShares: [
+      {
+        id: "ms-putri-budi",
+        customerId: "c-putri",
+        sharedWithAgentId: "budi",
+        sharedByAgentId: "admin",
+        permission: "edit",
+        reason: "Budi cover saat Sari cuti",
+        expiresAt: isoDaysAgo(-7),
+        createdAt: isoDaysAgo(5),
+      },
+    ],
   },
 ];
