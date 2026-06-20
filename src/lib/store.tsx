@@ -9,11 +9,20 @@ import type {
   ConversationStatus,
   OrderStatus,
   Priority,
+  AuditLogEntry,
+  AuditAction,
+  ExportRequest,
+  FieldVisibilityRule,
+  ManualShare,
+  Role,
 } from "@/types";
 import { AGENTS } from "@/data/agents";
 import { CUSTOMERS } from "@/data/customers";
 import { INITIAL_MESSAGES } from "@/data/conversations";
 import { DEFAULT_TAGS, DEFAULT_TEMPLATES, SERVICES } from "@/data/services";
+import { INITIAL_AUDIT_LOG } from "@/data/auditLog";
+import { INITIAL_EXPORT_REQUESTS } from "@/data/exportRequests";
+import { DEFAULT_FIELD_RULES } from "@/lib/fieldVisibility";
 
 interface StoreState {
   agents: Agent[];
@@ -24,6 +33,9 @@ interface StoreState {
   services: Service[];
   templates: Template[];
   tags: Tag[];
+  auditLog: AuditLogEntry[];
+  exportRequests: ExportRequest[];
+  fieldRules: FieldVisibilityRule[];
 
   login: (agentId: string) => void;
   logout: () => void;
@@ -48,6 +60,23 @@ interface StoreState {
 
   setCadenceOverride: (id: string, days: number | null) => void;
 
+  // Audit
+  logAudit: (entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => void;
+
+  // Manual shares
+  createManualShare: (input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => void;
+  revokeManualShare: (customerId: string, shareId: string) => void;
+
+  // Export workflow
+  createExportRequest: (dataType: ExportRequest["dataType"], reason: string) => void;
+  approveExportRequest: (id: string, note?: string) => void;
+  denyExportRequest: (id: string, note: string) => void;
+  exportDataDirect: (dataType: ExportRequest["dataType"]) => void;
+
+  // Field rules
+  addFieldRule: (rule: Omit<FieldVisibilityRule, "id">) => void;
+  deleteFieldRule: (id: string) => void;
+
   // Templates
   addTemplate: (text: string) => void;
   updateTemplate: (id: string, text: string) => void;
@@ -66,6 +95,8 @@ interface StoreState {
   toggleAgentOnline: (id: string) => void;
   updateAgent: (id: string, patch: Partial<Agent>) => void;
   addAgent: (a: Omit<Agent, "id" | "initials">) => void;
+  changeAgentRole: (id: string, newRole: Role) => void;
+  deleteAgent: (id: string) => void;
 }
 
 const StoreContext = createContext<StoreState | null>(null);
@@ -82,13 +113,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [services, setServices] = useState<Service[]>(SERVICES);
   const [templates, setTemplates] = useState<Template[]>(DEFAULT_TEMPLATES);
   const [tags, setTags] = useState<Tag[]>(DEFAULT_TAGS);
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOG);
+  const [exportRequests, setExportRequests] = useState<ExportRequest[]>(INITIAL_EXPORT_REQUESTS);
+  const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(DEFAULT_FIELD_RULES);
 
   const currentAgent = useMemo(
     () => agents.find((a) => a.id === currentAgentId) ?? null,
     [agents, currentAgentId],
   );
 
-  const login = useCallback((agentId: string) => setCurrentAgentId(agentId), []);
+  const logAuditRaw = useCallback((actor: Agent | null, entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => {
+    setAuditLog((prev) => [
+      {
+        ...entry,
+        id: genId("al"),
+        timestamp: new Date().toISOString(),
+        actorId: actor?.id ?? "system",
+        actorName: actor?.name ?? "Sistem",
+        actorRole: actor?.role ?? "cs",
+      },
+      ...prev,
+    ]);
+  }, []);
+
+  const logAudit = useCallback(
+    (entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => {
+      logAuditRaw(currentAgent, entry);
+    },
+    [currentAgent, logAuditRaw],
+  );
+
+  const login = useCallback((agentId: string) => {
+    setCurrentAgentId(agentId);
+    const ag = agents.find((a) => a.id === agentId);
+    if (ag) {
+      logAuditRaw(ag, {
+        action: "login",
+        targetType: "system",
+        targetId: "system",
+        targetLabel: "Sistem",
+        details: "Login dari workspace web",
+      });
+    }
+  }, [agents, logAuditRaw]);
   const logout = useCallback(() => setCurrentAgentId(null), []);
 
   const sendMessage = useCallback(
@@ -164,8 +231,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setCustomers((p) => p.map((c) => (c.id === id ? { ...c, priority: pr } : c)));
   }, []);
   const assignCustomer = useCallback((id: string, agentId: string) => {
-    setCustomers((p) => p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c)));
-  }, []);
+    setCustomers((p) => {
+      const cust = p.find((c) => c.id === id);
+      const oldAg = agents.find((a) => a.id === cust?.assignedAgentId);
+      const newAg = agents.find((a) => a.id === agentId);
+      if (cust) {
+        logAuditRaw(currentAgent, {
+          action: "customer_reassigned",
+          targetType: "customer",
+          targetId: id,
+          targetLabel: cust.name,
+          oldValue: oldAg?.name ?? "—",
+          newValue: newAg?.name ?? "—",
+          details: `Reassign dari ${oldAg?.name ?? "—"} ke ${newAg?.name ?? "—"}`,
+        });
+      }
+      return p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
+    });
+  }, [agents, currentAgent, logAuditRaw]);
 
   const addConversationTag = useCallback((id: string, tag: string) => {
     setCustomers((p) =>
@@ -258,7 +341,180 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
   const addAgent = useCallback((a: Omit<Agent, "id" | "initials">) => {
     const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-    setAgents((p) => [...p, { ...a, id: genId("ag"), initials }]);
+    const newAg = { ...a, id: genId("ag"), initials };
+    setAgents((p) => [...p, newAg]);
+    logAuditRaw(currentAgent, {
+      action: "agent_created",
+      targetType: "agent",
+      targetId: newAg.id,
+      targetLabel: newAg.name,
+      details: `Agent baru ditambahkan dengan role ${newAg.role}`,
+    });
+  }, [currentAgent, logAuditRaw]);
+
+  const changeAgentRole = useCallback((id: string, newRole: Role) => {
+    setAgents((prev) => {
+      const ag = prev.find((a) => a.id === id);
+      if (ag && ag.role !== newRole) {
+        logAuditRaw(currentAgent, {
+          action: "agent_role_changed",
+          targetType: "agent",
+          targetId: id,
+          targetLabel: ag.name,
+          oldValue: ag.role,
+          newValue: newRole,
+          details: `Role ${ag.name} diubah: ${ag.role} → ${newRole}`,
+        });
+      }
+      return prev.map((a) => (a.id === id ? { ...a, role: newRole } : a));
+    });
+  }, [currentAgent, logAuditRaw]);
+
+  const deleteAgent = useCallback((id: string) => {
+    setAgents((prev) => {
+      const ag = prev.find((a) => a.id === id);
+      if (ag) {
+        logAuditRaw(currentAgent, {
+          action: "agent_deleted",
+          targetType: "agent",
+          targetId: id,
+          targetLabel: ag.name,
+          details: `Agent ${ag.name} dihapus`,
+        });
+      }
+      return prev.filter((a) => a.id !== id);
+    });
+  }, [currentAgent, logAuditRaw]);
+
+  // Manual Shares
+  const createManualShare = useCallback((input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => {
+    if (!currentAgent) return;
+    const share: ManualShare = {
+      ...input,
+      id: genId("ms"),
+      createdAt: new Date().toISOString(),
+      sharedByAgentId: currentAgent.id,
+    };
+    setCustomers((p) =>
+      p.map((c) =>
+        c.id === input.customerId
+          ? { ...c, manualShares: [...(c.manualShares ?? []), share] }
+          : c,
+      ),
+    );
+    const target = customers.find((c) => c.id === input.customerId);
+    const sharedWith = agents.find((a) => a.id === input.sharedWithAgentId);
+    logAuditRaw(currentAgent, {
+      action: "manual_share_created",
+      targetType: "customer",
+      targetId: input.customerId,
+      targetLabel: target?.name ?? input.customerId,
+      newValue: `${sharedWith?.name ?? "—"} (${input.permission})`,
+      details: input.reason,
+    });
+  }, [currentAgent, customers, agents, logAuditRaw]);
+
+  const revokeManualShare = useCallback((customerId: string, shareId: string) => {
+    setCustomers((p) =>
+      p.map((c) => {
+        if (c.id !== customerId) return c;
+        const share = c.manualShares?.find((s) => s.id === shareId);
+        const sharedWith = agents.find((a) => a.id === share?.sharedWithAgentId);
+        if (share) {
+          logAuditRaw(currentAgent, {
+            action: "manual_share_revoked",
+            targetType: "customer",
+            targetId: customerId,
+            targetLabel: c.name,
+            oldValue: `${sharedWith?.name ?? "—"} (${share.permission})`,
+            details: "Akses dicabut",
+          });
+        }
+        return { ...c, manualShares: (c.manualShares ?? []).filter((s) => s.id !== shareId) };
+      }),
+    );
+  }, [agents, currentAgent, logAuditRaw]);
+
+  // Export
+  const createExportRequest = useCallback((dataType: ExportRequest["dataType"], reason: string) => {
+    if (!currentAgent) return;
+    const req: ExportRequest = {
+      id: genId("exp"),
+      requestedByAgentId: currentAgent.id,
+      requestedByName: currentAgent.name,
+      requestedAt: new Date().toISOString(),
+      dataType,
+      reason,
+      status: "pending",
+    };
+    setExportRequests((p) => [req, ...p]);
+    logAuditRaw(currentAgent, {
+      action: "export_requested",
+      targetType: "system",
+      targetId: req.id,
+      targetLabel: `Export ${dataType}`,
+      details: reason,
+    });
+  }, [currentAgent, logAuditRaw]);
+
+  const approveExportRequest = useCallback((id: string, note?: string) => {
+    if (!currentAgent) return;
+    setExportRequests((p) =>
+      p.map((r) => {
+        if (r.id !== id) return r;
+        logAuditRaw(currentAgent, {
+          action: "export_approved",
+          targetType: "system",
+          targetId: id,
+          targetLabel: `Export ${r.dataType}`,
+          details: note ?? "Disetujui Owner",
+        });
+        return { ...r, status: "approved", reviewedByAgentId: currentAgent.id, reviewedByName: currentAgent.name, reviewedAt: new Date().toISOString(), reviewNote: note };
+      }),
+    );
+  }, [currentAgent, logAuditRaw]);
+
+  const denyExportRequest = useCallback((id: string, note: string) => {
+    if (!currentAgent) return;
+    setExportRequests((p) =>
+      p.map((r) => {
+        if (r.id !== id) return r;
+        logAuditRaw(currentAgent, {
+          action: "export_denied",
+          targetType: "system",
+          targetId: id,
+          targetLabel: `Export ${r.dataType}`,
+          details: note,
+        });
+        return { ...r, status: "denied", reviewedByAgentId: currentAgent.id, reviewedByName: currentAgent.name, reviewedAt: new Date().toISOString(), reviewNote: note };
+      }),
+    );
+  }, [currentAgent, logAuditRaw]);
+
+  const exportDataDirect = useCallback((dataType: ExportRequest["dataType"]) => {
+    logAuditRaw(currentAgent, {
+      action: "data_exported",
+      targetType: "system",
+      targetId: "direct-" + Date.now(),
+      targetLabel: `Export ${dataType}`,
+      details: "File CSV diunduh (akses langsung Owner)",
+    });
+  }, [currentAgent, logAuditRaw]);
+
+  // Field rules
+  const addFieldRule = useCallback((rule: Omit<FieldVisibilityRule, "id">) => {
+    setFieldRules((p) => [...p, { ...rule, id: genId("fvr") }]);
+    logAuditRaw(currentAgent, {
+      action: "settings_changed",
+      targetType: "system",
+      targetId: "field-visibility",
+      targetLabel: "Visibilitas Field",
+      details: `Aturan baru: field ${rule.fieldName} disembunyikan dari ${rule.hiddenForRoles.join(", ")}`,
+    });
+  }, [currentAgent, logAuditRaw]);
+
+  const deleteFieldRule = useCallback((id: string) => {
+    setFieldRules((p) => p.filter((r) => r.id !== id || r.locked));
   }, []);
 
   const value: StoreState = {
@@ -270,6 +526,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     services,
     templates,
     tags,
+    auditLog,
+    exportRequests,
+    fieldRules,
     login,
     logout,
     sendMessage,
@@ -286,6 +545,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     removeCustomerTag,
     saveNotes,
     setCadenceOverride,
+    logAudit,
+    createManualShare,
+    revokeManualShare,
+    createExportRequest,
+    approveExportRequest,
+    denyExportRequest,
+    exportDataDirect,
+    addFieldRule,
+    deleteFieldRule,
     addTemplate,
     updateTemplate,
     deleteTemplate,
@@ -297,6 +565,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleAgentOnline,
     updateAgent,
     addAgent,
+    changeAgentRole,
+    deleteAgent,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;

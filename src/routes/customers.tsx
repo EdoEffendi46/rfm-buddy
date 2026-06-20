@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useStore } from "@/lib/store";
+import { hasPermission, shareBadgeFor } from "@/lib/permissions";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
 import { maskPhone } from "@/lib/mask";
@@ -22,7 +24,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { RFMSegment, Customer } from "@/types";
+import type { RFMSegment, Customer, Agent, ManualShare } from "@/types";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/customers")({
   head: () => ({ meta: [{ title: "Customer — ChatCRM" }] }),
@@ -42,8 +45,9 @@ const SEGMENT_FILTERS: { id: "all" | RFMSegment; label: string }[] = [
 type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdue";
 
 function CustomersPage() {
-  const { role } = useAuth();
+  const { role, agent } = useAuth();
   const { enriched, agents, addCustomer } = useCustomers();
+  const { createManualShare, revokeManualShare, logAudit } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<"all" | RFMSegment>("all");
@@ -180,6 +184,8 @@ function CustomersPage() {
                 <tbody>
                   {filtered.map((e, i) => {
                     const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
+                    const share = shareBadgeFor(agent, e.customer);
+                    const sharedBy = share ? agents.find((a) => a.id === share.sharedByAgentId) : null;
                     const lastP = e.customer.purchases.length
                       ? e.customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
                       : null;
@@ -204,6 +210,11 @@ function CustomersPage() {
                               size={28}
                             />
                             <span className="font-medium">{e.customer.name}</span>
+                            {share && (
+                              <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700" title={`Dibagikan oleh ${sharedBy?.name ?? ""}`}>
+                                🔗 Dibagikan oleh {sharedBy?.name ?? "—"}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-3 py-2 font-mono text-xs">{maskPhone(e.customer.phone, role)}</td>
@@ -371,6 +382,27 @@ function CustomersPage() {
             setDetailId(null);
             navigate({ to: "/chat/$customerId", params: { customerId: id } });
           }}
+          agents={agents}
+          currentAgentId={agent?.id ?? ""}
+          onShare={(input) => {
+            createManualShare(input);
+            toast.success("Akses dibagikan");
+          }}
+          onRevoke={(customerId, shareId) => {
+            revokeManualShare(customerId, shareId);
+            toast.success("Akses dicabut");
+          }}
+          onPhoneViewed={(c) => {
+            if (hasPermission(role, "view_all_customers")) {
+              logAudit({
+                action: "phone_viewed_full",
+                targetType: "customer",
+                targetId: c.id,
+                targetLabel: c.name,
+                details: "Membuka detail customer (no HP penuh terlihat)",
+              });
+            }
+          }}
         />
       )}
 
@@ -399,12 +431,22 @@ function CustomerDetailModal({
   open,
   onClose,
   onOpenChat,
+  agents,
+  currentAgentId,
+  onShare,
+  onRevoke,
+  onPhoneViewed,
 }: {
   enriched: ReturnType<typeof useCustomers>["enriched"][number];
-  role: "cs" | "supervisor";
+  role: import("@/types").Role;
   open: boolean;
   onClose: () => void;
   onOpenChat: (id: string) => void;
+  agents: Agent[];
+  currentAgentId: string;
+  onShare: (input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => void;
+  onRevoke: (customerId: string, shareId: string) => void;
+  onPhoneViewed: (c: Customer) => void;
 }) {
   const { customer, rfm, clv } = enriched;
   const cad = enriched.cadence;
@@ -415,6 +457,22 @@ function CustomerDetailModal({
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
   const avg = customer.purchases.length ? rfm.monetary / customer.purchases.length : 0;
+  const canShare = role === "supervisor" || role === "owner";
+  useEffect(() => {
+    if (open) onPhoneViewed(customer);
+    // eslint-disable-next-line
+  }, [open, customer.id]);
+
+  // Share form state
+  const csAgents = agents.filter((a) => a.role === "cs" && a.id !== customer.assignedAgentId);
+  const [shareAgentId, setShareAgentId] = useState(csAgents[0]?.id ?? "");
+  const [sharePermission, setSharePermission] = useState<"view" | "edit">("view");
+  const [shareReason, setShareReason] = useState("");
+  const [shareDuration, setShareDuration] = useState<"permanent" | "24h" | "7d">("7d");
+  const activeShares = (customer.manualShares ?? []).filter(
+    (s) => !s.expiresAt || new Date(s.expiresAt).getTime() > Date.now(),
+  );
+  const primaryAg = agents.find((a) => a.id === customer.assignedAgentId);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
@@ -428,6 +486,7 @@ function CustomerDetailModal({
             <TabsTrigger value="purchases">Riwayat Pembelian</TabsTrigger>
             <TabsTrigger value="segments">Riwayat Segment</TabsTrigger>
             <TabsTrigger value="notes">Catatan</TabsTrigger>
+            {canShare && <TabsTrigger value="access">Akses & Berbagi</TabsTrigger>}
           </TabsList>
           <TabsContent value="profile" className="space-y-3">
             <div className="flex items-center gap-3">
@@ -547,6 +606,87 @@ function CustomerDetailModal({
               Simpan Catatan
             </Button>
           </TabsContent>
+          {canShare && (
+            <TabsContent value="access" className="space-y-3">
+              <div className="rounded-xl border p-3 text-sm">
+                <div className="text-xs uppercase text-slate-500">Primary CS</div>
+                <div className="font-semibold">{primaryAg?.name ?? "Belum ditugaskan"}</div>
+              </div>
+              <div className="rounded-xl border p-3">
+                <div className="mb-2 text-sm font-semibold">Bagikan ke CS lain</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={shareAgentId} onValueChange={setShareAgentId}>
+                    <SelectTrigger><SelectValue placeholder="Pilih CS" /></SelectTrigger>
+                    <SelectContent>
+                      {csAgents.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={sharePermission} onValueChange={(v) => setSharePermission(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="view">Lihat saja</SelectItem>
+                      <SelectItem value="edit">Bisa edit</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={shareDuration} onValueChange={(v) => setShareDuration(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="24h">24 jam</SelectItem>
+                      <SelectItem value="7d">7 hari</SelectItem>
+                      <SelectItem value="permanent">Permanen</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Input value={shareReason} onChange={(e) => setShareReason(e.target.value)} placeholder="Alasan (contoh: backup saat cuti)" />
+                </div>
+                <Button
+                  className="mt-2 bg-[#25D366] text-white hover:bg-[#128C7E]"
+                  disabled={!shareAgentId || !shareReason.trim()}
+                  onClick={() => {
+                    const expiresAt =
+                      shareDuration === "permanent" ? undefined :
+                      shareDuration === "24h" ? new Date(Date.now() + 24 * 3600 * 1000).toISOString() :
+                      new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+                    onShare({
+                      customerId: customer.id,
+                      sharedWithAgentId: shareAgentId,
+                      permission: sharePermission,
+                      reason: shareReason.trim(),
+                      expiresAt,
+                    });
+                    setShareReason("");
+                  }}
+                >
+                  Bagikan Akses
+                </Button>
+              </div>
+              <div className="rounded-xl border p-3">
+                <div className="mb-2 text-sm font-semibold">Akses aktif ({activeShares.length})</div>
+                {activeShares.length === 0 ? (
+                  <div className="text-xs text-slate-500">Belum ada akses manual yang aktif.</div>
+                ) : (
+                  <ul className="space-y-2">
+                    {activeShares.map((s) => {
+                      const a = agents.find((x) => x.id === s.sharedWithAgentId);
+                      const by = agents.find((x) => x.id === s.sharedByAgentId);
+                      return (
+                        <li key={s.id} className="flex items-center justify-between rounded border bg-slate-50 p-2 text-xs">
+                          <div>
+                            <div className="font-semibold">{a?.name ?? "—"} · <span className="text-slate-500">{s.permission === "edit" ? "Bisa edit" : "Lihat saja"}</span></div>
+                            <div className="text-slate-500">
+                              {s.reason} · oleh {by?.name ?? "—"} · {s.expiresAt ? `expires ${formatDate(s.expiresAt)}` : "permanen"}
+                            </div>
+                          </div>
+                          <Button size="sm" variant="ghost" onClick={() => onRevoke(customer.id, s.id)}>
+                            <X className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
         <DialogFooter>
           <Button onClick={() => onOpenChat(customer.id)} className="bg-[#25D366] text-white hover:bg-[#128C7E]">

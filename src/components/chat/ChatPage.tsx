@@ -95,8 +95,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
 
   const conversations = useMemo(() => {
     let list = store.conversations;
-    // role visibility
-    if (role === "cs") list = list.filter((c) => c.customer.assignedAgentId === agent?.id);
+    // role visibility is handled in useConversations via canAccessCustomer (includes manual shares)
     // status tab
     if (statusTab === "mine") list = list.filter((c) => c.customer.assignedAgentId === agent?.id);
     if (statusTab === "unassigned") list = list.filter((c) => !c.customer.assignedAgentId);
@@ -134,9 +133,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
   }, [store.conversations, role, agent, statusTab, segmentTab, enriched, search, sortKey]);
 
   const statusCounts = useMemo(() => {
-    const base = store.conversations.filter(
-      (c) => role !== "cs" || c.customer.assignedAgentId === agent?.id,
-    );
+    const base = store.conversations;
     return {
       all: base.length,
       mine: base.filter((c) => c.customer.assignedAgentId === agent?.id).length,
@@ -859,7 +856,7 @@ function CustomerSidePanel({
   customer: Customer;
   rfm: ReturnType<typeof calculateRFM>;
   clv: ReturnType<typeof calculateCLV>;
-  role: "cs" | "supervisor";
+  role: import("@/types").Role;
 }) {
   const store = useConversations();
   const [notesDraft, setNotesDraft] = useState(customer.notes);
