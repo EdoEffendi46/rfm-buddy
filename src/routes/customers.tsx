@@ -24,7 +24,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import type { RFMSegment, Customer } from "@/types";
+import type { RFMSegment, Customer, Agent, ManualShare } from "@/types";
+import { useEffect } from "react";
 
 export const Route = createFileRoute("/customers")({
   head: () => ({ meta: [{ title: "Customer — ChatCRM" }] }),
@@ -430,12 +431,22 @@ function CustomerDetailModal({
   open,
   onClose,
   onOpenChat,
+  agents,
+  currentAgentId,
+  onShare,
+  onRevoke,
+  onPhoneViewed,
 }: {
   enriched: ReturnType<typeof useCustomers>["enriched"][number];
   role: import("@/types").Role;
   open: boolean;
   onClose: () => void;
   onOpenChat: (id: string) => void;
+  agents: Agent[];
+  currentAgentId: string;
+  onShare: (input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => void;
+  onRevoke: (customerId: string, shareId: string) => void;
+  onPhoneViewed: (c: Customer) => void;
 }) {
   const { customer, rfm, clv } = enriched;
   const cad = enriched.cadence;
@@ -446,6 +457,22 @@ function CustomerDetailModal({
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
   const avg = customer.purchases.length ? rfm.monetary / customer.purchases.length : 0;
+  const canShare = role === "supervisor" || role === "owner";
+  useEffect(() => {
+    if (open) onPhoneViewed(customer);
+    // eslint-disable-next-line
+  }, [open, customer.id]);
+
+  // Share form state
+  const csAgents = agents.filter((a) => a.role === "cs" && a.id !== customer.assignedAgentId);
+  const [shareAgentId, setShareAgentId] = useState(csAgents[0]?.id ?? "");
+  const [sharePermission, setSharePermission] = useState<"view" | "edit">("view");
+  const [shareReason, setShareReason] = useState("");
+  const [shareDuration, setShareDuration] = useState<"permanent" | "24h" | "7d">("7d");
+  const activeShares = (customer.manualShares ?? []).filter(
+    (s) => !s.expiresAt || new Date(s.expiresAt).getTime() > Date.now(),
+  );
+  const primaryAg = agents.find((a) => a.id === customer.assignedAgentId);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
