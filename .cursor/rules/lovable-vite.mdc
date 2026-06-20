@@ -1,0 +1,31 @@
+---
+description: Lovable + Vite + TanStack Start build constraints — do not break the pipeline
+globs: "vite.config.ts,package.json,bunfig.toml,src/server.ts,src/start.ts"
+alwaysApply: false
+---
+
+# Lovable & Vite Constraints
+
+This project uses `@lovable.dev/vite-tanstack-config`. Misconfigured Vite breaks **both** Lovable preview and Cursor local dev.
+
+## Do not
+
+- Add these plugins manually (already included — duplicates break the app):
+  `tanstackStart`, `viteReact`, `tailwindcss`, `tsConfigPaths`, `nitro`, `componentTagger`, path alias, dedupe plugins
+- Replace `defineConfig` import with plain `vite` config
+- Change SSR entry away from `src/server.ts` without updating `tanstackStart.server.entry`
+- Remove error handling in `server.ts` / `start.ts` without replacement
+- Upgrade major Vite/TanStack/Lovable packages casually — ask user first
+
+## Safe changes
+
+- Pass extra options via `defineConfig({ vite: { ... } })` only when needed
+- Edit `src/server.ts` for SSR error normalization — keep `fetch` export default
+
+## package.json scripts
+
+Keep standard: `dev`, `build`, `lint`, `format`. Do not rename without updating README and AGENTS.md.
+
+## If build fails after your edit
+
+Revert config changes first, then fix application code.

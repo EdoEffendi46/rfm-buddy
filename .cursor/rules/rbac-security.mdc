@@ -1,0 +1,57 @@
+---
+description: RBAC, permissions, audit, field visibility, and data access
+globs: "src/{lib/{permissions,store,fieldVisibility,mask}.ts,hooks/**,routes/**,components/chat/**}"
+alwaysApply: false
+---
+
+# RBAC & Security
+
+## Roles
+
+| Role | ID examples | Notes |
+|------|-------------|-------|
+| `cs` | rina, budi, sari | Assigned + unassigned + active manual shares |
+| `supervisor` | admin | Team-wide access via `ROLE_PERMISSIONS` |
+| `owner` | hartono | Supervisor permissions + billing, export approval, field rules |
+
+**Owner is not CS.** Never gate team features with `role === "supervisor"` alone — use `role !== "cs"` or `hasPermission`.
+
+## Required helpers
+
+```tsx
+hasPermission(role, "manage_agents")
+canAccessCustomer(agent, customer)   // list/filter visibility
+canEditCustomer(agent, customer)     // enforce on edit forms
+shareBadgeFor(agent, customer)       // "Dibagikan" badge
+getFieldDisplay(field, value, role, fieldRules)
+maskPhone(phone, role)
+canViewAuditEntry(viewerRole, entryActorRole, action)
+```
+
+## Manual shares
+
+- Stored on `customer.manualShares[]`; respect `expiresAt`.
+- Create/revoke via store → auto `logAudit`.
+- Share modal: agent picker (CS only), permission view/edit, reason, duration.
+
+## Audit log
+
+Call `logAudit` for: login, reassign, role change, export request/approve/deny, manual share, phone viewed full (supervisor+), field rule changes, agent CRUD.
+
+Action types must exist in `AuditAction` union (`src/types/index.ts`).
+
+## Settings gating
+
+Mirror `settings.tsx`: each section has `requires: Permission`. Use `<Gated perm="...">` pattern for new owner/supervisor sections.
+
+## Export workflow
+
+- Supervisor: `createExportRequest` → pending
+- Owner: `exportDataDirect` or `approveExportRequest` / `denyExportRequest`
+
+## Common bugs to prevent
+
+- Owner sees CS dashboard (missing team charts)
+- CS sees other agents' assigned customers without share
+- Raw phone in DOM for CS role
+- Audit entries visible to supervisor that should be owner-only

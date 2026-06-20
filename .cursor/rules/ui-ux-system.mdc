@@ -1,0 +1,52 @@
+---
+description: UI/UX consistency — layout, colors, components, copy
+globs: "**/*.{tsx,css}"
+alwaysApply: false
+---
+
+# UI/UX System
+
+## Visual identity
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| Brand green | `#25D366` / hover `#128C7E` | Primary CTAs, active nav, send button |
+| Sidebar | `#111B21` | `Sidebar`, login left panel |
+| App background | `#F0F2F5` | `AppShell` main area |
+| Cards | `rounded-2xl border border-slate-200 bg-white shadow-sm` | Panels, KPIs, tables |
+| Muted text | `text-slate-500` / `text-muted-foreground` | Subtitles, hints |
+
+Use shadcn semantic tokens (`bg-primary`, `text-muted-foreground`) inside forms; use brand hex for WhatsApp-style accents already in the app.
+
+## Layout patterns
+
+- **Authenticated pages**: `AppShell` → padded `p-6` content (except chat: `noPadding`).
+- **Sidebar nav**: icon-only 64px rail; tooltips on hover — do not replace with full text sidebar without explicit ask.
+- **Modals**: `@/components/ui/dialog` with `DialogHeader`, `DialogFooter`, consistent button order (Cancel left, primary right).
+- **Tables**: compact `text-sm`, header `text-xs text-slate-500`, row border `border-slate-100`.
+
+## Components
+
+- Buttons: `@/components/ui/button` — primary actions use brand green class override where existing pages do.
+- Forms: `Input`, `Textarea`, `Select`, `Switch` from ui — same height/spacing as settings page.
+- Badges: `SegmentBadge` for RFM; role pills use `rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase`.
+- Icons: `lucide-react` only — size `h-4 w-4` inline, `h-5 w-5` in nav.
+- Toasts: `<Toaster />` in root; use `toast.success` / `toast.error`.
+
+## Copy & language
+
+- **User-facing UI:** Indonesian — follow `ui-copy-voice.mdc` (human ops tone, not AI marketing).
+- **Code & types:** English.
+- **Chat filter tabs** may stay English ("Mine", "Open") — match `ChatPage.tsx`, do not mix randomly in the same component.
+
+## UX rules
+
+- CS must never see full phone numbers — always `maskPhone(phone, role)` or `getFieldDisplay`.
+- Locked settings sections show lock icon + empty state, not broken pages.
+- Loading: prefer skeleton only if page already uses it; demo app often has instant data.
+- Empty states: one line title + short hint, centered, `text-slate-400`.
+
+## Avoid
+
+- New color palettes, Inter alternatives, or rounded-full everything.
+- Replacing custom `Avatar` with shadcn `avatar` in app code (two systems exist — use `@/components/Avatar`).

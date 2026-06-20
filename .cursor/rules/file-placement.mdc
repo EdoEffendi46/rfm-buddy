@@ -1,0 +1,41 @@
+---
+description: Where to put new code — avoid bloating route files
+globs: "src/{routes/**,components/**}"
+alwaysApply: false
+---
+
+# File Placement
+
+Large files exist — do not make them worse without splitting.
+
+## Current heavy files (think before adding 50+ lines)
+
+| File | ~Lines | Prefer |
+|------|--------|--------|
+| `components/chat/ChatPage.tsx` | 1200 | New chat UI → `components/chat/` subcomponents |
+| `routes/settings.tsx` | 900 | New section → extract `components/settings/` |
+| `routes/customers.tsx` | 775 | Modals → `components/customers/` |
+| `lib/store.tsx` | 580 | Keep actions; extract pure helpers to `lib/` if complex |
+
+## Placement rules
+
+| What | Where |
+|------|-------|
+| New route page | `src/routes/*.tsx` (TanStack file routing) |
+| Reusable UI | `src/components/` (not inline 200-line JSX in routes) |
+| Business logic | `src/lib/` — pure functions, no React |
+| Derived data hooks | `src/hooks/` |
+| Types | `src/types/index.ts` |
+| Seed data | `src/data/` |
+| shadcn primitives | `src/components/ui/` — do not put app logic here |
+
+## When to extract a component
+
+- JSX block reused 2+ times
+- Modal/drawer > ~80 lines
+- Route file would exceed ~400 lines after your change — extract first, then add feature
+
+## Do not
+
+- Create parallel state folders or `services/` layer until real API exists
+- Add new top-level `src/` directories without user approval

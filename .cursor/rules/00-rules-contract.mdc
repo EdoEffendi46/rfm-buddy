@@ -1,0 +1,66 @@
+---
+description: MANDATORY — all agents must follow every applicable project rule (Cursor + Lovable)
+alwaysApply: true
+---
+
+# Rules Contract (Mandatory)
+
+**Every task on this repo MUST follow project rules.** Applies to **Cursor** and **Lovable** — same policy, no exceptions.
+
+| Platform | Primary rules source |
+|----------|---------------------|
+| **Lovable** | Root [`AGENTS.md`](../../AGENTS.md) — always injected; obey fully |
+| **Cursor** | `AGENTS.md` + all files in `.cursor/rules/` |
+
+**Keep in sync:** When editing rules, update **both** `AGENTS.md` and the matching `.mdc` file.
+
+## Before you write or change anything
+
+1. **Lovable:** Follow `AGENTS.md` in full on every response.
+2. **Cursor:** Follow `AGENTS.md` + all `alwaysApply` rules below; read file-scoped rules when editing matching paths.
+3. **If a user request conflicts with a rule** → do not silently comply. Explain and ask.
+4. **If you have not read the rules yet** → read `AGENTS.md` and relevant `.mdc` files first, then act.
+
+## Rule index
+
+| Rule file | When it applies |
+|-----------|-----------------|
+| `AGENTS.md` | **Always — both platforms** |
+| `00-rules-contract.mdc` | **Always** — this file |
+| `team-mindset.mdc` | **Always** |
+| `project-context.mdc` | **Always** |
+| `change-impact.mdc` | **Always** |
+| `ui-copy-voice.mdc` | **Always** |
+| `git-workflow.mdc` | **Always** — commits, push, Lovable |
+| `validation-done.mdc` | **Always** — definition of done |
+| `known-tech-debt.mdc` | **Always** — do not copy open bugs |
+| `demo-honesty.mdc` | **Always** — demo boundaries |
+| `validation-schema.mdc` | **Always** — Zod + RHF, backend parity |
+| `type-strictness.mdc` | **Always** — shared types, no any |
+| `e2e-verification.mdc` | **Always** — lint, build, E2E before done |
+| `code-standards.mdc` | All `*.ts`, `*.tsx` |
+| `ui-ux-system.mdc` | All `*.tsx`, `src/styles.css` |
+| `rbac-security.mdc` | permissions, store, hooks, routes, chat |
+| `business-domain.mdc` | rfm, clv, cadence, format, data, types |
+| `lovable-vite.mdc` | vite.config, server, start, package.json |
+| `audit-instrumentation.mdc` | store, routes, chat |
+| `file-placement.mdc` | routes, components |
+| `a11y-minimal.mdc` | All `*.tsx` |
+
+## Compliance checklist (end of every task)
+
+- [ ] Followed `AGENTS.md` (required on Lovable and Cursor)
+- [ ] Followed `change-impact.mdc` — searched usages, traced store/hooks/routes
+- [ ] Followed `team-mindset.mdc` — did not yes-man; asked if ambiguous
+- [ ] Followed `git-workflow.mdc` — no commit/push unless user asked
+- [ ] Followed `e2e-verification.mdc` — lint + build pass + E2E flows reported
+- [ ] Followed `known-tech-debt.mdc` — did not copy listed anti-patterns
+- [ ] Followed `demo-honesty.mdc` — no fake production claims
+- [ ] Followed `validation-schema.mdc` if forms or input validation touched
+- [ ] Followed `type-strictness.mdc` — no any, shared types FE/BE
+- [ ] Followed `e2e-verification.mdc` — lint + build pass + E2E flows reported
+- [ ] Followed `ui-copy-voice.mdc` if user-visible text changed
+- [ ] Followed scoped rules for files touched
+- [ ] Verified CS, supervisor, and owner where access control is involved
+
+**Skipping rules is a failure.** If you cannot follow a rule, stop and tell the user why.

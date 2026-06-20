@@ -1,0 +1,82 @@
+---
+description: Strict validation — shared schemas, backend + frontend parity, react-hook-form realtime
+globs: "src/**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Validation (Frontend + Backend)
+
+Validation is **never optional on one side only**. Frontend gives realtime UX; backend (or server handler) is the authority. Rules must match.
+
+## Current project (demo, no API yet)
+
+- State is in-memory (`store.tsx`) — still validate **before** calling store actions.
+- Define rules in **shared Zod schemas** under `src/lib/schemas/` (create as needed).
+- Do not rely on `if (!value) toast.error(...)` alone for new or refactored forms.
+
+## Stack (mandatory for forms)
+
+| Layer | Tool |
+|-------|------|
+| Schema | **Zod** — single source of truth |
+| Frontend form | **react-hook-form** + `@hookform/resolvers/zod` |
+| UI | shadcn `@/components/ui/form` (`Form`, `FormField`, `FormItem`, `FormLabel`, `FormMessage`) |
+
+```tsx
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { customerCreateSchema, type CustomerCreateInput } from "@/lib/schemas/customer";
+
+const form = useForm<CustomerCreateInput>({
+  resolver: zodResolver(customerCreateSchema),
+  mode: "onChange", // realtime — or onTouched for lighter validation
+  defaultValues: { ... },
+});
+```
+
+## Realtime UX rules
+
+- Show field errors **inline** via `FormMessage` — not only toast on submit.
+- Disable submit while `!form.formState.isValid` when schema is strict enough, or block submit handler if `form.trigger()` fails.
+- Indonesian error messages in schema `.refine()` / `.min(..., { message: "..." })` — match `ui-copy-voice.mdc` tone: short, specific (`Nomor HP wajib diisi`, not `Validasi gagal`).
+- Required fields: visual indicator + schema — not placeholder-only.
+
+## Backend parity (when API / server actions exist)
+
+1. **Import the same Zod schema** (or a `.pick()` / server-safe variant from the same file) in the server handler.
+2. **Parse on the server** with `schema.safeParse(body)` — reject invalid requests with 400 + field errors.
+3. **Never duplicate** validation logic in prose or separate if/else on server — derive from schema.
+4. Frontend must handle server validation errors (map to `form.setError("field", { message })`).
+
+Types for inputs/outputs: `z.infer<typeof schema>` — same on client and server (`type-strictness.mdc`).
+
+```
+src/lib/schemas/
+  customer.ts      # customerCreateSchema, customerUpdateSchema
+  agent.ts
+  export-request.ts
+  index.ts         # re-exports
+```
+
+## Strict checklist for new/changed forms
+
+- [ ] Zod schema exists in `src/lib/schemas/`
+- [ ] react-hook-form + `zodResolver` wired
+- [ ] Realtime mode (`onChange` or `onTouched`)
+- [ ] shadcn `Form*` components used
+- [ ] Server/API handler uses same schema (when backend exists)
+- [ ] Store action receives already-validated data
+
+## Do not
+
+- Submit unvalidated data to store/API "and fix later"
+- Different max lengths / regex on frontend vs backend
+- Replace Zod with ad-hoc `trim()` checks in components
+- Skip validation because "demo app" — demo still needs correct UX and future-ready schemas
+
+## Migrating legacy forms
+
+When editing an existing form (settings modals, add customer, export reason, etc.):
+
+- Prefer converting to react-hook-form + Zod in the **same task** if you touch submit logic.
+- If scope is too large, ask user — do not half-migrate (Zod on submit only without FormMessage).

@@ -1,0 +1,71 @@
+---
+description: Strict shared types — frontend and backend must match; no any or loose typing
+globs: "src/**/*.{ts,tsx}"
+alwaysApply: true
+---
+
+# Type Strictness (Frontend + Backend)
+
+Types must be **explicit, shared, and identical** across client and server. `strict: true` in `tsconfig.json` is the floor — not the ceiling.
+
+## Single source of truth
+
+| Layer | Location | Use for |
+|-------|----------|---------|
+| Domain entities | `src/types/index.ts` | Customer, Agent, Message, Role, etc. |
+| Input / API payloads | `src/lib/schemas/*.ts` | Zod schema + `z.infer<typeof schema>` |
+| Server responses | Same schema or `types` | Never hand-written duplicate interfaces |
+
+```tsx
+// ✅ One schema → validation + types
+export const customerCreateSchema = z.object({ name: z.string().min(1), phone: z.string().min(10) });
+export type CustomerCreateInput = z.infer<typeof customerCreateSchema>;
+
+// ✅ Domain entity stays in types/
+import type { Customer } from "@/types";
+```
+
+When backend/API exists: server handler input/output types **must** come from the same Zod schema or `@/types` — not a parallel `interface ApiCustomer`.
+
+## Forbidden
+
+| Pattern | Why |
+|---------|-----|
+| `any` | Never in new code; replace when touching legacy |
+| `as any` / `as unknown as Foo` | Bypasses safety — parse with Zod first |
+| `@ts-ignore` / `@ts-expect-error` | Fix the type error instead |
+| Duplicate interfaces | e.g. `CustomerDTO` mirroring `Customer` with different optional fields |
+| `Record<string, any>` | Use `Record<string, unknown>` + narrow, or a typed map |
+| Optional everything `?` | Only when field is genuinely optional in domain |
+| `enum` duplicates | Use `Role`, `RFMSegment` unions from `@/types` |
+| Untyped `fetch` JSON | `const data = await res.json()` — parse with schema |
+
+## Allowed narrow exceptions
+
+- Third-party chart/tooltip callbacks where lib types are weak — cast **once** at boundary with a comment why.
+- `routeTree.gen.ts` — generated; do not edit.
+- **Legacy code** with `as any` (Select `onValueChange`, `cadence.ts`) — do not add new ones; replace with proper union when you touch that file.
+
+## Backend ↔ frontend parity checklist
+
+- [ ] Request body type = `z.infer` of shared schema
+- [ ] Response shape matches what frontend store/hooks expect (`Customer`, not loose object)
+- [ ] Nullable fields agree (`null` vs `undefined` — prefer optional `?` in types, document in schema)
+- [ ] Enum/string unions identical (`OrderStatus`, `AuditAction`)
+- [ ] Changing a field in `@/types` → grep all usages + update seed + store + UI
+
+## Store actions
+
+```tsx
+// ❌
+addCustomer(c: any)
+
+// ✅
+addCustomer(c: Omit<Customer, "id" | "purchases" | ...>)
+```
+
+## Do not ship
+
+- Type errors suppressed instead of fixed
+- Frontend assumes fields backend doesn't guarantee
+- Wider types on frontend "just in case"

@@ -1,0 +1,42 @@
+---
+description: Demo app boundaries — do not pretend production features exist
+alwaysApply: true
+---
+
+# Demo Honesty
+
+ChatCRM is an **in-memory demo**. UI and copy must not mislead users into thinking production infra exists.
+
+## What is real (in the browser)
+
+- React UI, client-side state in `StoreProvider`
+- Seeded data from `src/data/*.ts`
+- RFM / CLV / cadence calculations (client-side, fixed demo date)
+
+## What is simulated (say so in UI if adding related features)
+
+| Feature | Reality |
+|---------|---------|
+| WhatsApp inbox | Mock messages in `store.messages` |
+| Export CSV | Toast + audit log only — no file generation unless explicitly implemented |
+| Login | Agent picker — no password auth |
+| Billing settings | Placeholder UI |
+| Persistence | **None** — refresh resets state |
+| Backend / API | **None** — do not add `fetch`, tRPC, Supabase unless user requests full backend |
+
+## Copy rules for demo features
+
+- OK: `(demo)`, `File CSV berhasil diunduh (demo)` — matches existing export toasts
+- OK: `Demo mode — pilih role untuk melihat perbedaan akses.`
+- Not OK: "Data tersimpan ke cloud", "Pesan terkirim ke WhatsApp", "Sinkronisasi real-time"
+
+## Do not add without explicit ask
+
+- Fake loading spinners for instant in-memory ops
+- OAuth / API keys / `.env` usage in app code
+- "Production-ready" auth, rate limiting, or webhooks
+- Marketing landing copy inside the authenticated app
+
+## If user asks for "real" backend
+
+Stop and clarify scope: database, auth provider, WhatsApp API — then plan separately from demo rules.

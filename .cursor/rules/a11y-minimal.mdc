@@ -1,0 +1,28 @@
+---
+description: Minimal accessibility — dialogs, icon buttons, forms
+globs: "**/*.tsx"
+alwaysApply: false
+---
+
+# Accessibility (Minimal)
+
+Not a full WCAG audit — baseline so the app is usable with keyboard and screen readers.
+
+## Required
+
+- **Dialogs:** always include `DialogTitle` (visually hidden OK via `className="sr-only"` if no visible title)
+- **Icon-only buttons:** `title` attribute or `aria-label` — match `Sidebar.tsx` nav pattern
+- **Form fields:** pair `Label` + `Input`/`Select`; don't rely on placeholder alone
+- **Destructive actions:** confirm dialog or `confirm()` — already used for deletes in settings
+
+## Prefer
+
+- Semantic HTML: `<button>` not `<div onClick>`
+- Focus visible on interactive elements (shadcn defaults)
+- Don't remove `alt`/`aria-*` when editing existing components
+
+## Skip unless asked
+
+- Full keyboard nav audit
+- ARIA live regions for toasts (sonner handles basics)
+- High-contrast theme beyond existing CSS variables

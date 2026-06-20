@@ -1,0 +1,41 @@
+---
+description: Definition of done — ties automated gates to E2E flows
+alwaysApply: true
+---
+
+# Validation & Definition of Done
+
+Do not say "done" without evidence. **Full procedure: `e2e-verification.mdc`** (lint + build + E2E flows).
+
+## Quick reference
+
+```bash
+bun run lint && bun run build
+```
+
+Then run smoke + feature E2E from `e2e-verification.mdc` Step 2–3.
+
+## Manual role matrix (when touching shared code)
+
+| Login as | Check |
+|----------|-------|
+| **Rina** (CS) | Assigned/unassigned/shared only; phone masked |
+| **Admin** (supervisor) | Team dashboard, all customers, audit (scoped) |
+| **Pak Hartono** (owner) | Supervisor view + owner settings |
+
+## By area touched
+
+| Changed | Verify |
+|---------|--------|
+| `store.tsx` / types | all routes + 3 roles |
+| `permissions.ts` | list, detail, settings gates |
+| `dashboard.tsx` | KPIs, charts, follow-up |
+| `ChatPage.tsx` | filters, send, transfer, snooze |
+| `customers.tsx` | list, detail, share, add |
+| `settings.tsx` | sections per role |
+| `index.tsx` | all 5 agents login labels |
+| Schemas/types | build passes; no `any`; API parity if server exists |
+
+## End-of-task report
+
+See report template in `e2e-verification.mdc`.

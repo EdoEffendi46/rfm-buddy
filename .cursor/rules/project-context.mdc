@@ -1,0 +1,46 @@
+---
+description: ChatCRM architecture, stack, and file map
+alwaysApply: true
+---
+
+# Project Context
+
+> **Cursor & Lovable:** Policy in root `AGENTS.md` (Lovable always reads it) + `.cursor/rules/` (Cursor). Keep both in sync when editing rules.
+
+**ChatCRM** — omnichannel inbox + CRM for laundry/salon businesses. Demo app; all data in `src/lib/store.tsx`.
+
+## Stack
+
+TanStack Start + Router, React 19, TypeScript, Tailwind 4, shadcn/ui (new-york), Recharts, Bun.
+
+## Where things live
+
+| Area | Location |
+|------|----------|
+| Routes | `src/routes/*.tsx` (file-based) |
+| Global state | `src/lib/store.tsx` |
+| Auth | `useAuth` → `currentAgent` in store |
+| Customers + RFM | `useCustomers`, `lib/rfm.ts`, `lib/clv.ts`, `lib/cadence.ts` |
+| Chat | `components/chat/ChatPage.tsx`, `useConversations` |
+| RBAC | `lib/permissions.ts` — always use helpers, never duplicate role checks |
+| Seed data | `src/data/*.ts` |
+| Types | `src/types/index.ts` |
+| Zod schemas | `src/lib/schemas/` (create when adding forms/API) |
+
+## Lovable constraint
+
+Never force-push or rewrite pushed git history (rebase/amend/squash on shared branch). Keep main branch buildable.
+
+## Demo constants
+
+RFM/CLV/cadence use fixed reference date `2026-06-18` in `lib/rfm.ts`, `lib/clv.ts`, `lib/format.ts`. Do not mix with `Date.now()` in the same calculation path without unifying.
+
+## Adding a feature checklist
+
+1. Type in `src/types/index.ts` if new entity/field
+2. Seed or store action in `store.tsx`
+3. Permission in `permissions.ts` if role-gated
+4. Hook if derived/filtered data is reused
+5. Route or section in existing page
+6. `logAudit` if user-visible security action
+7. Zod schema in `src/lib/schemas/` if form or validated input — see `validation-schema.mdc`

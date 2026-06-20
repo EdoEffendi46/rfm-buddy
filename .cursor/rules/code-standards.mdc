@@ -1,0 +1,69 @@
+---
+description: TypeScript and React clean-code standards for ChatCRM
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Code Standards
+
+## Imports & paths
+
+```tsx
+// ✅ Use @/ alias (never relative ../../../)
+import { useStore } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+```
+
+## State & data flow
+
+- **Mutations** → `useStore()` actions only. Do not duplicate `useState` for agents/customers/messages.
+- **Derived data** → `useMemo` in hooks (`useCustomers`, `useConversations`) or page-level, not in store unless persisted.
+- **React Query** is wired but unused — do not add `useQuery` until a real API exists.
+
+## TypeScript
+
+- **`strict: true` always** — see `type-strictness.mdc` for full policy.
+- Domain types from `@/types`. Input/API types from `z.infer<typeof schema>` in `src/lib/schemas/`.
+- **`any` forbidden** in new/changed code. Use `unknown` + Zod parse, or proper generics.
+- No `@ts-ignore`, no duplicate DTO interfaces for the same entity.
+- Prefer `Partial<Customer>` patches over loose objects.
+- Export shared unions (`Role`, `RFMSegment`) from types — do not redefine.
+
+## React patterns
+
+- Functional components only. Colocate small helpers in the same file if used once.
+- Use `cn()` from `@/lib/utils` for conditional classes.
+- Route pages: `createFileRoute` + `AppShell` wrapper for authenticated views.
+- Head/meta via route `head: () => ({ meta: [...] })`.
+
+## Forms & validation
+
+- New or refactored forms → `validation-schema.mdc`: Zod in `src/lib/schemas/`, react-hook-form + `zodResolver`, shadcn `Form*`, realtime `mode: "onChange"`.
+- Do not validate with toast-only on submit.
+
+## Clean code
+
+```tsx
+// ❌ Role check that forgets owner
+const isSupervisor = role === "supervisor";
+
+// ✅ Permission or elevated role
+const canViewTeam = role !== "cs";
+// or: hasPermission(role, "view_team_dashboard")
+```
+
+- No dead exports. No commented-out blocks left behind.
+- Match existing Indonesian toast messages: `toast.success("...")` via sonner.
+- ID generation: use store's `genId` pattern (`prefix-random`) for new entities.
+
+## Before editing this file
+
+Follow `change-impact.mdc`: grep imports/callers first. A type or store change here affects hooks and every route.
+
+## Do not
+
+- Skip lint/build/E2E verification — mandatory per `e2e-verification.mdc`.
+- Add automated test **files** unless user asks (verification = lint + build + manual E2E flows).
+- Add new npm deps without strong reason (use existing shadcn/ui, lucide, recharts).
+- Create README/docs files unless requested.
+- Apply a local fix that breaks another route — trace relations first.

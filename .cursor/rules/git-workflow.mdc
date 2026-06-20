@@ -1,0 +1,36 @@
+---
+description: Git commits, pushes, and Lovable sync — both Cursor and Lovable agents
+alwaysApply: true
+---
+
+# Git Workflow
+
+This repo syncs with **Lovable** via git. Broken history or bad commits affect both Cursor and Lovable.
+
+## Commits
+
+- **Only commit when the user explicitly asks.** Never commit proactively.
+- **Never** commit `.env`, credentials, or secrets.
+- Message: 1–2 sentences, focus on *why* (English or match repo style).
+- Keep the branch **buildable** after every commit — Lovable pulls from this branch.
+
+## Forbidden (unless user explicitly requests)
+
+- `git push --force` / `--force-with-lease` on shared branches
+- `git rebase`, `git commit --amend`, squash on commits **already pushed**
+- Rewriting history on `main` or the Lovable-connected branch
+- `git config` changes
+- `--no-verify` / skip hooks unless user asks
+
+## Amend exception
+
+Use `commit --amend` only if ALL true: user asked OR hook auto-fixed files; HEAD commit is yours this session; commit **not pushed**.
+
+## Push
+
+- Do **not** push unless the user explicitly asks.
+- If push needed for PR, use `-u origin HEAD` as appropriate.
+
+## When unsure
+
+Ask: "Should I commit / push these changes?" — do not assume.

@@ -1,0 +1,38 @@
+---
+description: Known bugs and anti-patterns — do not copy; fix when touching these files
+alwaysApply: true
+---
+
+# Known Tech Debt
+
+Do **not** copy these patterns into new code. If you edit the listed file for any reason, **fix the debt in the same task** or ask the user first.
+
+## Open bugs (as of last audit)
+
+| Issue | Location | Wrong pattern | Fix pattern |
+|-------|----------|---------------|-------------|
+| Owner sees CS dashboard | `routes/dashboard.tsx` | `isSupervisor = role === "supervisor"` | `role !== "cs"` or `hasPermission(role, "view_team_dashboard")` |
+| Owner unread badge wrong | `components/layout/Sidebar.tsx` | `role === "supervisor"` for all convos | Owner sees all unread like supervisor |
+| Owner login label wrong | `routes/index.tsx` | owner shown as "CS — akses terbatas" | Distinct copy/badge for owner |
+| `AppShell` blocks owner | `components/layout/AppShell.tsx` | `supervisorOnly && role !== "supervisor"` | Include owner |
+| Field rules not enforced | UI uses `maskPhone` only | ignores dynamic `fieldRules` from store | Use `getFieldDisplay(name, value, role, fieldRules)` |
+| Edit share not enforced | `canEditCustomer` unused | CS with view share might edit | Call `canEditCustomer` on edit actions |
+| Demo date split | `dashboard.tsx` SLA uses `Date.now()` | RFM uses fixed `2026-06-18` | Unify via shared `DEMO_NOW` or document intentional split |
+| Transfer audit gap | `ChatPage.tsx` transfer | only `assignCustomer` → `customer_reassigned` | Also log `conversation_transferred` if spec requires |
+| Legacy `any` types | `cadence.ts`, `ChatPage.tsx`, Select handlers in routes | `as any` casts | Use proper unions / `Message[]` when touching file |
+| `src/lib/schemas/` missing | — | folder not created yet | Create on first form migration per `validation-schema.mdc` |
+
+## Anti-patterns (never introduce)
+
+```tsx
+role === "supervisor"           // forgets owner
+role === "cs" ? x : y           // treats owner as CS
+Date.now() in RFM paths         // inconsistent with demo date
+New global useState for entities // use store
+fetch("/api/...")               // no backend exists
+```
+
+## When fixing debt
+
+- Trace all call sites (see `change-impact.mdc`).
+- Update this file when debt is **resolved** (remove row or mark fixed).

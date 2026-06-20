@@ -1,0 +1,48 @@
+---
+description: Impact analysis before edits — trace relations, prevent cross-page regressions
+alwaysApply: true
+---
+
+# Change & Bug-Fix Discipline
+
+Never patch in isolation. A fix in one file often breaks another screen.
+
+## Before changing anything
+
+1. **Search usages** — grep for the symbol, type, hook, store action, or permission you will touch.
+2. **Trace the chain** — follow the data path:
+   `types` → `data/` seed → `store.tsx` → `hooks/` → `routes/` → `components/`
+3. **Map blast radius** — list every consumer. For ChatCRM, always consider:
+
+   | Area | Files to check |
+   |------|----------------|
+   | Login / roles | `routes/index.tsx` |
+   | Dashboard KPIs | `routes/dashboard.tsx` |
+   | Inbox | `components/chat/ChatPage.tsx`, `useConversations` |
+   | CRM | `routes/customers.tsx`, `useCustomers` |
+   | Settings / audit | `routes/settings.tsx` |
+   | Access control | `lib/permissions.ts`, `lib/mask.ts`, `lib/fieldVisibility.ts` |
+   | Analytics | `lib/rfm.ts`, `lib/clv.ts`, `lib/cadence.ts` |
+
+4. **Read call sites** — open each file that imports what you change; understand how it uses the value.
+
+## Bug-fix rules
+
+- Fix the **root cause**, not the symptom on one page.
+- If you rename, change a type, or alter store shape → update **every** caller in the same task.
+- If you change role/permission logic → verify **CS, supervisor, and owner** on **dashboard, chat, customers, settings**.
+- If you change RFM/cadence/masking → check dashboard charts, customer list, chat sidebar, and detail modals.
+- Do **not** delete or refactor "while you're here" unless the user asked.
+
+## After changing
+
+1. Run `lint` / `build` when the environment allows; if not, say so explicitly.
+2. Mentally walk through affected screens — describe what you verified.
+3. If a regression risk remains, **warn the user** and name the exact pages to manually test.
+
+## When to pause and ask the user
+
+- Fix requires choosing between incompatible behaviors (e.g. owner vs supervisor UI).
+- Same bug has multiple root causes and you're not sure which is intended.
+- Requested fix would require changing shared types/store used by 4+ files — confirm scope first.
+- You found **other pre-existing bugs** while investigating — report them, do not silently fix unrelated issues unless asked.

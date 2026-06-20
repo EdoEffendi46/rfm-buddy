@@ -1,0 +1,36 @@
+---
+description: When and how to call logAudit for security-relevant actions
+globs: "src/{lib/store.tsx,routes/**,components/chat/**}"
+alwaysApply: false
+---
+
+# Audit Instrumentation
+
+Security-sensitive actions must call `logAudit` (or use store actions that already log internally).
+
+## Already wired in store
+
+`login`, `customer_reassigned`, `agent_created`, `agent_role_changed`, `agent_deleted`, `manual_share_created`, `manual_share_revoked`, `export_requested`, `export_approved`, `export_denied`, `data_exported`, `settings_changed` (field rules)
+
+## Must wire when adding/touching these flows
+
+| User action | `AuditAction` | Where |
+|-------------|---------------|-------|
+| Open customer detail (supervisor+) sees full phone | `phone_viewed_full` | `customers.tsx` — already on detail open |
+| Customer create/edit/delete | `customer_created` / `customer_edited` / `customer_deleted` | store or route |
+| Chat transfer | `conversation_transferred` | `ChatPage.tsx` — **currently missing** |
+| Message delete | `conversation_deleted_message` | chat if feature exists |
+| Template/tag/service CRUD | `settings_changed` | `settings.tsx` sections — **partially missing** |
+| Agent online toggle | `agent_deactivated` | if treating offline as audit-worthy |
+
+## Rules
+
+- New `AuditAction` → add to `src/types/index.ts` union first
+- Include `targetType`, `targetId`, `targetLabel`; use `oldValue`/`newValue` for diffs
+- Label in audit UI uses Indonesian mapping in `settings.tsx` — add new action labels there
+- Supervisor viewing audit: respect `canViewAuditEntry` — owner-only actions hidden
+
+## Do not
+
+- Log every button click — only security/governance events
+- Log CS viewing masked phone (no full number exposed)

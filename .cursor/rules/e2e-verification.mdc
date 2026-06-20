@@ -1,0 +1,81 @@
+---
+description: Mandatory E2E verification — lint, build, and full flow testing before done
+alwaysApply: true
+---
+
+# E2E Verification (Mandatory)
+
+**No task is complete until verified end-to-end.** "Should work" or "looks correct" is not done.
+
+## Step 1 — Automated gate (required)
+
+Run **both** before marking complete. Fix failures before finishing — do not hand off broken builds.
+
+```bash
+bun run lint
+bun run build
+```
+
+Fallback order if `bun` missing: `npm run lint` → `npm run build`.
+
+If **all** runners fail in the environment: state exactly what was tried. Task is **blocked**, not done — list what the user must run locally.
+
+`build` includes TypeScript strict check — type errors = build failure.
+
+## Step 2 — App smoke (every implementation)
+
+After any non-trivial change, mentally or manually verify this path loads without console errors:
+
+1. `/` — login page renders
+2. Login as **Rina** → `/dashboard` → `/chat` → `/customers` → `/settings`
+3. Logout → login as **Admin** → same routes (supervisor view)
+4. Logout → login as **Pak Hartono** → same routes (owner view)
+
+Skip only if change is isolated to one route **and** you explicitly confirm others unaffected via grep.
+
+## Step 3 — Feature E2E (touching specific flows)
+
+Execute the **full user journey** for what you changed — not just the happy path click.
+
+| Feature area | Minimum E2E flow |
+|--------------|------------------|
+| Login / roles | Select each agent → Masuk → correct dashboard scope |
+| Dashboard | KPIs render, charts no crash, follow-up actions navigate to chat |
+| Chat | Filter tabs → select conv → send message → snooze/transfer/status if touched |
+| Customers | Search → filter segment → open detail → share modal if touched → add customer submit |
+| Settings | Open each section user role can access → save/edit → locked sections show empty state for CS |
+| Store/types | All 4 main routes + login after data mutation |
+| Permissions | Same action as CS (denied/masked) vs supervisor vs owner |
+
+## Step 4 — Regression checks
+
+- No new `any` introduced (`type-strictness.mdc`)
+- Forms show inline errors on invalid input (`validation-schema.mdc`)
+- CS phone still masked where applicable
+- Toasts in Indonesian, no console.error on happy path
+
+## Definition of DONE (all required)
+
+1. ✅ `lint` passes
+2. ✅ `build` passes
+3. ✅ Smoke path (3 roles) for affected areas
+4. ✅ Feature-specific E2E flow documented in reply
+5. ✅ Known risks listed if something could not be run
+
+## Do not
+
+- Mark complete with only code review
+- Skip build because "small change"
+- Fix lint by disabling rules
+- Leave `@ts-ignore` to make build pass
+
+## Report template (include in every implementation reply)
+
+```
+Verification:
+- lint: pass / fail (…)
+- build: pass / fail (…)
+- E2E: [flows tested]
+- Roles: Rina / Admin / Pak Hartono — [which checked]
+- Open risk: none / [describe]
+```

@@ -1,0 +1,53 @@
+---
+description: CRM domain — RFM, CLV, cadence, customers, Indonesian business context
+globs: "src/{lib/{rfm,clv,cadence,format}.ts,data/**,types/**}"
+alwaysApply: false
+---
+
+# Business Domain (BA)
+
+## Product
+
+ChatCRM serves **laundry & salon** businesses in Indonesia. Currency: **IDR** via `formatRupiah()`. Dates: Indonesian labels via `formatDate()`.
+
+## RFM segments
+
+| Segment | Meaning |
+|---------|---------|
+| champions | High R+F+M — best customers |
+| loyal | High frequency & value |
+| promising | Recent but low frequency |
+| at_risk | Was active, recency dropping |
+| new | First/recent single purchase |
+| dormant | Long inactive |
+
+Scoring lives in `lib/rfm.ts` — do not change thresholds without updating seed data expectations and dashboard copy.
+
+## Cadence
+
+- Labels: `harian`, `mingguan`, `dua_mingguan`, `bulanan`, `tidak_tentu`
+- Display via `CADENCE_LABEL_TEXT`
+- `cadenceFor(purchases, cadenceOverrideDays)` — override set per customer in store
+- Cadence follow-up ≠ RFM at-risk — dashboard treats them separately; preserve that distinction
+
+## CLV
+
+Simple projection in `lib/clv.ts`: avg order × frequency/month × 12. Used for supervisor ranking, not shown to CS unless permission added.
+
+## Customer model
+
+Key fields: `purchases[]`, `assignedAgentId`, `conversationStatus`, `orderStatus`, `priority`, `tags`, `conversationTags`, `segmentHistory`, `manualShares`, `cadenceOverrideDays`.
+
+Order status values: `dalam_proses`, `siap_diambil`, `selesai`.
+
+## Seed data
+
+- Add customers in `data/customers.ts` with realistic purchase timelines relative to `isoDaysAgo()`.
+- Messages in `data/conversations.ts` — customer sends use `senderId: customer.id`.
+- Keep agent IDs consistent: `rina`, `budi`, `sari`, `admin`, `hartono`.
+
+## BA rules for new features
+
+- Every customer-facing label needs Indonesian copy consistent with existing screens.
+- New metrics must define which roles see them (CS vs supervisor vs owner).
+- If a field is sensitive, add to `FieldVisibilityRule` — not ad-hoc hiding in one component.
