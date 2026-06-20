@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { AuthChangeEvent, Session, User } from "@supabase/supabase-js";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   authErrorMessage,
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const bindAgent = useCallback(
-    async (nextUser: User | null) => {
+    async (nextUser: User | null, auditLogin = false) => {
       if (!nextUser) {
         clearAgentSession();
         return;
@@ -49,7 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const agent = await resolveAgentForUser(nextUser);
       if (agent) {
         setAgentSession(agent.id);
-        logAuthLogin(agent);
+        if (auditLogin) logAuthLogin(agent);
       } else {
         clearAgentSession();
       }
@@ -82,10 +82,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = client.auth.onAuthStateChange((_event, nextSession) => {
+    } = client.auth.onAuthStateChange((event: AuthChangeEvent, nextSession) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
-      bindAgent(nextSession?.user ?? null);
+      bindAgent(nextSession?.user ?? null, event === "SIGNED_IN");
     });
 
     return () => {
@@ -111,9 +111,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(nextSession);
       setUser(nextUser);
       setAgentSession(agent.id);
-      logAuthLogin(agent);
     },
-    [usesAuth, logAuthLogin, setAgentSession],
+    [usesAuth, setAgentSession],
   );
 
   const signOut = useCallback(async () => {

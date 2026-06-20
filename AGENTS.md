@@ -157,7 +157,9 @@ const canViewTeam = role !== "cs";
 
 Text must feel like a **real Indonesian CS/shop admin tool** — not AI-generated or translated marketing.
 
-**Tone:** direct, calm, short. User is busy; labels scan in 1–2 seconds.
+**Tone:** direct, calm, short. User is busy; labels scan in 1-2 seconds.
+
+**Punctuation:** use hyphen `-`, not em dash `—`. See `writing-punctuation.mdc`.
 
 **Do:** `Simpan`, `Profil diperbarui`, `Tidak ada customer dalam segment ini.`, `Cari nama, no HP...`
 
@@ -318,7 +320,8 @@ Full detail: `.cursor/rules/e2e-verification.mdc`
 | `team-mindset.mdc` | Always |
 | `project-context.mdc` | Always |
 | `change-impact.mdc` | Always |
-| `ui-copy-voice.mdc` | Always — UI labels, toasts |
+| `ui-copy-voice.mdc` | Always - UI labels, toasts |
+| `writing-punctuation.mdc` | Always - hyphen, not em dash |
 | `git-workflow.mdc` | Always — commits, push, Lovable sync |
 | `validation-done.mdc` | Always — definition of done |
 | `known-tech-debt.mdc` | Always — open bugs, anti-patterns |

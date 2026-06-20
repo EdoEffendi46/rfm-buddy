@@ -195,7 +195,7 @@ function EmailLoginForm({
         Belum punya akun? Hubungi owner bisnis Anda untuk mendapat undangan.
       </p>
 
-      <DemoShortcuts onSelect={fillDemo} activeEmail={email} />
+      {import.meta.env.DEV && <DemoShortcuts onSelect={fillDemo} activeEmail={email} />}
     </AuthLayout>
   );
 }

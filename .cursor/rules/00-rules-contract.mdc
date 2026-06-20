@@ -31,6 +31,7 @@ alwaysApply: true
 | `project-context.mdc` | **Always** |
 | `change-impact.mdc` | **Always** |
 | `ui-copy-voice.mdc` | **Always** |
+| `writing-punctuation.mdc` | **Always** - hyphen, not em dash |
 | `git-workflow.mdc` | **Always** — commits, push, Lovable |
 | `validation-done.mdc` | **Always** — definition of done |
 | `known-tech-debt.mdc` | **Always** — do not copy open bugs |

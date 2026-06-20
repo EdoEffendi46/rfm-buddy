@@ -85,8 +85,8 @@ function AcceptInvitePage() {
 
   return (
     <AuthLayout
-      title="Atur password Anda"
-      subtitle="Anda diundang ke ChatCRM. Buat password untuk mulai menggunakan workspace."
+      title="Atur password untuk akun ChatCRM Anda"
+      subtitle="Anda diundang ke workspace ini. Buat password untuk mulai menggunakan ChatCRM."
     >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

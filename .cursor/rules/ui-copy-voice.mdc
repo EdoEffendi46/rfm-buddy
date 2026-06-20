@@ -1,5 +1,5 @@
 ---
-description: UI labels & copy — natural Indonesian, written by humans not AI
+description: UI labels & copy - natural Indonesian, written by humans not AI
 globs: "**/*.{tsx,ts}"
 alwaysApply: true
 ---
@@ -8,12 +8,14 @@ alwaysApply: true
 
 All user-visible text must read like it was written by **an Indonesian ops/CS team lead**, not an AI or English marketing page translated overnight.
 
+**Punctuation:** never use em dash (`—`). Use hyphen `-` or rephrase - see `writing-punctuation.mdc`.
+
 ## Voice
 
-- **Direct, calm, operational** — the user is a busy CS agent or shop owner.
-- **Short labels** — scannable in 1–2 seconds. No paragraphs in buttons or KPI titles.
-- **Consistent terms** — reuse words already in the app (Customer, Percakapan, CS, Supervisor, Owner, Export, Audit Log).
-- **Indonesian first** — natural spoken-office tone, not stiff textbook or literal Google Translate.
+- **Direct, calm, operational** - the user is a busy CS agent or shop owner.
+- **Short labels** - scannable in 1-2 seconds. No paragraphs in buttons or KPI titles.
+- **Consistent terms** - reuse words already in the app (Customer, Percakapan, CS, Supervisor, Owner, Export, Audit Log).
+- **Indonesian first** - natural spoken-office tone, not stiff textbook or literal Google Translate.
 
 ## Do (match existing app)
 
@@ -24,33 +26,33 @@ All user-visible text must read like it was written by **an Indonesian ops/CS te
 | Empty state | `Tidak ada customer dalam segment ini.` |
 | Locked access | `Bagian ini khusus Supervisor & Owner` |
 | Placeholders | `Cari nama, no HP...`, `Tulis template...`, `Alasan penolakan (wajib)` |
-| Confirm | `Hapus akun agent ${name}?` — plain question, no drama |
+| Confirm | `Hapus akun agent ${name}?` - plain question, no drama |
 
-## Do not (AI tells — never use)
+## Do not (AI tells - never use)
 
 - Marketing fluff: *mempermudah*, *solusi terpadu*, *transformasi digital*, *cutting-edge*, *powerful*, *seamless*, *leverage*, *empower*
-- Over-celebration: *Berhasil!*, *Sukses!*, *Hebat!*, *Selamat, Anda telah...* (except login: `Selamat datang, ${name}!` — already established)
+- Over-celebration: *Berhasil!*, *Sukses!*, *Hebat!*, *Selamat, Anda telah...* (except login: `Selamat datang, ${name}!` - already established)
 - Robotic success: *Operasi berhasil dilakukan*, *Data telah berhasil disimpan*
 - Generic empty: *Tidak ada data*, *No results found*, *Belum ada apapun*
 - Tutorial voice in UI: *Klik di sini untuk...*, *Silakan masukkan...*, *Pastikan Anda...*
 - English in Indonesian screens: *Submit*, *Save changes*, *Learn more*, *Get started* (chat filter tabs Mine/Open are the documented exception)
-- Emoji spam in labels — segment badges and occasional dashboard alerts already use emoji; don't add more to buttons, headings, or toasts
-- Title Case Every Word — use sentence case for descriptions: `Ringkasan customer & percakapan yang ditugaskan untukmu.`
+- Emoji spam in labels - segment badges and occasional dashboard alerts already use emoji; don't add more to buttons, headings, or toasts
+- Title Case Every Word - use sentence case for descriptions: `Ringkasan customer & percakapan yang ditugaskan untukmu.`
 
 ## Label rules
 
-- **Buttons:** verb only or verb + object — `Customer Baru`, not `Tambah Customer Baru Sekarang`
-- **Section titles:** noun phrase — `Manajemen Agent`, `Template Balasan`
-- **Subtitles:** one line, grey (`text-slate-500`) — explain scope, not features
-- **Table headers:** short — `Nama`, `No HP`, `Terakhir Order` (not `Nama Lengkap Customer`)
-- **Errors:** say what happened + what to do — `Alasan penolakan wajib diisi`, not `Validasi gagal`
-- **Demo/disclaimer:** honest and brief — `Demo mode — pilih role untuk melihat perbedaan akses.`
+- **Buttons:** verb only or verb + object - `Customer Baru`, not `Tambah Customer Baru Sekarang`
+- **Section titles:** noun phrase - `Manajemen Agent`, `Template Balasan`
+- **Subtitles:** one line, grey (`text-slate-500`) - explain scope, not features
+- **Table headers:** short - `Nama`, `No HP`, `Terakhir Order` (not `Nama Lengkap Customer`)
+- **Errors:** say what happened + what to do - `Alasan penolakan wajib diisi`, not `Validasi gagal`
+- **Demo/disclaimer:** honest and brief - `Demo mode - pilih role untuk melihat perbedaan akses.`
 
 ## Before adding new copy
 
 1. Search the repo for similar strings (`grep` toast messages, button labels).
 2. Copy the **length and tone** of the closest existing screen.
-3. Read aloud — if it sounds like a chatbot or landing page, rewrite shorter.
+3. Read aloud - if it sounds like a chatbot or landing page, rewrite shorter.
 
 ## Code vs UI
 

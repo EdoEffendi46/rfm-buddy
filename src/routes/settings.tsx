@@ -19,8 +19,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
 import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
-import { inviteAgentServerFn } from "@/lib/invite-agent.fn";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
 import { formatDate } from "@/lib/format";
@@ -162,66 +161,13 @@ function AgentsSection() {
   const { role } = useAuth();
   const { agents, customers, addAgent, registerInvitedAgent, changeAgentRole, deleteAgent } = useStore();
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
   const [newRole, setNewRole] = useState<Role>("cs");
   const [color, setColor] = useState("#0EA5E9");
-  const [inviting, setInviting] = useState(false);
   const usesAuth = isSupabaseConfigured();
   const canDelete = hasPermission(role, "delete_agent_account");
   const canChangeRole = hasPermission(role, "change_agent_role");
   const canInvite = usesAuth && role === "owner";
   const canAddLocal = !usesAuth && hasPermission(role, "manage_agents");
-
-  const handleInvite = async () => {
-    if (!email.trim() || !name.trim()) return;
-    const client = getSupabaseBrowserClient();
-    if (!client) {
-      toast.error("Supabase belum dikonfigurasi");
-      return;
-    }
-    const { data: sessionData } = await client.auth.getSession();
-    if (!sessionData.session) {
-      toast.error("Sesi habis — silakan login ulang");
-      return;
-    }
-    setInviting(true);
-    try {
-      const result = await inviteAgentServerFn({
-        data: {
-          accessToken: sessionData.session.access_token,
-          email: email.trim(),
-          name: name.trim(),
-          role: newRole,
-          color,
-          appOrigin: window.location.origin,
-        },
-      });
-      registerInvitedAgent({
-        id: result.agentId,
-        name: result.name,
-        role: result.role as Role,
-        initials: result.name
-          .trim()
-          .split(/\s+/)
-          .map((w) => w[0])
-          .join("")
-          .slice(0, 2)
-          .toUpperCase(),
-        color,
-        isOnline: false,
-        email: result.email,
-        invitationStatus: "pending",
-      });
-      toast.success(`Undangan dikirim ke ${result.email}`);
-      setName("");
-      setEmail("");
-      setNewRole("cs");
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Gagal mengirim undangan");
-    } finally {
-      setInviting(false);
-    }
-  };
 
   return (
     <Card title="Manajemen Agent">
@@ -281,38 +227,7 @@ function AgentsSection() {
         </tbody>
       </table>
 
-      {canInvite && (
-        <div className="mt-4 rounded-lg border border-[#25D366]/20 bg-[#25D366]/5 p-3">
-          <div className="mb-1 text-sm font-semibold text-slate-900">+ Undang anggota tim</div>
-          <p className="mb-3 text-xs text-slate-500">
-            Kirim email undangan. Penerima mengatur password lewat link di inbox.
-          </p>
-          <div className="flex flex-wrap items-end gap-2">
-            <Input value={name} placeholder="Nama lengkap" onChange={(e) => setName(e.target.value)} className="w-40" />
-            <Input value={email} type="email" placeholder="email@perusahaan.com" onChange={(e) => setEmail(e.target.value)} className="w-52" />
-            <Select value={newRole} onValueChange={(v) => setNewRole(v as Role)}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="cs">CS</SelectItem>
-                <SelectItem value="supervisor">Supervisor</SelectItem>
-                <SelectItem value="owner">Owner</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex gap-1">
-              {["#0EA5E9","#8B5CF6","#EC4899","#F59E0B","#22C55E","#EF4444"].map((c) => (
-                <button key={c} type="button" onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-slate-700" : "border-transparent")} style={{ backgroundColor: c }} />
-              ))}
-            </div>
-            <Button
-              disabled={!name.trim() || !email.trim() || inviting}
-              onClick={handleInvite}
-              className="bg-[#25D366] text-white hover:bg-[#128C7E]"
-            >
-              <Plus className="h-4 w-4" /> {inviting ? "Mengirim…" : "Kirim undangan"}
-            </Button>
-          </div>
-        </div>
-      )}
+      {canInvite && <InviteAgentForm onInvited={registerInvitedAgent} />}
 
       {canAddLocal && (
         <div className="mt-4 rounded-lg border p-3">

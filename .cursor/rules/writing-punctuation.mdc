@@ -1,0 +1,52 @@
+---
+description: Punctuation - use hyphen (-), not em dash (—), in all prose and UI copy
+alwaysApply: true
+---
+
+# Writing punctuation
+
+Do **not** use the em dash (`—`) or en dash (`–`) as punctuation in this project.
+
+Use a **plain hyphen** (`-`) instead, with spaces when it separates phrases.
+
+## Applies to
+
+- User-facing UI copy (labels, toasts, errors, empty states)
+- AI replies to the user in chat
+- Docs and comments when writing for humans (README, AGENTS.md, `.lovable/*.md`)
+
+Code identifiers, URLs, and third-party quoted text are unchanged.
+
+## Replace
+
+| Avoid | Use |
+|-------|-----|
+| `Masuk — ChatCRM` | `Masuk - ChatCRM` |
+| `Demo mode — pilih role` | `Demo mode - pilih role` |
+| `Login gagal — coba lagi` | `Login gagal - coba lagi` |
+| `Opsi A — Lovable Cloud` | `Opsi A - Lovable Cloud` |
+
+## When a hyphen is not enough
+
+- Use a **comma**, **colon**, or **period** instead of a long dash
+- Or split into two short sentences
+
+## Examples
+
+```
+// Bad
+Belum punya akun? Hubungi owner — kami kirim undangan via email.
+
+// Good
+Belum punya akun? Hubungi owner. Undangan dikirim via email.
+```
+
+```
+// Bad (AI reply)
+Auth sudah benar — tidak ada public register — invite owner-only.
+
+// Good
+Auth sudah benar. Tidak ada public register; invite owner-only.
+```
+
+Before finishing any task that adds or edits copy, grep changed files for `—` and `–` and replace with `-` or rephrase.
