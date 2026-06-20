@@ -1,6 +1,7 @@
 import type { Customer, RFMSegment } from "@/types";
+import { DEMO_NOW } from "./demo";
 
-const NOW = new Date("2026-06-18T10:00:00Z");
+const NOW = DEMO_NOW;
 
 function scoreRecency(days: number): number {
   if (days <= 7) return 5;

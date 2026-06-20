@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/hooks/useConversations";
 import { AgentAvatar } from "@/components/Avatar";
 import { cn } from "@/lib/utils";
+import { isTeamView } from "@/lib/permissions";
 import { toast } from "sonner";
 
 function NavItem({
@@ -47,7 +48,7 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const unread = conversations
-    .filter((c) => role === "supervisor" || c.customer.assignedAgentId === agent?.id)
+    .filter((c) => isTeamView(role) || c.customer.assignedAgentId === agent?.id)
     .reduce((s, c) => s + c.unreadCount, 0);
 
   return (

@@ -7,7 +7,10 @@ import { useConversations } from "@/hooks/useConversations";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
 import { formatRupiah, formatDateLong, formatDate } from "@/lib/format";
-import { maskPhone } from "@/lib/mask";
+import { demoNowMs } from "@/lib/demo";
+import { isTeamView, ROLE_DISPLAY } from "@/lib/permissions";
+import { getFieldDisplay } from "@/lib/fieldVisibility";
+import { useStore } from "@/lib/store";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -28,12 +31,14 @@ function DashboardPage() {
   const { agent, role } = useAuth();
   const { enriched, agents } = useCustomers();
   const { conversations } = useConversations();
-  const isSupervisor = role === "supervisor";
+  const { fieldRules } = useStore();
+  const teamView = isTeamView(role);
+  const roleDisplay = role ? ROLE_DISPLAY[role] : ROLE_DISPLAY.cs;
 
-  const myEnriched = isSupervisor
+  const myEnriched = teamView
     ? enriched
     : enriched.filter((e) => e.customer.assignedAgentId === agent?.id);
-  const myConvs = isSupervisor
+  const myConvs = teamView
     ? conversations
     : conversations.filter((c) => c.customer.assignedAgentId === agent?.id);
 
@@ -72,7 +77,7 @@ function DashboardPage() {
   const slaBreach = myConvs.filter((c) => {
     if (c.unreadCount === 0 || !c.lastMessage) return false;
     const last = new Date(c.lastMessage.timestamp).getTime();
-    return Date.now() - last > 2 * 60 * 60 * 1000;
+    return demoNowMs() - last > 2 * 60 * 60 * 1000;
   }).length;
   const championsCount = segmentData.find((s) => s.segment === "champions")?.value ?? 0;
   const atRiskCount = segmentData.find((s) => s.segment === "at_risk")?.value ?? 0;
@@ -124,23 +129,23 @@ function DashboardPage() {
             <div className="text-xs text-slate-500">{formatDateLong(new Date().toISOString())}</div>
             <h1 className="text-2xl font-bold tracking-tight">Halo, {agent?.name} 👋</h1>
             <p className="text-sm text-slate-500">
-              {isSupervisor ? "Ringkasan performa tim, segmentasi RFM & follow-up." : "Ringkasan customer & percakapan yang ditugaskan untukmu."}
+              {roleDisplay.dashboardSubtitle}
             </p>
           </div>
-          <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${isSupervisor ? "bg-amber-100 text-amber-700" : "bg-sky-100 text-sky-700"}`}>
-            {isSupervisor ? "Supervisor" : "CS"}
+          <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${roleDisplay.badgeClass}`}>
+            {role === "owner" ? "Owner" : role === "supervisor" ? "Supervisor" : "CS"}
           </span>
         </div>
 
         {/* Alert Banners */}
         <div className="space-y-2">
-          {isSupervisor && atRiskCount > 0 && (
+          {teamView && atRiskCount > 0 && (
             <button onClick={() => navigate({ to: "/customers" })} className="flex w-full items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-left text-red-800 hover:bg-red-100">
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
               <div className="text-sm"><span className="font-semibold">🚨 {atRiskCount} customer At Risk</span> — terakhir order &gt;60 hari. Segera follow up.</div>
             </button>
           )}
-          {isSupervisor && championsCount > 0 && (
+          {teamView && championsCount > 0 && (
             <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-violet-50 p-4 text-violet-800">
               <Crown className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
               <div className="text-sm"><span className="font-semibold">👑 {championsCount} customer Champions</span> — pastikan tetap dijaga relasinya.</div>
@@ -167,7 +172,7 @@ function DashboardPage() {
 
         {/* KPI */}
         <div className="grid gap-4 md:grid-cols-4">
-          {isSupervisor ? (
+          {teamView ? (
             <>
               <Kpi title="Total Customer" value={enriched.length.toString()} sub={`${enriched.filter((e) => e.rfm.segment === "new").length} baru bulan ini`} />
               <Kpi title="Open Conversations" value={openConvs.toString()} sub={`${awaitingReply} belum dibalas`} />
@@ -185,7 +190,7 @@ function DashboardPage() {
         </div>
 
         {/* Charts — Supervisor only */}
-        {isSupervisor && (
+        {teamView && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-sm font-semibold">Distribusi Segment RFM</div>
@@ -226,7 +231,7 @@ function DashboardPage() {
         )}
 
         {/* Follow Up */}
-        {isSupervisor && (
+        {teamView && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold">🚨 Customer Prioritas Follow Up</div>
@@ -257,7 +262,7 @@ function DashboardPage() {
                     return (
                       <tr key={e.customer.id} className="border-t border-slate-100">
                         <td className="py-2 font-medium">{e.customer.name}</td>
-                        <td className="font-mono text-xs">{maskPhone(e.customer.phone, role)}</td>
+                        <td className="font-mono text-xs">{getFieldDisplay("phone", e.customer.phone, role, fieldRules)}</td>
                         <td><SegmentBadge segment={e.rfm.segment} /></td>
                         <td className="text-right font-mono text-xs">{e.rfm.total}/15</td>
                         <td className="text-right font-mono text-xs">{e.rfm.recencyDays}</td>
@@ -286,7 +291,7 @@ function DashboardPage() {
         )}
 
         {/* CS Performance */}
-        {isSupervisor && (
+        {teamView && (
         <div id="cadence-followup" className="rounded-2xl border border-amber-200 bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm font-semibold">
@@ -358,7 +363,7 @@ function DashboardPage() {
         </div>
         )}
 
-        {isSupervisor && (
+        {teamView && (
         <div className="grid gap-4 md:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-sm font-semibold">Performa CS</div>

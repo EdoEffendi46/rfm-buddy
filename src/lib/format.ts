@@ -35,13 +35,15 @@ export function daysBetween(iso: string, now = new Date()): number {
   return Math.floor((now.getTime() - d.getTime()) / 86400000);
 }
 
-export function isoDaysAgo(days: number, base = new Date("2026-06-18T10:00:00Z")): string {
+import { DEMO_NOW } from "./demo";
+
+export function isoDaysAgo(days: number, base = DEMO_NOW): string {
   const d = new Date(base);
   d.setDate(d.getDate() - days);
   return d.toISOString();
 }
 
-export function isoHoursAgo(hours: number, base = new Date("2026-06-18T10:00:00Z")): string {
+export function isoHoursAgo(hours: number, base = DEMO_NOW): string {
   const d = new Date(base);
   d.setHours(d.getHours() - hours);
   return d.toISOString();

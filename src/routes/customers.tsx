@@ -1,13 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useStore } from "@/lib/store";
-import { hasPermission, shareBadgeFor } from "@/lib/permissions";
+import { hasPermission, shareBadgeFor, canEditCustomer } from "@/lib/permissions";
+import { getFieldDisplay } from "@/lib/fieldVisibility";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
-import { maskPhone } from "@/lib/mask";
 import { formatDate, formatRupiah } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
@@ -24,8 +26,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  customerCreateSchema,
+  parseCustomerCreateTags,
+  type CustomerCreateInput,
+} from "@/lib/schemas/customer";
 import type { RFMSegment, Customer, Agent, ManualShare } from "@/types";
-import { useEffect } from "react";
 
 export const Route = createFileRoute("/customers")({
   head: () => ({ meta: [{ title: "Customer — ChatCRM" }] }),
@@ -47,7 +61,7 @@ type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdu
 function CustomersPage() {
   const { role, agent } = useAuth();
   const { enriched, agents, addCustomer } = useCustomers();
-  const { createManualShare, revokeManualShare, logAudit } = useStore();
+  const { createManualShare, revokeManualShare, logAudit, fieldRules } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<"all" | RFMSegment>("all");
@@ -217,7 +231,7 @@ function CustomersPage() {
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 font-mono text-xs">{maskPhone(e.customer.phone, role)}</td>
+                        <td className="px-3 py-2 font-mono text-xs">{getFieldDisplay("phone", e.customer.phone, role, fieldRules)}</td>
                         <td className="px-3 py-2"><SegmentBadge segment={e.rfm.segment} /></td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
@@ -316,7 +330,7 @@ function CustomersPage() {
                         <div>
                           <div className="font-semibold">{e.customer.name}</div>
                           <div className="font-mono text-xs text-slate-500">
-                            {maskPhone(e.customer.phone, role)}
+                            {getFieldDisplay("phone", e.customer.phone, role, fieldRules)}
                           </div>
                         </div>
                       </div>
@@ -383,6 +397,8 @@ function CustomersPage() {
             navigate({ to: "/chat/$customerId", params: { customerId: id } });
           }}
           agents={agents}
+          agent={agent}
+          fieldRules={fieldRules}
           currentAgentId={agent?.id ?? ""}
           onShare={(input) => {
             createManualShare(input);
@@ -432,6 +448,8 @@ function CustomerDetailModal({
   onClose,
   onOpenChat,
   agents,
+  agent,
+  fieldRules,
   currentAgentId,
   onShare,
   onRevoke,
@@ -443,6 +461,8 @@ function CustomerDetailModal({
   onClose: () => void;
   onOpenChat: (id: string) => void;
   agents: Agent[];
+  agent: Agent | null;
+  fieldRules: import("@/types").FieldVisibilityRule[];
   currentAgentId: string;
   onShare: (input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => void;
   onRevoke: (customerId: string, shareId: string) => void;
@@ -452,6 +472,7 @@ function CustomerDetailModal({
   const cad = enriched.cadence;
   const { saveNotes } = useCustomers();
   const [notes, setNotes] = useState(customer.notes);
+  const canEdit = canEditCustomer(agent, customer);
   const meta = SEGMENT_META[rfm.segment];
   const lastP = customer.purchases.length
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
@@ -493,7 +514,7 @@ function CustomerDetailModal({
               <Avatar name={customer.name} color={meta.color} size={56} ringColor={meta.color} />
               <div>
                 <div className="text-lg font-semibold">{customer.name}</div>
-                <div className="font-mono text-xs text-slate-500">{maskPhone(customer.phone, role)}</div>
+                <div className="font-mono text-xs text-slate-500">{getFieldDisplay("phone", customer.phone, role, fieldRules)}</div>
                 <div className="text-[11px] text-slate-400">Bergabung {formatDate(customer.joinDate)}</div>
               </div>
               <div className="ml-auto"><SegmentBadge segment={rfm.segment} size="md" /></div>
@@ -595,9 +616,19 @@ function CustomerDetailModal({
             </div>
           </TabsContent>
           <TabsContent value="notes">
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={6} />
+            <Textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={6}
+              readOnly={!canEdit}
+              className={!canEdit ? "bg-slate-50 text-slate-600" : undefined}
+            />
+            {!canEdit && (
+              <p className="mt-1 text-xs text-slate-500">Akses lihat saja — catatan tidak bisa diedit.</p>
+            )}
             <Button
               className="mt-2"
+              disabled={!canEdit}
               onClick={() => {
                 saveNotes(customer.id, notes);
                 toast.success("Catatan disimpan");
@@ -716,60 +747,133 @@ function AddCustomerModal({
   agents: ReturnType<typeof useCustomers>["agents"];
   onAdd: (d: { name: string; phone: string; agentId: string; tags: string[]; notes: string }) => void;
 }) {
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [agentId, setAgentId] = useState(agents[0]?.id ?? "");
-  const [tagsInput, setTagsInput] = useState("");
-  const [notes, setNotes] = useState("");
+  const defaultAgentId = agents.find((a) => a.role === "cs")?.id ?? agents[0]?.id ?? "";
+
+  const form = useForm<CustomerCreateInput>({
+    resolver: zodResolver(customerCreateSchema),
+    mode: "onChange",
+    defaultValues: {
+      name: "",
+      phone: "",
+      agentId: defaultAgentId,
+      tagsInput: "",
+      notes: "",
+    },
+  });
+
+  useEffect(() => {
+    if (open) {
+      form.reset({
+        name: "",
+        phone: "",
+        agentId: agents.find((a) => a.role === "cs")?.id ?? agents[0]?.id ?? "",
+        tagsInput: "",
+        notes: "",
+      });
+    }
+  }, [open, agents, form]);
+
+  const onSubmit = (values: CustomerCreateInput) => {
+    onAdd({
+      name: values.name.trim(),
+      phone: values.phone.trim(),
+      agentId: values.agentId,
+      tags: parseCustomerCreateTags(values.tagsInput),
+      notes: values.notes?.trim() ?? "",
+    });
+    onClose();
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
         <DialogHeader><DialogTitle>Tambah Customer Baru</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <label className="text-xs font-medium">Nama *</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
-          </div>
-          <div>
-            <label className="text-xs font-medium">No HP *</label>
-            <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="0812..." />
-          </div>
-          <div>
-            <label className="text-xs font-medium">Pilih CS *</label>
-            <Select value={agentId} onValueChange={setAgentId}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {agents.filter((a) => a.role === "cs").map((a) => (
-                  <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-xs font-medium">Tags (pisahkan koma)</label>
-            <Input value={tagsInput} onChange={(e) => setTagsInput(e.target.value)} placeholder="VIP, Langganan" />
-          </div>
-          <div>
-            <label className="text-xs font-medium">Catatan</label>
-            <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="ghost" onClick={onClose}>Batal</Button>
-          <Button
-            disabled={!name.trim() || !phone.trim()}
-            onClick={() => onAdd({
-              name: name.trim(),
-              phone: phone.trim(),
-              agentId,
-              tags: tagsInput.split(",").map((t) => t.trim()).filter(Boolean),
-              notes,
-            })}
-            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
-          >
-            Tambah
-          </Button>
-        </DialogFooter>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Nama *</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">No HP *</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="0812..." />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="agentId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Pilih CS *</FormLabel>
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {agents.filter((a) => a.role === "cs").map((a) => (
+                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="tagsInput"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Tags (pisahkan koma)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="VIP, Langganan" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs font-medium">Catatan</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} rows={2} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={onClose}>Batal</Button>
+              <Button
+                type="submit"
+                disabled={!form.formState.isValid}
+                className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+              >
+                Tambah
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

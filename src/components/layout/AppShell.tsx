@@ -2,6 +2,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "./Sidebar";
+import { isTeamView } from "@/lib/permissions";
 
 export function AppShell({
   children,
@@ -18,7 +19,7 @@ export function AppShell({
   useEffect(() => {
     if (!agent) {
       router.navigate({ to: "/" });
-    } else if (supervisorOnly && role !== "supervisor") {
+    } else if (supervisorOnly && !isTeamView(role)) {
       router.navigate({ to: "/dashboard" });
     }
   }, [agent, role, supervisorOnly, router]);

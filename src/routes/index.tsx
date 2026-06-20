@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Check, ArrowRight, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ROLE_DISPLAY } from "@/lib/permissions";
+import type { Role } from "@/types";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -101,15 +103,13 @@ function LoginPage() {
                 <div className="flex-1">
                   <div className="font-semibold text-slate-900">{a.name}</div>
                   <div className="text-xs text-slate-500">
-                    {a.role === "supervisor" ? "Supervisor — akses penuh" : "CS — akses terbatas"}
+                    {ROLE_DISPLAY[a.role as Role].subtitle}
                   </div>
                 </div>
                 <span
                   className={cn(
                     "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                    a.role === "supervisor"
-                      ? "bg-amber-100 text-amber-700"
-                      : "bg-sky-100 text-sky-700",
+                    ROLE_DISPLAY[a.role as Role].badgeClass,
                   )}
                 >
                   {a.role}

@@ -19,7 +19,10 @@ export function getFieldDisplay(
   rules: FieldVisibilityRule[] = DEFAULT_FIELD_RULES,
 ): string {
   const rule = rules.find((r) => r.fieldName === fieldName && r.hiddenForRoles.includes(role));
-  if (!rule) return String(value);
+  if (!rule) {
+    if (fieldName === "phone") return maskPhone(String(value), role);
+    return String(value);
+  }
   switch (rule.maskPattern) {
     case "phone": return maskPhone(String(value), role);
     case "currency_range": return "Rp •••";

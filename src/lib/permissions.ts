@@ -39,6 +39,32 @@ export function hasPermission(role: Role | undefined | null, p: Permission): boo
   return ROLE_PERMISSIONS[role].includes(p);
 }
 
+/** Supervisor and owner — team-wide dashboard, unread, etc. */
+export function isTeamView(role: Role | undefined | null): boolean {
+  return hasPermission(role, "view_team_dashboard");
+}
+
+export const ROLE_DISPLAY: Record<
+  Role,
+  { subtitle: string; badgeClass: string; dashboardSubtitle: string }
+> = {
+  cs: {
+    subtitle: "CS — akses terbatas",
+    badgeClass: "bg-sky-100 text-sky-700",
+    dashboardSubtitle: "Ringkasan customer & percakapan yang ditugaskan untukmu.",
+  },
+  supervisor: {
+    subtitle: "Supervisor — akses penuh",
+    badgeClass: "bg-amber-100 text-amber-700",
+    dashboardSubtitle: "Ringkasan performa tim, segmentasi RFM & follow-up.",
+  },
+  owner: {
+    subtitle: "Owner — billing & approval",
+    badgeClass: "bg-red-100 text-red-700",
+    dashboardSubtitle: "Ringkasan performa tim, segmentasi RFM & follow-up.",
+  },
+};
+
 function shareActiveFor(c: Customer, agentId: string): { permission: "view" | "edit"; sharedByAgentId: string } | null {
   if (!c.manualShares?.length) return null;
   const now = Date.now();

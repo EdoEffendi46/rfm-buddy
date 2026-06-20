@@ -1,6 +1,7 @@
 import type { Customer } from "@/types";
+import { DEMO_NOW } from "./demo";
 
-const NOW = new Date("2026-06-18T10:00:00Z");
+const NOW = DEMO_NOW;
 
 export interface CLVResult {
   totalSpent: number;

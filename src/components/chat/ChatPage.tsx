@@ -5,7 +5,9 @@ import { useCustomers } from "@/hooks/useCustomers";
 import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
 import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
-import { maskPhone } from "@/lib/mask";
+import { getFieldDisplay } from "@/lib/fieldVisibility";
+import { canEditCustomer } from "@/lib/permissions";
+import { useStore } from "@/lib/store";
 import { formatTime, formatRupiah, formatDate, relativeDay, relativeTime, minutesBetween } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
@@ -58,6 +60,7 @@ function orderStatusLabel(s: OrderStatus) {
 export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) {
   const { agent, role } = useAuth();
   const store = useConversations();
+  const { fieldRules } = useStore();
   const { customers, enriched, templates, tags, agents } = useCustomers();
 
   const [search, setSearch] = useState("");
@@ -380,7 +383,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     <SegmentBadge segment={selectedRfm!.segment} />
                   </div>
                   <div className="font-mono text-xs text-slate-500">
-                    {maskPhone(selectedCustomer.phone, role)}
+                    {getFieldDisplay("phone", selectedCustomer.phone, role, fieldRules)}
                   </div>
                 </div>
               </div>
@@ -653,6 +656,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           rfm={selectedRfm}
           clv={selectedClv}
           role={role}
+          agent={agent}
         />
       )}
 
@@ -703,6 +707,16 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     key={a.id}
                     onClick={() => {
                       if (!selectedCustomer) return;
+                      const oldAgent = agents.find((a) => a.id === selectedCustomer.assignedAgentId);
+                      store.logAudit({
+                        action: "conversation_transferred",
+                        targetType: "conversation",
+                        targetId: selectedCustomer.id,
+                        targetLabel: selectedCustomer.name,
+                        oldValue: oldAgent?.name ?? "—",
+                        newValue: a.name,
+                        details: "Transfer percakapan antar CS",
+                      });
                       store.assignCustomer(selectedCustomer.id, a.id);
                       store.sendMessage(
                         selectedCustomer.id,
@@ -852,13 +866,17 @@ function CustomerSidePanel({
   rfm,
   clv,
   role,
+  agent,
 }: {
   customer: Customer;
   rfm: ReturnType<typeof calculateRFM>;
   clv: ReturnType<typeof calculateCLV>;
   role: import("@/types").Role;
+  agent: import("@/types").Agent | null;
 }) {
   const store = useConversations();
+  const { fieldRules } = useStore();
+  const canEdit = canEditCustomer(agent, customer);
   const [notesDraft, setNotesDraft] = useState(customer.notes);
   useEffect(() => setNotesDraft(customer.notes), [customer.id, customer.notes]);
   const meta = SEGMENT_META[rfm.segment];
@@ -875,7 +893,7 @@ function CustomerSidePanel({
       <div className="flex flex-col items-center text-center">
         <Avatar name={customer.name} size={72} color={meta.color} ringColor={meta.color} />
         <h3 className="mt-3 text-lg font-semibold">{customer.name}</h3>
-        <div className="font-mono text-xs text-slate-500">{maskPhone(customer.phone, role)}</div>
+        <div className="font-mono text-xs text-slate-500">{getFieldDisplay("phone", customer.phone, role, fieldRules)}</div>
         <div className="text-[11px] text-slate-400">Bergabung {formatDate(customer.joinDate)}</div>
         <div className="mt-2"><SegmentBadge segment={rfm.segment} size="md" /></div>
       </div>
@@ -905,7 +923,7 @@ function CustomerSidePanel({
 
       {/* Cadence card */}
       <div className="mt-3">
-        <CadenceCard customer={customer} cadence={cadence} />
+        <CadenceCard customer={customer} cadence={cadence} canEdit={canEdit} />
       </div>
 
       {/* Stats */}
@@ -1019,14 +1037,16 @@ function CustomerSidePanel({
           value={notesDraft}
           onChange={(e) => setNotesDraft(e.target.value)}
           onBlur={() => {
+            if (!canEdit) return;
             if (notesDraft !== customer.notes) {
               store.saveNotes(customer.id, notesDraft);
               toast.success("Catatan disimpan");
             }
           }}
-          placeholder="Catatan internal CS..."
+          readOnly={!canEdit}
+          placeholder={canEdit ? "Catatan internal CS..." : "Akses lihat saja"}
           rows={3}
-          className="mt-1 text-xs"
+          className={cn("mt-1 text-xs", !canEdit && "bg-slate-50 text-slate-600")}
         />
         <div className="mt-1 text-[10px] text-slate-400">🔒 Hanya terlihat oleh tim internal</div>
       </div>
@@ -1057,9 +1077,11 @@ function ScoreRow({ label, score }: { label: string; score: number }) {
 function CadenceCard({
   customer,
   cadence,
+  canEdit,
 }: {
   customer: Customer;
   cadence: CadenceResult;
+  canEdit: boolean;
 }) {
   const store = useConversations();
   const [editing, setEditing] = useState(false);
@@ -1129,7 +1151,9 @@ function CadenceCard({
         <div className={cn("mt-1 text-[11px]", predictionTone)}>{predictionMsg}</div>
       )}
       <div className="mt-2">
-        {editing ? (
+        {!canEdit ? (
+          <p className="text-[11px] text-slate-400">Akses lihat saja — siklus manual tidak bisa diedit.</p>
+        ) : editing ? (
           <div className="flex items-center gap-1">
             <Input
               type="number"

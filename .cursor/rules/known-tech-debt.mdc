@@ -11,21 +11,25 @@ Do **not** copy these patterns into new code. If you edit the listed file for an
 
 | Issue | Location | Wrong pattern | Fix pattern |
 |-------|----------|---------------|-------------|
-| Owner sees CS dashboard | `routes/dashboard.tsx` | `isSupervisor = role === "supervisor"` | `role !== "cs"` or `hasPermission(role, "view_team_dashboard")` |
-| Owner unread badge wrong | `components/layout/Sidebar.tsx` | `role === "supervisor"` for all convos | Owner sees all unread like supervisor |
-| Owner login label wrong | `routes/index.tsx` | owner shown as "CS — akses terbatas" | Distinct copy/badge for owner |
-| `AppShell` blocks owner | `components/layout/AppShell.tsx` | `supervisorOnly && role !== "supervisor"` | Include owner |
-| Field rules not enforced | UI uses `maskPhone` only | ignores dynamic `fieldRules` from store | Use `getFieldDisplay(name, value, role, fieldRules)` |
-| Edit share not enforced | `canEditCustomer` unused | CS with view share might edit | Call `canEditCustomer` on edit actions |
-| Demo date split | `dashboard.tsx` SLA uses `Date.now()` | RFM uses fixed `2026-06-18` | Unify via shared `DEMO_NOW` or document intentional split |
-| Transfer audit gap | `ChatPage.tsx` transfer | only `assignCustomer` → `customer_reassigned` | Also log `conversation_transferred` if spec requires |
 | Legacy `any` types | `cadence.ts`, `ChatPage.tsx`, Select handlers in routes | `as any` casts | Use proper unions / `Message[]` when touching file |
-| `src/lib/schemas/` missing | — | folder not created yet | Create on first form migration per `validation-schema.mdc` |
+
+## Recently fixed (Phase 1)
+
+- Owner dashboard / sidebar / login / AppShell — use `isTeamView()` + `ROLE_DISPLAY` in `permissions.ts`
+- `src/lib/schemas/customer.ts` — Zod schema for add-customer form
+- `AddCustomerModal` — react-hook-form + zodResolver
+
+## Recently fixed (Phase 1.5)
+
+- `getFieldDisplay()` wired in customers, dashboard, chat (respects `fieldRules` from store)
+- `canEditCustomer()` enforced on notes + cadence override (view-only share blocks edit)
+- Transfer chat logs `conversation_transferred` audit entry
+- `DEMO_NOW` in `src/lib/demo.ts` — unified demo date for RFM + dashboard SLA
 
 ## Anti-patterns (never introduce)
 
 ```tsx
-role === "supervisor"           // forgets owner
+role === "supervisor"           // forgets owner — use isTeamView(role)
 role === "cs" ? x : y           // treats owner as CS
 Date.now() in RFM paths         // inconsistent with demo date
 New global useState for entities // use store

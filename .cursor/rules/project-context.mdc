@@ -33,7 +33,7 @@ Never force-push or rewrite pushed git history (rebase/amend/squash on shared br
 
 ## Demo constants
 
-RFM/CLV/cadence use fixed reference date `2026-06-18` in `lib/rfm.ts`, `lib/clv.ts`, `lib/format.ts`. Do not mix with `Date.now()` in the same calculation path without unifying.
+RFM/CLV/cadence use fixed reference date `DEMO_NOW` in `lib/demo.ts` (2026-06-18). Do not mix with `Date.now()` in the same calculation path without unifying.
 
 ## Adding a feature checklist
 
