@@ -1,42 +1,41 @@
 ---
-description: Demo app boundaries — do not pretend production features exist
+description: Demo app boundaries — label simulated vs real features honestly
 alwaysApply: true
 ---
 
 # Demo Honesty
 
-ChatCRM is an **in-memory demo**. UI and copy must not mislead users into thinking production infra exists.
+ChatCRM **MVP 1** = beli putus (single tenant). When Supabase is configured, **auth + DB persistence are real**. WhatsApp inbox and billing remain simulated unless stated otherwise.
 
-## What is real (in the browser)
+## What is real (when Supabase configured)
 
-- React UI, client-side state in `StoreProvider`
-- Seeded data from `src/data/*.ts`
-- RFM / CLV / cadence calculations (client-side, fixed demo date)
+- Email/password login (Supabase Auth)
+- Owner invite flow → email → set password
+- Customer/message/agent data persisted in PostgreSQL
+- RFM / CLV / cadence calculations (client-side logic, real customer data from DB)
 
 ## What is simulated (say so in UI if adding related features)
 
 | Feature | Reality |
 |---------|---------|
-| WhatsApp inbox | Mock messages in `store.messages` |
-| Export CSV | Toast + audit log only — no file generation unless explicitly implemented |
-| Login | Agent picker — no password auth |
-| Billing settings | Placeholder UI |
-| Persistence | **None** — refresh resets state |
-| Backend / API | **None** — do not add `fetch`, tRPC, Supabase unless user requests full backend |
+| WhatsApp inbox | Mock messages — not connected to WA Business API |
+| Export CSV | Toast + audit log — verify file download before claiming |
+| Billing settings | Placeholder UI — not Stripe/payment |
+| Demo login shortcuts | Labeled dev/demo — pre-filled credentials |
 
-## Copy rules for demo features
+## MVP 1 auth copy
 
-- OK: `(demo)`, `File CSV berhasil diunduh (demo)` — matches existing export toasts
-- OK: `Demo mode — pilih role untuk melihat perbedaan akses.`
-- Not OK: "Data tersimpan ke cloud", "Pesan terkirim ke WhatsApp", "Sinkronisasi real-time"
+- **No** "Daftar sekarang" — use *"Hubungi owner bisnis Anda"*
+- **No** public registration route
+- Invite flow is production-intent for deployed instances
 
 ## Do not add without explicit ask
 
+- Public SaaS signup / multi-tenant org picker
 - Fake loading spinners for instant in-memory ops
-- OAuth / API keys / `.env` usage in app code
-- "Production-ready" auth, rate limiting, or webhooks
-- Marketing landing copy inside the authenticated app
+- "Production-ready" WhatsApp webhooks
+- Marketing landing copy inside authenticated app
 
-## If user asks for "real" backend
+## If user asks for SaaS phase
 
-Stop and clarify scope: database, auth provider, WhatsApp API — then plan separately from demo rules.
+Plan separately: organizations, subscriptions, self-serve register — see `mvp1-product.mdc`.

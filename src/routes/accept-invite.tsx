@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { Button } from "@/components/ui/button";
@@ -19,14 +19,14 @@ import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/schemas/auth";
 import { isPasswordSetupSession } from "@/lib/supabase/auth";
 
-export const Route = createFileRoute("/reset-password")({
+export const Route = createFileRoute("/accept-invite")({
   head: () => ({
-    meta: [{ title: "Reset Password — ChatCRM" }],
+    meta: [{ title: "Terima Undangan — ChatCRM" }],
   }),
-  component: ResetPasswordPage,
+  component: AcceptInvitePage,
 });
 
-function ResetPasswordPage() {
+function AcceptInvitePage() {
   const router = useRouter();
   const { setNewPassword, isAuthLoading } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
@@ -47,7 +47,7 @@ function ResetPasswordPage() {
     setSubmitting(true);
     try {
       await setNewPassword(values.password);
-      toast.success("Password berhasil diperbarui.");
+      toast.success("Password berhasil dibuat. Selamat datang di ChatCRM!");
       router.navigate({ to: "/dashboard" });
     } catch (err) {
       toast.error(authErrorMessage(err));
@@ -67,18 +67,27 @@ function ResetPasswordPage() {
   if (!ready) {
     return (
       <AuthLayout
-        title="Link tidak valid"
-        subtitle="Link reset password kadaluarsa atau sudah dipakai."
+        title="Link undangan tidak valid"
+        subtitle="Link mungkin kadaluarsa atau sudah dipakai. Minta owner mengirim ulang undangan."
       >
-        <Link to="/forgot-password">
-          <Button className="w-full bg-[#25D366] hover:bg-[#128C7E]">Minta link baru</Button>
+        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-6 text-center">
+          <MailCheck className="mx-auto h-10 w-10 text-slate-400" />
+          <p className="mt-3 text-sm text-slate-600">
+            Buka link undangan terbaru dari email Anda, atau hubungi owner workspace.
+          </p>
+        </div>
+        <Link to="/" className="mt-6 inline-block text-sm font-medium text-[#128C7E] hover:underline">
+          Kembali ke login
         </Link>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout title="Password baru" subtitle="Buat password baru untuk akun ChatCRM Anda.">
+    <AuthLayout
+      title="Atur password Anda"
+      subtitle="Anda diundang ke ChatCRM. Buat password untuk mulai menggunakan workspace."
+    >
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField
@@ -143,7 +152,7 @@ function ResetPasswordPage() {
               </>
             ) : (
               <>
-                Simpan password
+                Aktifkan akun
                 <ArrowRight className="ml-1 h-4 w-4" />
               </>
             )}

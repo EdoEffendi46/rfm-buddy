@@ -104,6 +104,7 @@ interface StoreState {
   toggleAgentOnline: (id: string) => void;
   updateAgent: (id: string, patch: Partial<Agent>) => void;
   addAgent: (a: Omit<Agent, "id" | "initials">) => void;
+  registerInvitedAgent: (agent: Agent) => void;
   changeAgentRole: (id: string, newRole: Role) => void;
   deleteAgent: (id: string) => void;
 }
@@ -480,6 +481,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, [currentAgent, logAuditRaw]);
 
+  const registerInvitedAgent = useCallback(
+    (agent: Agent) => {
+      db.persistAgent(agent);
+      setAgents((p) => [...p, agent]);
+      logAuditRaw(currentAgent, {
+        action: "agent_created",
+        targetType: "agent",
+        targetId: agent.id,
+        targetLabel: agent.name,
+        details: `Undangan dikirim ke ${agent.email} (${agent.role})`,
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
+
   const changeAgentRole = useCallback((id: string, newRole: Role) => {
     setAgents((prev) => {
       const ag = prev.find((a) => a.id === id);
@@ -739,6 +755,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     toggleAgentOnline,
     updateAgent,
     addAgent,
+    registerInvitedAgent,
     changeAgentRole,
     deleteAgent,
   };

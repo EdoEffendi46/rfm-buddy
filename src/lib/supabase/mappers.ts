@@ -32,6 +32,8 @@ export function agentToRow(a: Agent) {
     initials: a.initials,
     color: a.color,
     is_online: a.isOnline,
+    ...(a.email != null ? { email: a.email } : {}),
+    ...(a.invitationStatus != null ? { invitation_status: a.invitationStatus } : {}),
   };
 }
 
@@ -42,6 +44,8 @@ export function rowToAgent(r: {
   initials: string;
   color: string;
   is_online: boolean;
+  email?: string | null;
+  invitation_status?: "pending" | "active" | null;
 }): Agent {
   return {
     id: r.id,
@@ -50,6 +54,8 @@ export function rowToAgent(r: {
     initials: r.initials,
     color: r.color,
     isOnline: r.is_online,
+    email: r.email ?? null,
+    invitationStatus: r.invitation_status ?? "active",
   };
 }
 

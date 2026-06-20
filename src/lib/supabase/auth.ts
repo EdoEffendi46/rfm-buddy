@@ -49,34 +49,6 @@ export async function signInWithEmail(
   return data;
 }
 
-export async function signUpWithEmail(name: string, email: string, password: string) {
-  const client = getSupabaseBrowserClient();
-  if (!client) throw new Error("Supabase belum dikonfigurasi");
-
-  const initials = name
-    .trim()
-    .split(/\s+/)
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
-
-  const { data, error } = await client.auth.signUp({
-    email,
-    password,
-    options: {
-      data: {
-        name: name.trim(),
-        role: "cs",
-        initials,
-        color: "#0EA5E9",
-      },
-    },
-  });
-  if (error) throw error;
-  return data;
-}
-
 export async function signOutAuth() {
   const client = getSupabaseBrowserClient();
   if (!client) return;
@@ -102,8 +74,12 @@ export async function updatePassword(newPassword: string) {
   if (error) throw error;
 }
 
-export function isRecoverySession(): boolean {
+export function isPasswordSetupSession(): boolean {
   if (typeof window === "undefined") return false;
   const hash = window.location.hash;
-  return hash.includes("type=recovery") || hash.includes("type=signup");
+  return (
+    hash.includes("type=recovery") ||
+    hash.includes("type=invite") ||
+    hash.includes("type=signup")
+  );
 }

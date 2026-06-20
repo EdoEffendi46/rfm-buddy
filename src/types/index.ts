@@ -19,6 +19,8 @@ export interface Agent {
   initials: string;
   color: string;
   isOnline: boolean;
+  email?: string | null;
+  invitationStatus?: "pending" | "active";
 }
 
 export interface Service {

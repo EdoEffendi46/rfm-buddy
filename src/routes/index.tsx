@@ -192,10 +192,7 @@ function EmailLoginForm({
       </Form>
 
       <p className="mt-6 text-center text-sm text-slate-500">
-        Belum punya akun?{" "}
-        <Link to="/register" className="font-semibold text-[#128C7E] hover:underline">
-          Daftar sekarang
-        </Link>
+        Belum punya akun? Hubungi owner bisnis Anda untuk mendapat undangan.
       </p>
 
       <DemoShortcuts onSelect={fillDemo} activeEmail={email} />

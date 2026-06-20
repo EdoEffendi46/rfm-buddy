@@ -11,6 +11,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:test": "bun run scripts/test-supabase-connection.ts",
+    "db:migrate": "bun run scripts/migrate-supabase.ts",
     "db:seed": "bun run scripts/seed-supabase.ts",
     "db:seed-auth": "bun run scripts/seed-auth-users.ts",
     "db:push": "supabase db push"
@@ -84,6 +85,7 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^15.15.0",
     "nitro": "3.0.260603-beta",
+    "postgres": "^3.4.9",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",

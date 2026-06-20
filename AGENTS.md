@@ -89,9 +89,16 @@ Embody: **PM** (minimal scope), **BA** (RFM, cadence, audit terms), **Dev** (reu
 
 ## Project context
 
-**ChatCRM** — omnichannel inbox + CRM demo for Indonesian laundry/salon businesses. All state is **in-memory** via `src/lib/store.tsx` (no real backend).
+**ChatCRM** — omnichannel inbox + CRM for Indonesian laundry/salon businesses. **MVP 1 = beli putus** (single tenant), **bukan SaaS** — see `mvp1-product.mdc`.
 
-**Stack:** TanStack Start + Router, React 19, TypeScript, Tailwind 4, shadcn/ui, Recharts, Bun.
+**Stack:** TanStack Start + Router, React 19, TypeScript, Tailwind 4, shadcn/ui, Recharts, Bun, Supabase (when configured).
+
+**MVP 1 auth (mandatory):**
+
+- **No public `/register`** — redirect to login
+- **Owner invites** team via Settings → email → `/accept-invite` set password
+- **No self-signup** in app or DB trigger
+- First owner seeded at deploy; demo shortcuts on login for dev only
 
 **Key paths:**
 
@@ -316,6 +323,7 @@ Full detail: `.cursor/rules/e2e-verification.mdc`
 | `validation-done.mdc` | Always — definition of done |
 | `known-tech-debt.mdc` | Always — open bugs, anti-patterns |
 | `demo-honesty.mdc` | Always — demo boundaries |
+| `mvp1-product.mdc` | Always — MVP1 beli putus, invite-only auth |
 | `validation-schema.mdc` | Always — Zod + RHF |
 | `type-strictness.mdc` | Always — shared types, no any |
 | `e2e-verification.mdc` | Always — lint, build, E2E |

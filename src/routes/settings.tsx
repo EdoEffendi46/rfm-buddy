@@ -19,6 +19,9 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
 import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
+import { inviteAgentServerFn } from "@/lib/invite-agent.fn";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
 import { formatDate } from "@/lib/format";
 import type { Role, AuditAction, FieldVisibilityRule } from "@/types";
@@ -157,24 +160,91 @@ function ProfileSection() {
 
 function AgentsSection() {
   const { role } = useAuth();
-  const { agents, customers, addAgent, changeAgentRole, deleteAgent } = useStore();
+  const { agents, customers, addAgent, registerInvitedAgent, changeAgentRole, deleteAgent } = useStore();
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [newRole, setNewRole] = useState<Role>("cs");
   const [color, setColor] = useState("#0EA5E9");
+  const [inviting, setInviting] = useState(false);
+  const usesAuth = isSupabaseConfigured();
   const canDelete = hasPermission(role, "delete_agent_account");
   const canChangeRole = hasPermission(role, "change_agent_role");
+  const canInvite = usesAuth && role === "owner";
+  const canAddLocal = !usesAuth && hasPermission(role, "manage_agents");
+
+  const handleInvite = async () => {
+    if (!email.trim() || !name.trim()) return;
+    const client = getSupabaseBrowserClient();
+    if (!client) {
+      toast.error("Supabase belum dikonfigurasi");
+      return;
+    }
+    const { data: sessionData } = await client.auth.getSession();
+    if (!sessionData.session) {
+      toast.error("Sesi habis — silakan login ulang");
+      return;
+    }
+    setInviting(true);
+    try {
+      const result = await inviteAgentServerFn({
+        data: {
+          accessToken: sessionData.session.access_token,
+          email: email.trim(),
+          name: name.trim(),
+          role: newRole,
+          color,
+          appOrigin: window.location.origin,
+        },
+      });
+      registerInvitedAgent({
+        id: result.agentId,
+        name: result.name,
+        role: result.role as Role,
+        initials: result.name
+          .trim()
+          .split(/\s+/)
+          .map((w) => w[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
+        color,
+        isOnline: false,
+        email: result.email,
+        invitationStatus: "pending",
+      });
+      toast.success(`Undangan dikirim ke ${result.email}`);
+      setName("");
+      setEmail("");
+      setNewRole("cs");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Gagal mengirim undangan");
+    } finally {
+      setInviting(false);
+    }
+  };
 
   return (
     <Card title="Manajemen Agent">
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th></th><th className="text-left">Nama</th><th className="text-left">Role</th><th className="text-right">Customer</th><th>Status</th><th></th></tr>
+          <tr>
+            <th></th>
+            <th className="text-left">Nama</th>
+            {usesAuth && <th className="text-left">Email</th>}
+            <th className="text-left">Role</th>
+            <th className="text-right">Customer</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {agents.map((a) => (
             <tr key={a.id} className="border-t border-slate-100">
               <td className="py-2"><AgentAvatar agent={a} size={28} /></td>
               <td>{a.name}</td>
+              {usesAuth && (
+                <td className="max-w-[160px] truncate text-xs text-slate-600">{a.email ?? "—"}</td>
+              )}
               <td>
                 {canChangeRole && a.role !== "owner" ? (
                   <Select value={a.role} onValueChange={(v) => { changeAgentRole(a.id, v as Role); toast.success(`Role ${a.name} → ${v}`); }}>
@@ -190,7 +260,15 @@ function AgentsSection() {
                 )}
               </td>
               <td className="text-right font-mono text-xs">{customers.filter((c) => c.assignedAgentId === a.id).length}</td>
-              <td className="text-center"><span className={cn("inline-block h-2 w-2 rounded-full", a.isOnline ? "bg-emerald-500" : "bg-slate-300")} /></td>
+              <td className="text-center">
+                {usesAuth && a.invitationStatus === "pending" ? (
+                  <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                    Menunggu
+                  </span>
+                ) : (
+                  <span className={cn("inline-block h-2 w-2 rounded-full", a.isOnline ? "bg-emerald-500" : "bg-slate-300")} title={a.isOnline ? "Online" : "Offline"} />
+                )}
+              </td>
               <td className="text-right">
                 {canDelete && a.role !== "owner" && (
                   <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Hapus akun agent ${a.name}?`)) { deleteAgent(a.id); toast.success("Agent dihapus"); } }}>
@@ -202,32 +280,68 @@ function AgentsSection() {
           ))}
         </tbody>
       </table>
-      <div className="mt-4 rounded-lg border p-3">
-        <div className="mb-2 text-sm font-semibold">+ Tambah Agent</div>
-        <div className="flex flex-wrap items-end gap-2">
-          <Input value={name} placeholder="Nama" onChange={(e) => setName(e.target.value)} className="w-40" />
-          <Select value={newRole} onValueChange={(v) => setNewRole(v as any)}>
-            <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cs">CS</SelectItem>
-              <SelectItem value="supervisor">Supervisor</SelectItem>
-              {role === "owner" && <SelectItem value="owner">Owner</SelectItem>}
-            </SelectContent>
-          </Select>
-          <div className="flex gap-1">
-            {["#0EA5E9","#8B5CF6","#EC4899","#F59E0B","#22C55E","#EF4444"].map((c) => (
-              <button key={c} onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-slate-700" : "border-transparent")} style={{ backgroundColor: c }} />
-            ))}
+
+      {canInvite && (
+        <div className="mt-4 rounded-lg border border-[#25D366]/20 bg-[#25D366]/5 p-3">
+          <div className="mb-1 text-sm font-semibold text-slate-900">+ Undang anggota tim</div>
+          <p className="mb-3 text-xs text-slate-500">
+            Kirim email undangan. Penerima mengatur password lewat link di inbox.
+          </p>
+          <div className="flex flex-wrap items-end gap-2">
+            <Input value={name} placeholder="Nama lengkap" onChange={(e) => setName(e.target.value)} className="w-40" />
+            <Input value={email} type="email" placeholder="email@perusahaan.com" onChange={(e) => setEmail(e.target.value)} className="w-52" />
+            <Select value={newRole} onValueChange={(v) => setNewRole(v as Role)}>
+              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cs">CS</SelectItem>
+                <SelectItem value="supervisor">Supervisor</SelectItem>
+                <SelectItem value="owner">Owner</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              {["#0EA5E9","#8B5CF6","#EC4899","#F59E0B","#22C55E","#EF4444"].map((c) => (
+                <button key={c} type="button" onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-slate-700" : "border-transparent")} style={{ backgroundColor: c }} />
+              ))}
+            </div>
+            <Button
+              disabled={!name.trim() || !email.trim() || inviting}
+              onClick={handleInvite}
+              className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+            >
+              <Plus className="h-4 w-4" /> {inviting ? "Mengirim…" : "Kirim undangan"}
+            </Button>
           </div>
-          <Button
-            disabled={!name.trim()}
-            onClick={() => { addAgent({ name, role: newRole, color, isOnline: true }); setName(""); toast.success("Agent ditambahkan"); }}
-            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
-          >
-            <Plus className="h-4 w-4" /> Tambah
-          </Button>
         </div>
-      </div>
+      )}
+
+      {canAddLocal && (
+        <div className="mt-4 rounded-lg border p-3">
+          <div className="mb-2 text-sm font-semibold">+ Tambah Agent (demo lokal)</div>
+          <div className="flex flex-wrap items-end gap-2">
+            <Input value={name} placeholder="Nama" onChange={(e) => setName(e.target.value)} className="w-40" />
+            <Select value={newRole} onValueChange={(v) => setNewRole(v as Role)}>
+              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cs">CS</SelectItem>
+                <SelectItem value="supervisor">Supervisor</SelectItem>
+                {role === "owner" && <SelectItem value="owner">Owner</SelectItem>}
+              </SelectContent>
+            </Select>
+            <div className="flex gap-1">
+              {["#0EA5E9","#8B5CF6","#EC4899","#F59E0B","#22C55E","#EF4444"].map((c) => (
+                <button key={c} type="button" onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-slate-700" : "border-transparent")} style={{ backgroundColor: c }} />
+              ))}
+            </div>
+            <Button
+              disabled={!name.trim()}
+              onClick={() => { addAgent({ name, role: newRole, color, isOnline: true }); setName(""); toast.success("Agent ditambahkan"); }}
+              className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+            >
+              <Plus className="h-4 w-4" /> Tambah
+            </Button>
+          </div>
+        </div>
+      )}
     </Card>
   );
 }

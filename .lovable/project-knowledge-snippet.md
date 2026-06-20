@@ -14,7 +14,9 @@ Paste into **Lovable → Project → Knowledge** (max 10,000 chars). Same policy
 
 **Done means:** lint/build if possible + test Rina, Admin, Pak Hartono on touched pages.
 
-**Demo:** In-memory only — no real API/WhatsApp/persistence. Export is simulated. Label honestly.
+**Demo:** WhatsApp inbox simulated. Supabase auth+DB real when configured. Export simulated unless implemented.
+
+**MVP 1 (beli putus):** NO public register. Owner invites via Settings → email → accept-invite set password. Single tenant — not SaaS yet. See `.cursor/rules/mvp1-product.mdc`.
 
 **Validation:** Zod schemas in `src/lib/schemas/` — shared frontend + backend. Forms: react-hook-form + zodResolver, realtime `onChange`, inline errors.
 

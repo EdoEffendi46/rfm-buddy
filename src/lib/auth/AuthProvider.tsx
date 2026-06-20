@@ -15,7 +15,6 @@ import {
   sendPasswordResetEmail,
   signInWithEmail,
   signOutAuth,
-  signUpWithEmail,
   updatePassword,
 } from "@/lib/supabase/auth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -27,7 +26,6 @@ interface AuthContextValue {
   user: User | null;
   usesAuth: boolean;
   signIn: (email: string, password: string, rememberMe: boolean) => Promise<void>;
-  signUp: (name: string, email: string, password: string) => Promise<{ needsConfirmation: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   setNewPassword: (password: string) => Promise<void>;
@@ -108,31 +106,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const agent = await resolveAgentForUser(nextUser);
       if (!agent) {
         await signOutAuth();
-        throw new Error("Profil agent tidak ditemukan. Hubungi admin.");
+        throw new Error("Profil agent tidak ditemukan. Hubungi owner bisnis.");
       }
       setSession(nextSession);
       setUser(nextUser);
       setAgentSession(agent.id);
       logAuthLogin(agent);
-    },
-    [usesAuth, logAuthLogin, setAgentSession],
-  );
-
-  const signUp = useCallback(
-    async (name: string, email: string, password: string) => {
-      if (!usesAuth) throw new Error("Autentikasi belum dikonfigurasi");
-      const { session: nextSession, user: nextUser } = await signUpWithEmail(name, email, password);
-      const needsConfirmation = !nextSession;
-      if (nextSession && nextUser) {
-        const agent = await resolveAgentForUser(nextUser);
-        if (agent) {
-          setSession(nextSession);
-          setUser(nextUser);
-          setAgentSession(agent.id);
-          logAuthLogin(agent);
-        }
-      }
-      return { needsConfirmation };
     },
     [usesAuth, logAuthLogin, setAgentSession],
   );
@@ -167,22 +146,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       usesAuth,
       signIn,
-      signUp,
       signOut,
       resetPassword,
       setNewPassword,
     }),
-    [
-      isAuthLoading,
-      session,
-      user,
-      usesAuth,
-      signIn,
-      signUp,
-      signOut,
-      resetPassword,
-      setNewPassword,
-    ],
+    [isAuthLoading, session, user, usesAuth, signIn, signOut, resetPassword, setNewPassword],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,0 +1,56 @@
+---
+description: MVP 1 product model — beli putus, bukan SaaS; auth & onboarding via owner invite
+alwaysApply: true
+---
+
+# MVP 1 — Product & Auth Model
+
+## Deployment model (MVP 1)
+
+| Aspect | MVP 1 (now) | Future (SaaS) |
+|--------|-------------|---------------|
+| Sales | **Beli putus** — satu bisnis, satu install/deployment | Multi-tenant subscription |
+| Tenancy | Single organization per instance | Workspace / org per customer |
+| Public signup | **Tidak ada** | Register + plan picker |
+| New team members | **Owner invite** via email → set password | Self-serve + billing seats |
+
+**Do not build** public `/register`, open signup, or multi-tenant billing in MVP 1 unless user explicitly asks for SaaS phase.
+
+## Auth & onboarding (MVP 1)
+
+1. **Login only** — email + password (Supabase Auth when configured).
+2. **First owner** — seeded at deploy (`hartono@chatcrm.demo` or setup script); bukan self-register.
+3. **CS / Supervisor / Owner tambahan** — hanya **Owner** yang mengundang:
+   - Settings → Manajemen Agent → **Undang via email**
+   - Supabase `inviteUserByEmail` → email link → halaman set password (`/accept-invite`)
+   - Trigger DB link `auth.users` ke baris `agents` via `user_metadata.agent_id`
+4. **Forgot password** — tetap ada untuk semua role.
+5. **Demo shortcuts** di login — hanya dev/demo; label jujur.
+
+## Role rules (unchanged)
+
+- `cs` — assigned customers + manual shares
+- `supervisor` — team view, manage agents (role change), no invite
+- `owner` — supervisor + **invite users**, billing, export approval, field rules
+
+Invite permission: **`role === 'owner'` only** — not `manage_agents` alone.
+
+## Copy (Indonesian)
+
+- Login footer: *"Belum punya akun? Hubungi owner bisnis Anda."* — **not** "Daftar sekarang"
+- Invite success: *"Undangan dikirim ke {email}"*
+- Accept invite page: *"Atur password untuk akun ChatCRM Anda"*
+
+## Technical constraints
+
+- Invite **must** use server function + `SUPABASE_SECRET_KEY` (admin API) — never expose secret in client.
+- No `signUp` / public registration in app code.
+- DB trigger `handle_new_user`: link via `agent_id` metadata only — **do not** auto-create agent on orphan signup.
+- Agent row created **before** invite (status `pending`); becomes `active` after user sets password.
+
+## When implementing SaaS later
+
+- Add `organizations`, `memberships`, subdomain routing
+- Replace single-tenant seed with org provisioning
+- Re-enable guarded registration or checkout → provision flow
+- See future note in `AGENTS.md` — do not half-implement SaaS in MVP 1 files
