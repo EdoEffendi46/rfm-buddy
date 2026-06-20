@@ -71,8 +71,8 @@ export function Sidebar() {
       <div className="flex flex-col items-center gap-3">
         {agent && <AgentAvatar agent={agent} size={36} online />}
         <button
-          onClick={() => {
-            logout();
+          onClick={async () => {
+            await logout();
             toast.success("Berhasil keluar");
             router.navigate({ to: "/" });
           }}

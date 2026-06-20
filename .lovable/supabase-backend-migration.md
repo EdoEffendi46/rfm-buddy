@@ -15,8 +15,57 @@
 1. **Supabase Dashboard → SQL Editor** → paste & run isi `supabase/migrations/001_initial_schema.sql`
 2. **Atau** paste prompt di bawah ke **chat Lovable** → Lovable jalankan SQL ke project Supabase yang sudah connected
 3. **Atau** Supabase CLI: `supabase db push` (kalau project di-link ke CLI)
+4. **Otomatis (disarankan)** — GitHub Actions `.github/workflows/supabase-migrate.yml` jalankan `supabase db push` setiap push ke `main` yang mengubah `supabase/migrations/`
 
 Tanpa langkah di atas, push hanya mengirim **file**, bukan mengeksekusi migration.
+
+---
+
+## Auto migration on push (GitHub Actions)
+
+Workflow sudah ada di `.github/workflows/supabase-migrate.yml`. Setelah secrets diisi, setiap push ke `main` yang mengubah file migration akan menjalankan `supabase db push` ke project Supabase Anda.
+
+### Setup sekali (GitHub repo)
+
+1. **Supabase Access Token** — [Dashboard → Account → Access Tokens](https://supabase.com/dashboard/account/tokens) → buat token baru
+2. **Project ref** — URL project: `https://supabase.com/dashboard/project/<PROJECT_REF>` → copy `<PROJECT_REF>`
+3. **Database password** — Project → Settings → Database → password yang dibuat saat project dibuat (reset jika lupa)
+
+4. **GitHub** → repo → **Settings → Secrets and variables → Actions → New repository secret**:
+
+| Secret | Isi |
+|--------|-----|
+| `SUPABASE_ACCESS_TOKEN` | Personal access token |
+| `SUPABASE_PROJECT_ID` | Project ref (contoh: `btdoqpowkfbssfdyygpm`) |
+| `SUPABASE_DB_PASSWORD` | Password database Postgres |
+
+5. Push ke `main` — cek tab **Actions** di GitHub; job **Supabase Migrations** harus hijau.
+
+### Lokal (manual)
+
+```bash
+# Sekali: link project (butuh Supabase CLI — brew install supabase/tap/supabase)
+export SUPABASE_ACCESS_TOKEN=...
+supabase link --project-ref YOUR_PROJECT_REF
+
+# Setiap ada migration baru
+bun run db:push
+```
+
+### Schema sudah pernah di-run manual?
+
+Kalau `001_initial_schema.sql` sudah dijalankan lewat SQL Editor **sebelum** CI pertama kali, `db push` bisa gagal karena tabel sudah ada. Baseline history:
+
+```bash
+supabase link --project-ref YOUR_PROJECT_REF
+supabase migration repair --status applied 001_initial_schema
+supabase migration repair --status applied 002_auth   # jika sudah di-run
+supabase db push
+```
+
+Atau jalankan repair lewat satu kali di SQL Editor + insert ke `supabase_migrations.schema_migrations` — lihat [Supabase docs: managing environments](https://supabase.com/docs/guides/deployment/managing-environments).
+
+**Catatan:** Push ke GitHub/Lovable **tidak** menjalankan migration sendiri — hanya GitHub Action (atau CLI manual) yang mengeksekusi SQL ke database.
 
 ---
 

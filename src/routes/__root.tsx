@@ -12,7 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "@/lib/store";
-import { StoreHydrationGate } from "@/components/StoreHydrationGate";
+import { AuthProvider } from "@/lib/auth/AuthProvider";
+import { AuthHydrationGate } from "@/components/auth/AuthHydrationGate";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -132,9 +133,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <StoreProvider>
-        <StoreHydrationGate>
-          <Outlet />
-        </StoreHydrationGate>
+        <AuthProvider>
+          <AuthHydrationGate>
+            <Outlet />
+          </AuthHydrationGate>
+        </AuthProvider>
         <Toaster position="top-right" richColors />
       </StoreProvider>
     </QueryClientProvider>

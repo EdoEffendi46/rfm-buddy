@@ -1,0 +1,12 @@
+# Supabase CLI config — dipakai `supabase db push` (lokal & GitHub Actions)
+# Project ref asli di-set saat `supabase link` atau lewat secret CI.
+
+project_id = "rfm-buddy"
+
+[db]
+major_version = 15
+port = 54322
+shadow_port = 54320
+
+[db.migrations]
+enabled = true

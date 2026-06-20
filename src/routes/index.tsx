@@ -1,15 +1,32 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { useRouter } from "@tanstack/react-router";
-import { useStore } from "@/lib/store";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { AuthLayout } from "@/components/auth/AuthLayout";
+import { DemoShortcuts } from "@/components/auth/DemoShortcuts";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
+import type { DemoAccount } from "@/lib/auth/demo-accounts";
+import { loginSchema, type LoginInput } from "@/lib/schemas/auth";
 import { AGENTS } from "@/data/agents";
 import { Avatar } from "@/components/Avatar";
-import { Button } from "@/components/ui/button";
-import { Check, ArrowRight, MessageCircle } from "lucide-react";
-import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 import { ROLE_DISPLAY } from "@/lib/permissions";
 import type { Role } from "@/types";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,113 +40,218 @@ export const Route = createFileRoute("/")({
   component: LoginPage,
 });
 
-const FEATURES = [
-  "Inbox WA terpusat untuk seluruh tim CS",
-  "Segmentasi RFM otomatis dari data transaksi",
-  "Proteksi data customer dari CS",
-];
-
 function LoginPage() {
-  const { login, currentAgent } = useStore();
   const router = useRouter();
-  const [selected, setSelected] = useState<string>(AGENTS[0].id);
+  const { agent, login: demoLogin } = useAuth();
+  const auth = useAuthContext();
+  const usesAuth = isSupabaseConfigured();
 
   useEffect(() => {
-    if (currentAgent) router.navigate({ to: "/dashboard" });
-  }, [currentAgent, router]);
+    if (agent) router.navigate({ to: "/dashboard" });
+  }, [agent, router]);
+
+  if (!usesAuth) {
+    return <DemoPickerLogin onLogin={demoLogin} />;
+  }
+
+  return <EmailLoginForm signIn={auth.signIn} />;
+}
+
+function EmailLoginForm({
+  signIn,
+}: {
+  signIn: (email: string, password: string, rememberMe: boolean) => Promise<void>;
+}) {
+  const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const form = useForm<LoginInput>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "", rememberMe: true },
+  });
+
+  const email = form.watch("email");
+
+  const fillDemo = (account: DemoAccount) => {
+    form.setValue("email", account.email, { shouldValidate: true });
+    form.setValue("password", account.password, { shouldValidate: true });
+  };
+
+  const onSubmit = async (values: LoginInput) => {
+    setSubmitting(true);
+    try {
+      await signIn(values.email, values.password, values.rememberMe);
+      toast.success("Selamat datang!");
+      router.navigate({ to: "/dashboard" });
+    } catch (err) {
+      toast.error(authErrorMessage(err));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <AuthLayout
+      title="Masuk ke ChatCRM"
+      subtitle="Kelola inbox WhatsApp dan CRM tim Anda."
+    >
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    autoComplete="email"
+                    placeholder="nama@perusahaan.com"
+                    className="h-11"
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <div className="flex items-center justify-between">
+                  <FormLabel>Password</FormLabel>
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs font-medium text-[#128C7E] hover:underline"
+                  >
+                    Lupa password?
+                  </Link>
+                </div>
+                <FormControl>
+                  <div className="relative">
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      className="h-11 pr-10"
+                      {...field}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="rememberMe"
+            render={({ field }) => (
+              <FormItem className="flex items-center gap-2 space-y-0">
+                <FormControl>
+                  <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                </FormControl>
+                <FormLabel className="cursor-pointer font-normal text-slate-600">
+                  Ingat saya di perangkat ini
+                </FormLabel>
+              </FormItem>
+            )}
+          />
+
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Memproses…
+              </>
+            ) : (
+              <>
+                Masuk
+                <ArrowRight className="ml-1 h-4 w-4" />
+              </>
+            )}
+          </Button>
+        </form>
+      </Form>
+
+      <p className="mt-6 text-center text-sm text-slate-500">
+        Belum punya akun?{" "}
+        <Link to="/register" className="font-semibold text-[#128C7E] hover:underline">
+          Daftar sekarang
+        </Link>
+      </p>
+
+      <DemoShortcuts onSelect={fillDemo} activeEmail={email} />
+    </AuthLayout>
+  );
+}
+
+/** Fallback when Supabase env is not configured */
+function DemoPickerLogin({ onLogin }: { onLogin: (agentId: string) => void }) {
+  const router = useRouter();
+  const [selected, setSelected] = useState(AGENTS[0].id);
 
   const handleLogin = () => {
-    const agent = AGENTS.find((a) => a.id === selected)!;
-    login(agent.id);
-    toast.success(`Selamat datang, ${agent.name}!`);
+    onLogin(selected);
+    toast.success("Selamat datang!");
     router.navigate({ to: "/dashboard" });
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      {/* Left brand panel */}
-      <div className="hidden w-[45%] flex-col justify-between bg-[#111B21] p-12 text-white lg:flex">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#25D366]">
-            <MessageCircle className="h-6 w-6" />
-          </div>
-          <span className="text-2xl font-bold tracking-tight">ChatCRM</span>
-        </div>
-        <div>
-          <h1 className="text-4xl font-bold leading-tight tracking-tight">
-            Kelola customer & chat dalam satu platform
-          </h1>
-          <p className="mt-4 text-slate-400">
-            Inbox WhatsApp, segmentasi RFM, dan proteksi data — semua dalam satu workspace untuk tim CS Anda.
-          </p>
-          <ul className="mt-8 space-y-3">
-            {FEATURES.map((f) => (
-              <li key={f} className="flex items-start gap-3 text-slate-200">
-                <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#25D366]/20 text-[#25D366]">
-                  <Check className="h-3 w-3" />
-                </span>
-                <span className="text-sm">{f}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="text-xs text-slate-500">© 2026 ChatCRM · Demo</div>
-      </div>
-      {/* Right login panel */}
-      <div className="flex w-full flex-col items-center justify-center bg-white px-6 py-12 lg:w-[55%]">
-        <div className="w-full max-w-md">
-          <div className="mb-8 flex items-center gap-3 lg:hidden">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#25D366] text-white">
-              <MessageCircle className="h-5 w-5" />
-            </div>
-            <span className="text-xl font-bold">ChatCRM</span>
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight text-slate-900">Masuk ke ChatCRM</h2>
-          <p className="mt-1 text-sm text-slate-500">Pilih akun untuk masuk ke workspace demo.</p>
-
-          <div className="mt-6 space-y-2">
-            {AGENTS.map((a) => (
-              <button
-                key={a.id}
-                onClick={() => setSelected(a.id)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
-                  selected === a.id
-                    ? "border-[#25D366] bg-[#25D366]/5 shadow-sm"
-                    : "border-slate-200 hover:border-slate-300",
-                )}
-              >
-                <Avatar name={a.name} color={a.color} initials={a.initials} size={40} />
-                <div className="flex-1">
-                  <div className="font-semibold text-slate-900">{a.name}</div>
-                  <div className="text-xs text-slate-500">
-                    {ROLE_DISPLAY[a.role as Role].subtitle}
-                  </div>
-                </div>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                    ROLE_DISPLAY[a.role as Role].badgeClass,
-                  )}
-                >
-                  {a.role}
-                </span>
-              </button>
-            ))}
-          </div>
-
-          <Button
-            onClick={handleLogin}
-            className="mt-6 h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+    <AuthLayout title="Masuk ke ChatCRM" subtitle="Mode demo lokal — pilih role untuk masuk.">
+      <div className="space-y-2">
+        {AGENTS.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            onClick={() => setSelected(a.id)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
+              selected === a.id
+                ? "border-[#25D366] bg-[#25D366]/5 shadow-sm"
+                : "border-slate-200 hover:border-slate-300",
+            )}
           >
-            Masuk
-            <ArrowRight className="ml-1 h-4 w-4" />
-          </Button>
-          <p className="mt-4 text-center text-xs text-slate-500">
-            Demo mode — pilih role untuk melihat perbedaan akses.
-          </p>
-        </div>
+            <Avatar name={a.name} color={a.color} initials={a.initials} size={40} />
+            <div className="flex-1">
+              <div className="font-semibold text-slate-900">{a.name}</div>
+              <div className="text-xs text-slate-500">{ROLE_DISPLAY[a.role as Role].subtitle}</div>
+            </div>
+            <span
+              className={cn(
+                "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                ROLE_DISPLAY[a.role as Role].badgeClass,
+              )}
+            >
+              {a.role}
+            </span>
+          </button>
+        ))}
       </div>
-    </div>
+      <Button
+        onClick={handleLogin}
+        className="mt-6 h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+      >
+        Masuk
+        <ArrowRight className="ml-1 h-4 w-4" />
+      </Button>
+    </AuthLayout>
   );
 }

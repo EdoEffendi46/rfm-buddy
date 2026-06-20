@@ -137,6 +137,19 @@ export async function fetchAppSnapshot(client: SupabaseClient): Promise<AppSnaps
   };
 }
 
+export async function fetchAgentByAuthUserId(
+  client: SupabaseClient,
+  authUserId: string,
+): Promise<Agent | null> {
+  const { data, error } = await client
+    .from("agents")
+    .select("*")
+    .eq("auth_user_id", authUserId)
+    .maybeSingle();
+  throwIf(error);
+  return data ? rowToAgent(data) : null;
+}
+
 export async function upsertAgent(client: SupabaseClient, agent: Agent) {
   throwIf((await client.from("agents").upsert(agentToRow(agent))).error);
 }

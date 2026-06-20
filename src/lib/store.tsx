@@ -45,6 +45,9 @@ interface StoreState {
 
   login: (agentId: string) => void;
   logout: () => void;
+  setAgentSession: (agentId: string) => void;
+  clearAgentSession: () => void;
+  logAuthLogin: (agent: Agent) => void;
 
   sendMessage: (customerId: string, content: string, type?: "text" | "internal_note") => void;
   markRead: (customerId: string) => void;
@@ -114,7 +117,9 @@ function genId(prefix = "id") {
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(USE_SUPABASE);
   const [agents, setAgents] = useState<Agent[]>(USE_SUPABASE ? [] : AGENTS);
-  const [currentAgentId, setCurrentAgentId] = useState<string | null>(() => db.loadSessionAgentId());
+  const [currentAgentId, setCurrentAgentId] = useState<string | null>(() =>
+    USE_SUPABASE ? null : db.loadSessionAgentId(),
+  );
   const [customers, setCustomers] = useState<Customer[]>(USE_SUPABASE ? [] : CUSTOMERS);
   const [messages, setMessages] = useState<Message[]>(USE_SUPABASE ? [] : INITIAL_MESSAGES);
   const [services, setServices] = useState<Service[]>(USE_SUPABASE ? [] : SERVICES);
@@ -197,10 +202,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       });
     }
   }, [agents, logAuditRaw]);
-  const logout = useCallback(() => {
+
+  const setAgentSession = useCallback((agentId: string) => {
+    setCurrentAgentId(agentId);
+    db.saveSessionAgentId(agentId);
+  }, []);
+
+  const clearAgentSession = useCallback(() => {
     setCurrentAgentId(null);
     db.saveSessionAgentId(null);
   }, []);
+
+  const logAuthLogin = useCallback(
+    (agent: Agent) => {
+      logAuditRaw(agent, {
+        action: "login",
+        targetType: "system",
+        targetId: "system",
+        targetLabel: "Sistem",
+        details: "Login via autentikasi",
+      });
+    },
+    [logAuditRaw],
+  );
+
+  const logout = useCallback(() => {
+    clearAgentSession();
+  }, [clearAgentSession]);
 
   const sendMessage = useCallback(
     (customerId: string, content: string, type: "text" | "internal_note" = "text") => {
@@ -674,6 +702,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     fieldRules,
     login,
     logout,
+    setAgentSession,
+    clearAgentSession,
+    logAuthLogin,
     sendMessage,
     markRead,
     updateCustomer,
