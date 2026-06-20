@@ -11,62 +11,107 @@ import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Lock, Plus, Trash2, Edit2, Check, X, Info } from "lucide-react";
+import { Lock, Plus, Trash2, Edit2, Check, X, Info, ShieldAlert, ClipboardList, ShieldCheck, History, CreditCard, Download, FileDown, Search as SearchIcon, ChevronDown, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatRupiah } from "@/lib/format";
+import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
+import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
+import { formatDate } from "@/lib/format";
+import type { Role, AuditAction, FieldVisibilityRule } from "@/types";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Pengaturan — ChatCRM" }] }),
   component: SettingsPage,
 });
 
-type Section = "profile" | "agents" | "templates" | "tags" | "services" | "notifications" | "about";
+type Section =
+  | "profile" | "agents" | "templates" | "tags" | "services"
+  | "workflow" | "sla" | "hours" | "field_visibility"
+  | "audit_log" | "export_approval" | "role_history"
+  | "billing" | "export_data" | "about";
 
-const SECTIONS: { id: Section; label: string; icon: string }[] = [
+const SECTIONS: { id: Section; label: string; icon: string; requires?: Permission | "owner_only" | "sup_or_owner" }[] = [
   { id: "profile", label: "Profil Saya", icon: "👤" },
-  { id: "agents", label: "Manajemen Agent", icon: "👥" },
+  { id: "agents", label: "Manajemen Agent", icon: "👥", requires: "manage_agents" },
   { id: "templates", label: "Template Balasan", icon: "⚡" },
   { id: "tags", label: "Tags", icon: "🏷️" },
   { id: "services", label: "Layanan & Produk", icon: "🛠️" },
-  { id: "notifications", label: "Notifikasi", icon: "🔔" },
+  { id: "workflow", label: "Status & Workflow", icon: "🔄" },
+  { id: "sla", label: "SLA & Notifikasi", icon: "⏱️", requires: "manage_sla_notifications" },
+  { id: "hours", label: "Jam Operasional", icon: "🕐", requires: "manage_business_hours" },
+  { id: "field_visibility", label: "Visibilitas Field", icon: "🔐", requires: "manage_field_visibility_rules" },
+  { id: "audit_log", label: "Audit Log", icon: "📋", requires: "view_audit_log" },
+  { id: "export_approval", label: "Persetujuan Export", icon: "✅", requires: "approve_export_requests" },
+  { id: "role_history", label: "Riwayat Perubahan Role", icon: "👤", requires: "view_permission_history" },
+  { id: "billing", label: "Billing & Subscription", icon: "💳", requires: "manage_billing" },
+  { id: "export_data", label: "Export Data", icon: "📤", requires: "export_data" },
   { id: "about", label: "Tentang Aplikasi", icon: "ℹ️" },
 ];
 
 function SettingsPage() {
   const [section, setSection] = useState<Section>("profile");
+  const { role } = useAuth();
+  const isUnlocked = (s: typeof SECTIONS[number]) => !s.requires || hasPermission(role, s.requires as Permission);
   return (
     <AppShell>
       <div className="flex h-full">
-        <aside className="w-[220px] border-r border-slate-200 bg-white p-3">
+        <aside className="w-[240px] overflow-y-auto border-r border-slate-200 bg-white p-3">
           <h2 className="px-2 py-2 text-sm font-semibold text-slate-700">Pengaturan</h2>
           <nav className="space-y-0.5">
-            {SECTIONS.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setSection(s.id)}
-                className={cn(
-                  "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm",
-                  section === s.id ? "bg-emerald-50 font-semibold text-emerald-700" : "text-slate-600 hover:bg-slate-50",
-                )}
-              >
-                <span>{s.icon}</span>
-                {s.label}
-              </button>
-            ))}
+            {SECTIONS.map((s) => {
+              const unlocked = isUnlocked(s);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => setSection(s.id)}
+                  className={cn(
+                    "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm",
+                    section === s.id ? "bg-emerald-50 font-semibold text-emerald-700" :
+                    unlocked ? "text-slate-600 hover:bg-slate-50" : "text-slate-400 hover:bg-slate-50",
+                  )}
+                >
+                  <span>{s.icon}</span>
+                  <span className="flex-1">{s.label}</span>
+                  {!unlocked && <Lock className="h-3.5 w-3.5" />}
+                </button>
+              );
+            })}
           </nav>
         </aside>
         <div className="flex-1 overflow-y-auto p-6">
           {section === "profile" && <ProfileSection />}
-          {section === "agents" && <AgentsSection />}
+          {section === "agents" && <Gated perm="manage_agents"><AgentsSection /></Gated>}
           {section === "templates" && <TemplatesSection />}
           {section === "tags" && <TagsSection />}
           {section === "services" && <ServicesSection />}
-          {section === "notifications" && <NotificationsSection />}
+          {section === "workflow" && <WorkflowSection />}
+          {section === "sla" && <Gated perm="manage_sla_notifications"><NotificationsSection /></Gated>}
+          {section === "hours" && <Gated perm="manage_business_hours"><HoursSection /></Gated>}
+          {section === "field_visibility" && <Gated perm="manage_field_visibility_rules"><FieldVisibilitySection /></Gated>}
+          {section === "audit_log" && <Gated perm="view_audit_log"><AuditLogSection /></Gated>}
+          {section === "export_approval" && <Gated perm="approve_export_requests"><ExportApprovalSection /></Gated>}
+          {section === "role_history" && <Gated perm="view_permission_history"><RoleHistorySection /></Gated>}
+          {section === "billing" && <Gated perm="manage_billing"><BillingSection /></Gated>}
+          {section === "export_data" && <Gated perm="export_data"><ExportDataSection /></Gated>}
           {section === "about" && <AboutSection />}
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function Gated({ perm, children }: { perm: Permission; children: React.ReactNode }) {
+  const { role } = useAuth();
+  if (hasPermission(role, perm)) return <>{children}</>;
+  return (
+    <Card title="Akses Terbatas">
+      <div className="flex flex-col items-center justify-center gap-2 rounded-xl bg-slate-50 p-10 text-center text-slate-500">
+        <Lock className="h-8 w-8" />
+        <div className="text-sm font-medium">Bagian ini khusus Supervisor & Owner</div>
+        <div className="text-xs">Hubungi Admin atau Owner jika Anda butuh akses.</div>
+      </div>
+    </Card>
   );
 }
 
