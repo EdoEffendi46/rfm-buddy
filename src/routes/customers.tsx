@@ -401,7 +401,7 @@ function CustomerDetailModal({
   onOpenChat,
 }: {
   enriched: ReturnType<typeof useCustomers>["enriched"][number];
-  role: "cs" | "supervisor";
+  role: import("@/types").Role;
   open: boolean;
   onClose: () => void;
   onOpenChat: (id: string) => void;

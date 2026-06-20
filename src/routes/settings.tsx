@@ -111,7 +111,7 @@ function AgentsSection() {
   const { role } = useAuth();
   const { agents, customers, addAgent } = useStore();
   const [name, setName] = useState("");
-  const [newRole, setNewRole] = useState<"cs" | "supervisor">("cs");
+  const [newRole, setNewRole] = useState<"cs" | "supervisor" | "owner">("cs");
   const [color, setColor] = useState("#0EA5E9");
 
   if (role !== "supervisor") {

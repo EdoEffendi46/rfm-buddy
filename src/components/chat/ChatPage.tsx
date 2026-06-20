@@ -859,7 +859,7 @@ function CustomerSidePanel({
   customer: Customer;
   rfm: ReturnType<typeof calculateRFM>;
   clv: ReturnType<typeof calculateCLV>;
-  role: "cs" | "supervisor";
+  role: import("@/types").Role;
 }) {
   const store = useConversations();
   const [notesDraft, setNotesDraft] = useState(customer.notes);
