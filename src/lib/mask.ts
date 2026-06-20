@@ -13,7 +13,7 @@ export function maskPhone(phone: string, role: Role): string {
       : digits.length >= 8
         ? `${digits.slice(0, 4)}-${digits.slice(4, digits.length - 4)}-${digits.slice(-4)}`
         : phone;
-  if (role === "supervisor") return formatted;
+  if (role === "supervisor" || role === "owner") return formatted;
   const parts = formatted.split("-");
   if (parts.length !== 3) return formatted;
   return `${parts[0]}-****-${parts[2]}`;

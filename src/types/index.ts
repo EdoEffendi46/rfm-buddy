@@ -1,4 +1,4 @@
-export type Role = "cs" | "supervisor";
+export type Role = "cs" | "supervisor" | "owner";
 export type RFMSegment =
   | "champions"
   | "loyal"
@@ -61,6 +61,8 @@ export interface Customer {
   segmentHistory: SegmentHistoryEntry[];
   /** Manual cadence override (days between orders) set by CS/Admin. */
   cadenceOverrideDays?: number;
+  /** Manual record shares (Salesforce-style record sharing). */
+  manualShares?: ManualShare[];
 }
 
 export interface Message {
@@ -84,4 +86,62 @@ export interface Tag {
   name: string;
   color: string;
   scope: "customer" | "conversation";
+}
+
+export interface ManualShare {
+  id: string;
+  customerId: string;
+  sharedWithAgentId: string;
+  sharedByAgentId: string;
+  permission: "view" | "edit";
+  reason: string;
+  expiresAt?: string;
+  createdAt: string;
+}
+
+export type AuditAction =
+  | "customer_created" | "customer_edited" | "customer_deleted"
+  | "customer_reassigned" | "phone_viewed_full" | "agent_role_changed"
+  | "agent_created" | "agent_deactivated" | "agent_deleted"
+  | "data_exported" | "export_requested" | "export_approved" | "export_denied"
+  | "manual_share_created" | "manual_share_revoked"
+  | "conversation_transferred" | "conversation_deleted_message"
+  | "login" | "settings_changed";
+
+export interface AuditLogEntry {
+  id: string;
+  timestamp: string;
+  actorId: string;
+  actorName: string;
+  actorRole: Role;
+  action: AuditAction;
+  targetType: "customer" | "agent" | "conversation" | "system";
+  targetId: string;
+  targetLabel: string;
+  oldValue?: string;
+  newValue?: string;
+  details?: string;
+}
+
+export interface ExportRequest {
+  id: string;
+  requestedByAgentId: string;
+  requestedByName: string;
+  requestedAt: string;
+  dataType: "customers" | "conversations" | "financial_report";
+  reason: string;
+  status: "pending" | "approved" | "denied";
+  reviewedByAgentId?: string;
+  reviewedByName?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
+}
+
+export interface FieldVisibilityRule {
+  id: string;
+  fieldName: string;
+  entityType: "customer";
+  hiddenForRoles: Role[];
+  maskPattern?: "phone" | "currency_range" | "full_hide";
+  locked?: boolean;
 }
