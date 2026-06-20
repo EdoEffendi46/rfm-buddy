@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
+import { useStore } from "@/lib/store";
+import { hasPermission, shareBadgeFor } from "@/lib/permissions";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
 import { maskPhone } from "@/lib/mask";
@@ -42,8 +44,9 @@ const SEGMENT_FILTERS: { id: "all" | RFMSegment; label: string }[] = [
 type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdue";
 
 function CustomersPage() {
-  const { role } = useAuth();
+  const { role, agent } = useAuth();
   const { enriched, agents, addCustomer } = useCustomers();
+  const { createManualShare, revokeManualShare, logAudit } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<"all" | RFMSegment>("all");
@@ -180,6 +183,8 @@ function CustomersPage() {
                 <tbody>
                   {filtered.map((e, i) => {
                     const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
+                    const share = shareBadgeFor(agent, e.customer);
+                    const sharedBy = share ? agents.find((a) => a.id === share.sharedByAgentId) : null;
                     const lastP = e.customer.purchases.length
                       ? e.customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
                       : null;
@@ -204,6 +209,11 @@ function CustomersPage() {
                               size={28}
                             />
                             <span className="font-medium">{e.customer.name}</span>
+                            {share && (
+                              <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700" title={`Dibagikan oleh ${sharedBy?.name ?? ""}`}>
+                                🔗 Dibagikan oleh {sharedBy?.name ?? "—"}
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="px-3 py-2 font-mono text-xs">{maskPhone(e.customer.phone, role)}</td>
