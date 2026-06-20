@@ -40,7 +40,7 @@ SCHEMA:
 
 IMPLEMENTASI:
 1. Install @supabase/supabase-js
-2. src/lib/supabase/server.ts — createClient hanya untuk server (pakai env SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY atau anon + RLS)
+2. src/lib/supabase/server.ts — createClient server-only (env: VITE_SUPABASE_URL + SUPABASE_SECRET_KEY sb_secret_...)
 3. Server functions per domain: customers, messages, agents, audit, settings
 4. Refactor store.tsx: baca/tulis via server functions; keep same hook API (useStore, useCustomers, useConversations) supaya routes tidak break
 5. Tambah .env.example; jangan commit secrets
@@ -86,9 +86,9 @@ Migrate audit_log, export_requests, field_rules, templates, services, tags.
 Copy `.env.example` → `.env` (jangan commit `.env`).
 
 Ambil dari **Supabase Dashboard → Settings → API**:
-- `VITE_SUPABASE_URL` — Project URL (boleh di client)
-- `VITE_SUPABASE_PUBLISHABLE_KEY` — anon public key (boleh di client)
-- `SUPABASE_SERVICE_ROLE_KEY` — **server only**, jangan expose ke browser
+- `VITE_SUPABASE_URL` — Project URL
+- `VITE_SUPABASE_PUBLISHABLE_KEY` — `sb_publishable_...` (client)
+- `SUPABASE_SECRET_KEY` — `sb_secret_...` (server only, Settings → API Keys → Secret keys)
 
 Lovable connected project biasanya inject env otomatis di Preview; lokal harus isi manual.
 
