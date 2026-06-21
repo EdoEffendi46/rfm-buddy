@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useStore } from "@/lib/store";
-import { hasPermission, shareBadgeFor, canEditCustomer } from "@/lib/permissions";
+import { hasPermission, shareBadgeFor, canEditCustomer, hasFlag } from "@/lib/permissions";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
