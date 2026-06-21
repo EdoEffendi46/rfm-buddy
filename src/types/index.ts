@@ -22,6 +22,10 @@ export interface Agent {
   email?: string | null;
   invitationStatus?: "pending" | "active";
   invitationSentAt?: string | null;
+  /** Only the flags that differ from the role default. */
+  permissionOverrides?: Partial<PermissionFlags>;
+  /** Free-form internal note shown on the agent profile (training status, etc.). */
+  internalNote?: string;
 }
 
 export interface Service {
