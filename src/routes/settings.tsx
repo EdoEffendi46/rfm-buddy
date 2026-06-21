@@ -164,16 +164,25 @@ function ProfileSection() {
 }
 
 function AgentsSection() {
-  const { role } = useAuth();
+  const { role, agent: viewer } = useAuth();
   const { agents, customers, addAgent, registerInvitedAgent, changeAgentRole, deleteAgent, updateAgent } = useStore();
   const [name, setName] = useState("");
   const [newRole, setNewRole] = useState<Role>("cs");
   const [color, setColor] = useState("#0EA5E9");
+  const [permAgentId, setPermAgentId] = useState<string | null>(null);
   const usesAuth = isSupabaseConfigured();
   const canDelete = hasPermission(role, "delete_agent_account");
   const canChangeRole = hasPermission(role, "change_agent_role");
   const canInvite = usesAuth && role === "owner";
   const canAddLocal = !usesAuth && hasPermission(role, "manage_agents");
+  const canOverridePerms = hasFlag(viewer, "settings_override_agent_permissions");
+  const canManagePermsFor = (a: typeof agents[number]) => {
+    if (!canOverridePerms || !viewer) return false;
+    if (viewer.id === a.id) return false;
+    if (viewer.role === "owner") return true;
+    return a.role === "cs";
+  };
+  const permAgent = agents.find((a) => a.id === permAgentId) ?? null;
 
   return (
     <Card title="Manajemen Agent">
