@@ -3,7 +3,7 @@ import { z } from "zod";
 export const loginSchema = z.object({
   email: z.string().trim().email("Format email tidak valid"),
   password: z.string().min(1, "Password wajib diisi"),
-  rememberMe: z.boolean().default(true),
+  rememberMe: z.boolean(),
 });
 
 export const forgotPasswordSchema = z.object({
