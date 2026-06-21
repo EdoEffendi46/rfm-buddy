@@ -109,9 +109,11 @@ function CustomersPage() {
             <h1 className="text-2xl font-bold tracking-tight">Customer</h1>
             <p className="text-sm text-slate-500">{enriched.length} total customer</p>
           </div>
-          <Button onClick={() => setAddOpen(true)} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
-            <Plus className="h-4 w-4" /> Customer Baru
-          </Button>
+          {hasFlag(agent, "customer_create") && (
+            <Button onClick={() => setAddOpen(true)} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
+              <Plus className="h-4 w-4" /> Customer Baru
+            </Button>
+          )}
         </div>
 
         {/* filter bar */}
