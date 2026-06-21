@@ -542,6 +542,56 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, [currentAgent, logAuditRaw]);
 
+  const setAgentPermissionOverrides = useCallback(
+    (id: string, overrides: Partial<import("@/types").PermissionFlags>, summary?: string) => {
+      setAgents((prev) => {
+        const ag = prev.find((a) => a.id === id);
+        if (!ag) return prev;
+        const before = ag.permissionOverrides ?? {};
+        const next = prev.map((a) => (a.id === id ? { ...a, permissionOverrides: overrides } : a));
+        logAuditRaw(currentAgent, {
+          action: "permission_override_changed",
+          targetType: "agent",
+          targetId: id,
+          targetLabel: ag.name,
+          oldValue: JSON.stringify(before),
+          newValue: JSON.stringify(overrides),
+          details: summary ?? `Izin ${ag.name} diperbarui`,
+        });
+        const updated = next.find((a) => a.id === id);
+        if (updated) db.persistAgent(updated);
+        return next;
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
+
+  const resetAgentPermissionOverrides = useCallback(
+    (id: string) => {
+      setAgents((prev) => {
+        const ag = prev.find((a) => a.id === id);
+        if (!ag) return prev;
+        const before = ag.permissionOverrides ?? {};
+        const next = prev.map((a) =>
+          a.id === id ? { ...a, permissionOverrides: undefined } : a,
+        );
+        logAuditRaw(currentAgent, {
+          action: "permission_overrides_reset",
+          targetType: "agent",
+          targetId: id,
+          targetLabel: ag.name,
+          oldValue: JSON.stringify(before),
+          newValue: "{}",
+          details: `Semua izin ${ag.name} dikembalikan ke default role`,
+        });
+        const updated = next.find((a) => a.id === id);
+        if (updated) db.persistAgent(updated);
+        return next;
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
+
   // Manual Shares
   const createManualShare = useCallback((input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => {
     if (!currentAgent) return;
@@ -766,6 +816,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     registerInvitedAgent,
     changeAgentRole,
     deleteAgent,
+    setAgentPermissionOverrides,
+    resetAgentPermissionOverrides,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
