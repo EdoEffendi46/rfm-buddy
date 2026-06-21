@@ -1,7 +1,12 @@
 import type { Service, Template, Tag } from "@/types";
 
 export const SERVICES: Service[] = [
-  { id: "svc-cuci-setrika", name: "Paket Cuci Lengkap", defaultPrice: 7000, category: "Pembersihan" },
+  {
+    id: "svc-cuci-setrika",
+    name: "Paket Cuci Lengkap",
+    defaultPrice: 7000,
+    category: "Pembersihan",
+  },
   { id: "svc-laundry-kiloan", name: "Cuci Standar", defaultPrice: 6000, category: "Pembersihan" },
   { id: "svc-setrika", name: "Finishing Express", defaultPrice: 4000, category: "Pembersihan" },
   { id: "svc-cuci-sepatu", name: "Deep Clean Item", defaultPrice: 35000, category: "Pembersihan" },

@@ -83,17 +83,34 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "ChatCRM — Omnichannel Inbox & CRM" },
-      { name: "description", content: "Inbox WhatsApp + CRM berbasis RFM — fleksibel untuk bisnis apa saja." },
+      {
+        name: "description",
+        content: "Inbox WhatsApp + CRM berbasis RFM — fleksibel untuk bisnis apa saja.",
+      },
       { name: "author", content: "ChatCRM" },
       { property: "og:title", content: "ChatCRM — Omnichannel Inbox & CRM" },
-      { property: "og:description", content: "Inbox WhatsApp + CRM berbasis RFM — fleksibel untuk bisnis apa saja." },
+      {
+        property: "og:description",
+        content: "Inbox WhatsApp + CRM berbasis RFM — fleksibel untuk bisnis apa saja.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "ChatCRM — Omnichannel Inbox & CRM" },
-      { name: "twitter:description", content: "Inbox WhatsApp + CRM berbasis RFM — fleksibel untuk bisnis apa saja." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c1e520e7-a8f1-4367-98d0-3ae88ea4f9e1/id-preview-ddd5cce2--ad73e71b-394a-42d7-ac92-94c187225172.lovable.app-1781870570004.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c1e520e7-a8f1-4367-98d0-3ae88ea4f9e1/id-preview-ddd5cce2--ad73e71b-394a-42d7-ac92-94c187225172.lovable.app-1781870570004.png" },
+      {
+        name: "twitter:description",
+        content: "Inbox WhatsApp + CRM berbasis RFM — fleksibel untuk bisnis apa saja.",
+      },
+      {
+        property: "og:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c1e520e7-a8f1-4367-98d0-3ae88ea4f9e1/id-preview-ddd5cce2--ad73e71b-394a-42d7-ac92-94c187225172.lovable.app-1781870570004.png",
+      },
+      {
+        name: "twitter:image",
+        content:
+          "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/c1e520e7-a8f1-4367-98d0-3ae88ea4f9e1/id-preview-ddd5cce2--ad73e71b-394a-42d7-ac92-94c187225172.lovable.app-1781870570004.png",
+      },
     ],
     links: [
       {

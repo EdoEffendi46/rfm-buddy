@@ -104,10 +104,7 @@ function EmailLoginForm({
   };
 
   return (
-    <AuthLayout
-      title="Masuk ke ChatCRM"
-      subtitle="Kelola inbox WhatsApp dan CRM tim Anda."
-    >
+    <AuthLayout title="Masuk ke ChatCRM" subtitle="Kelola inbox WhatsApp dan CRM tim Anda.">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <FormField

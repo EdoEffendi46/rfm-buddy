@@ -19,8 +19,7 @@ export function calculateCLV(customer: Customer, now: Date = NOW): CLVResult {
   const joined = new Date(customer.joinDate);
   const monthsSinceJoin = Math.max(
     1,
-    (now.getFullYear() - joined.getFullYear()) * 12 +
-      (now.getMonth() - joined.getMonth()),
+    (now.getFullYear() - joined.getFullYear()) * 12 + (now.getMonth() - joined.getMonth()),
   );
   const purchaseFrequencyPerMonth = n / monthsSinceJoin;
   const projectedMonthlyValue = avgOrderValue * purchaseFrequencyPerMonth;

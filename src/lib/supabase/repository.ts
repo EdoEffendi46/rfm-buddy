@@ -163,8 +163,11 @@ export async function upsertCustomer(client: SupabaseClient, customer: Customer)
   throwIf((await client.from("purchases").delete().eq("customer_id", customer.id)).error);
   if (customer.purchases.length) {
     throwIf(
-      (await client.from("purchases").insert(customer.purchases.map((p) => purchaseToRow(p, customer.id))))
-        .error,
+      (
+        await client
+          .from("purchases")
+          .insert(customer.purchases.map((p) => purchaseToRow(p, customer.id)))
+      ).error,
     );
   }
   throwIf((await client.from("manual_shares").delete().eq("customer_id", customer.id)).error);
@@ -241,23 +244,32 @@ export async function wipeAppData(client: SupabaseClient) {
 export async function seedAppSnapshot(client: SupabaseClient, snapshot: AppSnapshot) {
   if (snapshot.agents.length) {
     throwIf(
-      (await client.from("agents").upsert(snapshot.agents.map(agentToRow), { onConflict: "id" })).error,
+      (await client.from("agents").upsert(snapshot.agents.map(agentToRow), { onConflict: "id" }))
+        .error,
     );
   }
   if (snapshot.services.length) {
     throwIf(
-      (await client.from("services").upsert(snapshot.services.map(serviceToRow), { onConflict: "id" }))
-        .error,
+      (
+        await client
+          .from("services")
+          .upsert(snapshot.services.map(serviceToRow), { onConflict: "id" })
+      ).error,
     );
   }
   if (snapshot.templates.length) {
     throwIf(
-      (await client.from("templates").upsert(snapshot.templates.map(templateToRow), { onConflict: "id" }))
-        .error,
+      (
+        await client
+          .from("templates")
+          .upsert(snapshot.templates.map(templateToRow), { onConflict: "id" })
+      ).error,
     );
   }
   if (snapshot.tags.length) {
-    throwIf((await client.from("tags").upsert(snapshot.tags.map(tagToRow), { onConflict: "id" })).error);
+    throwIf(
+      (await client.from("tags").upsert(snapshot.tags.map(tagToRow), { onConflict: "id" })).error,
+    );
   }
   if (snapshot.customers.length) {
     throwIf(
@@ -272,27 +284,29 @@ export async function seedAppSnapshot(client: SupabaseClient, snapshot: AppSnaps
       c.purchases.map((p) => purchaseToRow(p, c.id)),
     );
     if (allPurchases.length) {
-      throwIf(
-        (await client.from("purchases").upsert(allPurchases, { onConflict: "id" })).error,
-      );
+      throwIf((await client.from("purchases").upsert(allPurchases, { onConflict: "id" })).error);
     }
     const allShares = snapshot.customers.flatMap((c) => (c.manualShares ?? []).map(shareToRow));
     if (allShares.length) {
-      throwIf(
-        (await client.from("manual_shares").upsert(allShares, { onConflict: "id" })).error,
-      );
+      throwIf((await client.from("manual_shares").upsert(allShares, { onConflict: "id" })).error);
     }
   }
   if (snapshot.messages.length) {
     throwIf(
-      (await client.from("messages").upsert(snapshot.messages.map(messageToRow), { onConflict: "id" }))
-        .error,
+      (
+        await client
+          .from("messages")
+          .upsert(snapshot.messages.map(messageToRow), { onConflict: "id" })
+      ).error,
     );
   }
   if (snapshot.auditLog.length) {
     throwIf(
-      (await client.from("audit_log").upsert(snapshot.auditLog.map(auditToRow), { onConflict: "id" }))
-        .error,
+      (
+        await client
+          .from("audit_log")
+          .upsert(snapshot.auditLog.map(auditToRow), { onConflict: "id" })
+      ).error,
     );
   }
   if (snapshot.exportRequests.length) {
@@ -307,9 +321,11 @@ export async function seedAppSnapshot(client: SupabaseClient, snapshot: AppSnaps
   if (snapshot.fieldRules.length) {
     throwIf(
       (
-        await client.from("field_visibility_rules").upsert(snapshot.fieldRules.map(fieldRuleToRow), {
-          onConflict: "id",
-        })
+        await client
+          .from("field_visibility_rules")
+          .upsert(snapshot.fieldRules.map(fieldRuleToRow), {
+            onConflict: "id",
+          })
       ).error,
     );
   }

@@ -1,11 +1,6 @@
 import type { Purchase } from "@/types";
 
-export type CadenceLabel =
-  | "harian"
-  | "mingguan"
-  | "dua_mingguan"
-  | "bulanan"
-  | "tidak_tentu";
+export type CadenceLabel = "harian" | "mingguan" | "dua_mingguan" | "bulanan" | "tidak_tentu";
 
 export interface CadenceResult {
   avgDaysBetweenOrders: number | null;
@@ -42,10 +37,7 @@ export function labelForDays(days: number, variance: number): CadenceLabel {
   return "tidak_tentu";
 }
 
-export function calculateCadence(
-  purchases: Purchase[],
-  now: Date = new Date(),
-): CadenceResult {
+export function calculateCadence(purchases: Purchase[], now: Date = new Date()): CadenceResult {
   const sorted = [...purchases].sort((a, b) => a.date.localeCompare(b.date));
   const lastOrderDate = sorted.length ? sorted[sorted.length - 1].date : null;
   const manualOverrideDays =
@@ -73,12 +65,9 @@ export function calculateCadence(
     gaps.push(Math.max(1, Math.round((b - a) / 86400000)));
   }
   const avg = gaps.reduce((s, g) => s + g, 0) / gaps.length;
-  const variance = Math.sqrt(
-    gaps.reduce((s, g) => s + (g - avg) ** 2, 0) / gaps.length,
-  );
+  const variance = Math.sqrt(gaps.reduce((s, g) => s + (g - avg) ** 2, 0) / gaps.length);
   const cv = avg > 0 ? variance / avg : 1; // coefficient of variation
-  const confidence: CadenceResult["confidence"] =
-    cv < 0.25 ? "high" : cv < 0.5 ? "medium" : "low";
+  const confidence: CadenceResult["confidence"] = cv < 0.25 ? "high" : cv < 0.5 ? "medium" : "low";
   const label = labelForDays(avg, variance);
 
   return {
@@ -91,10 +80,7 @@ export function calculateCadence(
       ? new Date(new Date(lastOrderDate).getTime() + avg * 86400000).toISOString()
       : null,
     daysUntilPredicted: lastOrderDate
-      ? Math.round(
-          (new Date(lastOrderDate).getTime() + avg * 86400000 - now.getTime()) /
-            86400000,
-        )
+      ? Math.round((new Date(lastOrderDate).getTime() + avg * 86400000 - now.getTime()) / 86400000)
       : null,
     confidence,
     gaps,
@@ -120,9 +106,7 @@ export function applyManualOverride(
     effectiveDaysBetweenOrders: overrideDays,
     label: labelForDays(overrideDays, 0),
     predictedNextOrderDate: predicted,
-    daysUntilPredicted: Math.round(
-      (new Date(predicted).getTime() - now.getTime()) / 86400000,
-    ),
+    daysUntilPredicted: Math.round((new Date(predicted).getTime() - now.getTime()) / 86400000),
   };
 }
 

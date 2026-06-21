@@ -6,9 +6,16 @@ import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
 import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
-import { canEditCustomer } from "@/lib/permissions";
+import { canEditCustomer, hasFlag } from "@/lib/permissions";
 import { useStore } from "@/lib/store";
-import { formatTime, formatRupiah, formatDate, relativeDay, relativeTime, minutesBetween } from "@/lib/format";
+import {
+  formatTime,
+  formatRupiah,
+  formatDate,
+  relativeDay,
+  relativeTime,
+  minutesBetween,
+} from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
 import { SegmentBadge } from "@/components/SegmentBadge";
 import { SegmentIcon } from "@/components/SegmentIcon";
@@ -16,20 +23,44 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Search, Send, Zap, Tag as TagIcon, Paperclip, MoreVertical, Clock,
-  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock, Moon, Pencil, Users,
+  Search,
+  Send,
+  Zap,
+  Tag as TagIcon,
+  Paperclip,
+  MoreVertical,
+  Clock,
+  CheckCheck,
+  Check as CheckIcon,
+  AlertTriangle,
+  Crown,
+  X,
+  CalendarClock,
+  Moon,
+  Pencil,
+  Users,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -101,8 +132,10 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
     if (statusTab === "mine") list = list.filter((c) => c.customer.assignedAgentId === agent?.id);
     if (statusTab === "unassigned") list = list.filter((c) => !c.customer.assignedAgentId);
     if (statusTab === "open") list = list.filter((c) => c.customer.conversationStatus === "open");
-    if (statusTab === "resolved") list = list.filter((c) => c.customer.conversationStatus === "resolved");
-    if (statusTab === "snoozed") list = list.filter((c) => c.customer.conversationStatus === "snoozed");
+    if (statusTab === "resolved")
+      list = list.filter((c) => c.customer.conversationStatus === "resolved");
+    if (statusTab === "snoozed")
+      list = list.filter((c) => c.customer.conversationStatus === "snoozed");
     // segment tab
     if (segmentTab !== "all") {
       const map = new Map(enriched.map((e) => [e.customer.id, e.rfm.segment]));
@@ -214,25 +247,25 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           </div>
           <div className="scrollbar-thin mt-2 flex gap-1.5 overflow-x-auto pb-1">
             {SEGMENT_TABS.map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => setSegmentTab(t.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors",
-                    segmentTab === t.id
-                      ? "border-slate-400 bg-slate-100 text-slate-800"
-                      : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
-                  )}
-                >
-                  {t.id === "all" ? (
-                    <Users className="h-3 w-3 shrink-0 text-slate-500" aria-hidden />
-                  ) : (
-                    <SegmentIcon segment={t.id} />
-                  )}
-                  {t.label}
-                  <span className="opacity-60">{segmentCounts[t.id] ?? 0}</span>
-                </button>
-              ))}
+              <button
+                key={t.id}
+                onClick={() => setSegmentTab(t.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition-colors",
+                  segmentTab === t.id
+                    ? "border-slate-400 bg-slate-100 text-slate-800"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50",
+                )}
+              >
+                {t.id === "all" ? (
+                  <Users className="h-3 w-3 shrink-0 text-slate-500" aria-hidden />
+                ) : (
+                  <SegmentIcon segment={t.id} />
+                )}
+                {t.label}
+                <span className="opacity-60">{segmentCounts[t.id] ?? 0}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -311,17 +344,17 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                         {c.customer.name}
                       </div>
                       <div className="ml-2 flex shrink-0 items-center gap-1 font-mono text-[10px] text-slate-400">
-                        {isUnread && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        )}
+                        {isUnread && <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />}
                         {c.lastMessage ? formatTime(c.lastMessage.timestamp) : ""}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={cn(
-                        "truncate text-xs",
-                        isUnread && customerIsLastSender ? "text-slate-800" : "text-slate-500",
-                      )}>
+                      <div
+                        className={cn(
+                          "truncate text-xs",
+                          isUnread && customerIsLastSender ? "text-slate-800" : "text-slate-500",
+                        )}
+                      >
                         {c.lastMessage?.content ?? "Belum ada pesan"}
                       </div>
                       {c.unreadCount > 0 && (
@@ -344,7 +377,10 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                         {orderStatusLabel(c.customer.orderStatus)}
                       </span>
                       {c.customer.priority === "high" && (
-                        <span className="h-2 w-2 rounded-full bg-red-500" title="Prioritas tinggi" />
+                        <span
+                          className="h-2 w-2 rounded-full bg-red-500"
+                          title="Prioritas tinggi"
+                        />
                       )}
                     </div>
                   </div>
@@ -469,39 +505,47 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               </div>
             </div>
             {/* Conversation context bar */}
-            {selectedConv && selectedConv.messages.length > 0 && (() => {
-              const msgs = selectedConv.messages;
-              const first = msgs[0];
-              // average response time = avg minutes between a customer msg and the next agent msg
-              const gaps: number[] = [];
-              for (let i = 1; i < msgs.length; i++) {
-                const prev = msgs[i - 1], cur = msgs[i];
-                if (
-                  prev.type === "text" && cur.type === "text" &&
-                  prev.senderId === selectedCustomer.id && cur.senderId !== selectedCustomer.id
-                ) {
-                  gaps.push(minutesBetween(prev.timestamp, cur.timestamp));
+            {selectedConv &&
+              selectedConv.messages.length > 0 &&
+              (() => {
+                const msgs = selectedConv.messages;
+                const first = msgs[0];
+                // average response time = avg minutes between a customer msg and the next agent msg
+                const gaps: number[] = [];
+                for (let i = 1; i < msgs.length; i++) {
+                  const prev = msgs[i - 1],
+                    cur = msgs[i];
+                  if (
+                    prev.type === "text" &&
+                    cur.type === "text" &&
+                    prev.senderId === selectedCustomer.id &&
+                    cur.senderId !== selectedCustomer.id
+                  ) {
+                    gaps.push(minutesBetween(prev.timestamp, cur.timestamp));
+                  }
                 }
-              }
-              const avg = gaps.length
-                ? Math.round(gaps.reduce((s, g) => s + g, 0) / gaps.length)
-                : null;
-              return (
-                <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-1.5 text-[11px] text-slate-500">
-                  <span>Percakapan dimulai {formatDate(first.timestamp)}</span>
-                  <span className="text-slate-300">·</span>
-                  <span>{msgs.length} pesan</span>
-                  {avg !== null && (
-                    <>
-                      <span className="text-slate-300">·</span>
-                      <span>Respon rata-rata: <span className="font-semibold text-slate-700">
-                        {avg < 60 ? `${avg} menit` : `${(avg / 60).toFixed(1)} jam`}
-                      </span></span>
-                    </>
-                  )}
-                </div>
-              );
-            })()}
+                const avg = gaps.length
+                  ? Math.round(gaps.reduce((s, g) => s + g, 0) / gaps.length)
+                  : null;
+                return (
+                  <div className="flex items-center gap-3 border-b border-slate-100 bg-slate-50/60 px-4 py-1.5 text-[11px] text-slate-500">
+                    <span>Percakapan dimulai {formatDate(first.timestamp)}</span>
+                    <span className="text-slate-300">·</span>
+                    <span>{msgs.length} pesan</span>
+                    {avg !== null && (
+                      <>
+                        <span className="text-slate-300">·</span>
+                        <span>
+                          Respon rata-rata:{" "}
+                          <span className="font-semibold text-slate-700">
+                            {avg < 60 ? `${avg} menit` : `${(avg / 60).toFixed(1)} jam`}
+                          </span>
+                        </span>
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
             {/* Tags row */}
             {selectedCustomer.conversationTags.length > 0 && (
@@ -525,26 +569,48 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
 
             {/* Messages */}
             <div ref={chatScrollRef} className="scrollbar-thin flex-1 overflow-y-auto p-4">
-              <MessagesList conv={selectedConv!} typing={typing} agentId={agent!.id} customerId={selectedCustomer.id} />
+              <MessagesList
+                conv={selectedConv!}
+                typing={typing}
+                agentId={agent!.id}
+                customerId={selectedCustomer.id}
+              />
             </div>
 
             {/* Input */}
             <div className="border-t border-slate-200 bg-white p-3">
-              <div className="mb-2 flex gap-1">
+              {!hasFlag(agent, "chat_reply") && inputMode === "text" ? (
+                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                  <Lock className="h-4 w-4 shrink-0" />
+                  <span>
+                    Anda memiliki akses lihat saja untuk percakapan ini. Hubungi Admin jika butuh
+                    akses balas.
+                  </span>
+                </div>
+              ) : null}
+              <div className="mb-2 mt-2 flex gap-1">
                 <button
                   onClick={() => setInputMode("text")}
+                  disabled={!hasFlag(agent, "chat_reply")}
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium",
-                    inputMode === "text" ? "bg-emerald-100 text-emerald-700" : "text-slate-500 hover:bg-slate-100",
+                    inputMode === "text"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "text-slate-500 hover:bg-slate-100",
+                    !hasFlag(agent, "chat_reply") && "cursor-not-allowed opacity-50",
                   )}
                 >
                   Balas
                 </button>
                 <button
                   onClick={() => setInputMode("internal_note")}
+                  disabled={!hasFlag(agent, "chat_write_internal_note")}
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium",
-                    inputMode === "internal_note" ? "bg-amber-100 text-amber-700" : "text-slate-500 hover:bg-slate-100",
+                    inputMode === "internal_note"
+                      ? "bg-amber-100 text-amber-700"
+                      : "text-slate-500 hover:bg-slate-100",
+                    !hasFlag(agent, "chat_write_internal_note") && "cursor-not-allowed opacity-50",
                   )}
                 >
                   Catatan Internal
@@ -552,6 +618,11 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               </div>
               <Textarea
                 value={draft}
+                disabled={
+                  inputMode === "text"
+                    ? !hasFlag(agent, "chat_reply")
+                    : !hasFlag(agent, "chat_write_internal_note")
+                }
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -561,13 +632,18 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 }}
                 placeholder={
                   inputMode === "text"
-                    ? "Ketik balasan..."
+                    ? hasFlag(agent, "chat_reply")
+                      ? "Ketik balasan..."
+                      : "Akses balas dinonaktifkan"
                     : "Tulis catatan internal (tidak terlihat customer)..."
                 }
                 rows={2}
                 className={cn(
                   "min-h-[60px] resize-none",
                   inputMode === "internal_note" && "bg-amber-50 border-amber-200",
+                  inputMode === "text" &&
+                    !hasFlag(agent, "chat_reply") &&
+                    "bg-slate-50 text-slate-400",
                 )}
               />
               <div className="mt-2 flex items-center justify-between">
@@ -602,26 +678,31 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     <PopoverContent className="w-64 p-3" align="start">
                       <div className="text-sm font-semibold">Label Percakapan</div>
                       <div className="mt-2 space-y-1">
-                        {tags.filter((t) => t.scope === "conversation").map((t) => {
-                          const active = selectedCustomer.conversationTags.includes(t.name);
-                          return (
-                            <button
-                              key={t.id}
-                              onClick={() =>
-                                active
-                                  ? store.removeConversationTag(selectedCustomer.id, t.name)
-                                  : store.addConversationTag(selectedCustomer.id, t.name)
-                              }
-                              className="flex w-full items-center justify-between rounded-md p-2 text-left text-xs hover:bg-slate-50"
-                            >
-                              <span className="flex items-center gap-2">
-                                <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
-                                {t.name}
-                              </span>
-                              {active && <CheckIcon className="h-3 w-3 text-emerald-600" />}
-                            </button>
-                          );
-                        })}
+                        {tags
+                          .filter((t) => t.scope === "conversation")
+                          .map((t) => {
+                            const active = selectedCustomer.conversationTags.includes(t.name);
+                            return (
+                              <button
+                                key={t.id}
+                                onClick={() =>
+                                  active
+                                    ? store.removeConversationTag(selectedCustomer.id, t.name)
+                                    : store.addConversationTag(selectedCustomer.id, t.name)
+                                }
+                                className="flex w-full items-center justify-between rounded-md p-2 text-left text-xs hover:bg-slate-50"
+                              >
+                                <span className="flex items-center gap-2">
+                                  <span
+                                    className="h-2 w-2 rounded-full"
+                                    style={{ backgroundColor: t.color }}
+                                  />
+                                  {t.name}
+                                </span>
+                                {active && <CheckIcon className="h-3 w-3 text-emerald-600" />}
+                              </button>
+                            );
+                          })}
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -706,7 +787,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     key={a.id}
                     onClick={() => {
                       if (!selectedCustomer) return;
-                      const oldAgent = agents.find((a) => a.id === selectedCustomer.assignedAgentId);
+                      const oldAgent = agents.find(
+                        (a) => a.id === selectedCustomer.assignedAgentId,
+                      );
                       store.logAudit({
                         action: "conversation_transferred",
                         targetType: "conversation",
@@ -727,7 +810,13 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     }}
                     className="flex w-full items-center gap-3 rounded-lg border p-3 hover:bg-slate-50"
                   >
-                    <Avatar name={a.name} color={a.color} initials={a.initials} size={36} online={a.isOnline} />
+                    <Avatar
+                      name={a.name}
+                      color={a.color}
+                      initials={a.initials}
+                      size={36}
+                      online={a.isOnline}
+                    />
                     <div className="flex-1 text-left">
                       <div className="font-medium">{a.name}</div>
                       <div className="text-xs text-slate-500">
@@ -778,14 +867,17 @@ function MessagesList({
               const isAgentMsg = m.senderId !== customerId && m.type === "text";
               const prevIsCustomer = prev && prev.senderId === customerId && prev.type === "text";
               const gapMin =
-                isAgentMsg && prevIsCustomer
-                  ? minutesBetween(prev.timestamp, m.timestamp)
-                  : 0;
+                isAgentMsg && prevIsCustomer ? minutesBetween(prev.timestamp, m.timestamp) : 0;
               const showGap = gapMin >= 30;
               if (m.type === "internal_note") {
                 return (
-                  <div key={m.id} className="mx-auto max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 p-3">
-                    <div className="text-[10px] font-semibold uppercase text-amber-700">Catatan Internal</div>
+                  <div
+                    key={m.id}
+                    className="mx-auto max-w-[70%] rounded-lg border border-amber-200 bg-amber-50 p-3"
+                  >
+                    <div className="text-[10px] font-semibold uppercase text-amber-700">
+                      Catatan Internal
+                    </div>
                     <div className="mt-1 text-sm italic text-amber-900">{m.content}</div>
                     <div className="mt-1 text-right font-mono text-[10px] text-amber-600">
                       {m.senderName} · {formatTime(m.timestamp)}
@@ -798,45 +890,48 @@ function MessagesList({
                 <div key={m.id}>
                   {showGap && (
                     <div className="my-2 flex items-center justify-center gap-2 text-[10px] text-slate-400">
-                      <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
-                      - dibalas setelah {gapMin < 60 ? `${gapMin} menit` : `${(gapMin / 60).toFixed(1)} jam`} -
+                      <span className="h-px flex-1 max-w-[60px] bg-slate-200" />- dibalas setelah{" "}
+                      {gapMin < 60 ? `${gapMin} menit` : `${(gapMin / 60).toFixed(1)} jam`} -
                       <span className="h-px flex-1 max-w-[60px] bg-slate-200" />
                     </div>
                   )}
                   <div className={cn("flex", isAgent ? "justify-end" : "justify-start")}>
-                  <div
-                    className={cn(
-                      "max-w-[70%] rounded-lg p-2.5 text-sm shadow-sm",
-                      isAgent
-                        ? "rounded-tr-none bg-[#25D366] text-white"
-                        : "rounded-tl-none bg-white text-slate-900",
-                    )}
-                  >
-                    {isAgent && (
-                      <div className="mb-0.5 text-right text-[10px] opacity-80">{m.senderName}</div>
-                    )}
-                    <div className="whitespace-pre-wrap">{m.content}</div>
                     <div
                       className={cn(
-                        "mt-1 flex items-center gap-1 font-mono text-[10px]",
-                        isAgent ? "justify-end text-emerald-50/80" : "justify-end text-slate-400",
+                        "max-w-[70%] rounded-lg p-2.5 text-sm shadow-sm",
+                        isAgent
+                          ? "rounded-tr-none bg-[#25D366] text-white"
+                          : "rounded-tl-none bg-white text-slate-900",
                       )}
                     >
-                      <span>{formatTime(m.timestamp)}</span>
                       {isAgent && (
-                        m.readStatus === "read" ? (
-                          <>
-                            <CheckCheck className="h-3 w-3 text-sky-200" />
-                            <span className="text-emerald-50/80" title="Dibaca">· Dibaca</span>
-                          </>
-                        ) : m.readStatus === "delivered" ? (
-                          <CheckCheck className="h-3 w-3" />
-                        ) : (
-                          <CheckIcon className="h-3 w-3" />
-                        )
+                        <div className="mb-0.5 text-right text-[10px] opacity-80">
+                          {m.senderName}
+                        </div>
                       )}
+                      <div className="whitespace-pre-wrap">{m.content}</div>
+                      <div
+                        className={cn(
+                          "mt-1 flex items-center gap-1 font-mono text-[10px]",
+                          isAgent ? "justify-end text-emerald-50/80" : "justify-end text-slate-400",
+                        )}
+                      >
+                        <span>{formatTime(m.timestamp)}</span>
+                        {isAgent &&
+                          (m.readStatus === "read" ? (
+                            <>
+                              <CheckCheck className="h-3 w-3 text-sky-200" />
+                              <span className="text-emerald-50/80" title="Dibaca">
+                                · Dibaca
+                              </span>
+                            </>
+                          ) : m.readStatus === "delivered" ? (
+                            <CheckCheck className="h-3 w-3" />
+                          ) : (
+                            <CheckIcon className="h-3 w-3" />
+                          ))}
+                      </div>
                     </div>
-                  </div>
                   </div>
                 </div>
               );
@@ -892,9 +987,13 @@ function CustomerSidePanel({
       <div className="flex flex-col items-center text-center">
         <Avatar name={customer.name} size={72} color={meta.color} ringColor={meta.color} />
         <h3 className="mt-3 text-lg font-semibold">{customer.name}</h3>
-        <div className="font-mono text-xs text-slate-500">{getFieldDisplay("phone", customer.phone, role, fieldRules)}</div>
+        <div className="font-mono text-xs text-slate-500">
+          {getFieldDisplay("phone", customer.phone, role, fieldRules)}
+        </div>
         <div className="text-[11px] text-slate-400">Bergabung {formatDate(customer.joinDate)}</div>
-        <div className="mt-2"><SegmentBadge segment={rfm.segment} size="md" /></div>
+        <div className="mt-2">
+          <SegmentBadge segment={rfm.segment} size="md" />
+        </div>
       </div>
 
       {/* RFM Bars */}
@@ -932,9 +1031,7 @@ function CustomerSidePanel({
           <div className="text-[10px] text-slate-500">Pembelian</div>
         </div>
         <div className="rounded-lg bg-slate-50 p-2">
-          <div className="text-[11px] font-semibold">
-            {lastP ? formatDate(lastP.date) : "-"}
-          </div>
+          <div className="text-[11px] font-semibold">{lastP ? formatDate(lastP.date) : "-"}</div>
           <div className="text-[10px] text-slate-500">Terakhir</div>
         </div>
         <div className="rounded-lg bg-slate-50 p-2">
@@ -946,12 +1043,14 @@ function CustomerSidePanel({
       {/* Alerts */}
       {rfm.segment === "at_risk" && (
         <div className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-800">
-          <AlertTriangle className="mb-1 inline h-3.5 w-3.5" /> Pernah aktif, kini sudah {rfm.recencyDays} hari tidak order.
+          <AlertTriangle className="mb-1 inline h-3.5 w-3.5" /> Pernah aktif, kini sudah{" "}
+          {rfm.recencyDays} hari tidak order.
         </div>
       )}
       {rfm.segment === "dormant" && (
         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-          <SegmentIcon segment="dormant" className="mb-1 inline" /> Tidak ada transaksi selama {rfm.recencyDays} hari.
+          <SegmentIcon segment="dormant" className="mb-1 inline" /> Tidak ada transaksi selama{" "}
+          {rfm.recencyDays} hari.
         </div>
       )}
       {rfm.segment === "champions" && (
@@ -968,9 +1067,14 @@ function CustomerSidePanel({
             <span className="text-[11px] text-slate-400">Belum ada tag</span>
           )}
           {customer.tags.map((t) => (
-            <span key={t} className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-700">
+            <span
+              key={t}
+              className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[11px] text-sky-700"
+            >
               {t}
-              <button onClick={() => store.removeCustomerTag(customer.id, t)}><X className="h-3 w-3" /></button>
+              <button onClick={() => store.removeCustomerTag(customer.id, t)}>
+                <X className="h-3 w-3" />
+              </button>
             </span>
           ))}
         </div>
@@ -984,7 +1088,10 @@ function CustomerSidePanel({
             <div className="text-[11px] text-slate-400">Belum ada transaksi</div>
           )}
           {purchases.map((p) => (
-            <div key={p.id} className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1 text-xs">
+            <div
+              key={p.id}
+              className="flex items-center justify-between rounded-md bg-slate-50 px-2 py-1 text-xs"
+            >
               <div>
                 <div className="font-medium">{p.serviceName}</div>
                 <div className="font-mono text-[10px] text-slate-400">{formatDate(p.date)}</div>
@@ -1018,7 +1125,10 @@ function CustomerSidePanel({
                 <div className="font-mono text-slate-400">{formatDate(h.date)}</div>
                 <div>
                   {h.fromSegment ? `${SEGMENT_META[h.fromSegment].label} → ` : ""}
-                  <span style={{ color: SEGMENT_META[h.toSegment].color }} className="font-semibold">
+                  <span
+                    style={{ color: SEGMENT_META[h.toSegment].color }}
+                    className="font-semibold"
+                  >
                     {SEGMENT_META[h.toSegment].label}
                   </span>
                 </div>
@@ -1061,10 +1171,7 @@ function ScoreRow({ label, score }: { label: string; score: number }) {
         {[1, 2, 3, 4, 5].map((n) => (
           <span
             key={n}
-            className={cn(
-              "h-2 w-3 rounded-sm",
-              n <= score ? "bg-emerald-500" : "bg-slate-200",
-            )}
+            className={cn("h-2 w-3 rounded-sm", n <= score ? "bg-emerald-500" : "bg-slate-200")}
           />
         ))}
       </div>
@@ -1122,7 +1229,9 @@ function CadenceCard({
           className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700"
           title={`Konsistensi pola: ${confText}`}
         >
-          <span className={cn("mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle", confColor)} />
+          <span
+            className={cn("mr-1 inline-block h-1.5 w-1.5 rounded-full align-middle", confColor)}
+          />
           {labelText}
         </span>
       </div>
@@ -1138,7 +1247,12 @@ function CadenceCard({
             </span>
           </>
         ) : (
-          <>Rata-rata tiap <span className="font-semibold text-slate-800">{cadence.avgDaysBetweenOrders} hari</span></>
+          <>
+            Rata-rata tiap{" "}
+            <span className="font-semibold text-slate-800">
+              {cadence.avgDaysBetweenOrders} hari
+            </span>
+          </>
         )}
       </div>
       {cadence.predictedNextOrderDate && (
@@ -1151,7 +1265,9 @@ function CadenceCard({
       )}
       <div className="mt-2">
         {!canEdit ? (
-          <p className="text-[11px] text-slate-400">Akses lihat saja - siklus manual tidak bisa diedit.</p>
+          <p className="text-[11px] text-slate-400">
+            Akses lihat saja - siklus manual tidak bisa diedit.
+          </p>
         ) : editing ? (
           <div className="flex items-center gap-1">
             <Input

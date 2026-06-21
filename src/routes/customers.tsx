@@ -6,7 +6,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useStore } from "@/lib/store";
-import { hasPermission, shareBadgeFor, canEditCustomer } from "@/lib/permissions";
+import { hasPermission, shareBadgeFor, canEditCustomer, hasFlag } from "@/lib/permissions";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
@@ -18,13 +18,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Search, Table as TableIcon, LayoutGrid, MessageSquare, Eye, Plus, X, CalendarClock, Users } from "lucide-react";
+import {
+  Search,
+  Table as TableIcon,
+  LayoutGrid,
+  MessageSquare,
+  Eye,
+  Plus,
+  X,
+  CalendarClock,
+  Users,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import {
@@ -79,11 +97,16 @@ function CustomersPage() {
     }
     list.sort((a, b) => {
       switch (sortKey) {
-        case "recency": return a.rfm.recencyDays - b.rfm.recencyDays;
-        case "monetary": return b.rfm.monetary - a.rfm.monetary;
-        case "rfm": return b.rfm.total - a.rfm.total;
-        case "clv": return b.clv.clv12months - a.clv.clv12months;
-        case "name": return a.customer.name.localeCompare(b.customer.name);
+        case "recency":
+          return a.rfm.recencyDays - b.rfm.recencyDays;
+        case "monetary":
+          return b.rfm.monetary - a.rfm.monetary;
+        case "rfm":
+          return b.rfm.total - a.rfm.total;
+        case "clv":
+          return b.clv.clv12months - a.clv.clv12months;
+        case "name":
+          return a.customer.name.localeCompare(b.customer.name);
         case "cadence_overdue": {
           const av = a.cadence.daysUntilPredicted ?? 99999;
           const bv = b.cadence.daysUntilPredicted ?? 99999;
@@ -109,9 +132,14 @@ function CustomersPage() {
             <h1 className="text-2xl font-bold tracking-tight">Customer</h1>
             <p className="text-sm text-slate-500">{enriched.length} total customer</p>
           </div>
-          <Button onClick={() => setAddOpen(true)} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
-            <Plus className="h-4 w-4" /> Customer Baru
-          </Button>
+          {hasFlag(agent, "customer_create") && (
+            <Button
+              onClick={() => setAddOpen(true)}
+              className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+            >
+              <Plus className="h-4 w-4" /> Customer Baru
+            </Button>
+          )}
         </div>
 
         {/* filter bar */}
@@ -127,7 +155,9 @@ function CustomersPage() {
               />
             </div>
             <Select value={sortKey} onValueChange={(v) => setSortKey(v as SortKey)}>
-              <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="recency">Terakhir Order</SelectItem>
                 <SelectItem value="monetary">Total Pembelian</SelectItem>
@@ -140,13 +170,19 @@ function CustomersPage() {
             <div className="flex rounded-md border">
               <button
                 onClick={() => setView("table")}
-                className={cn("flex h-9 w-9 items-center justify-center", view === "table" ? "bg-slate-100" : "")}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center",
+                  view === "table" ? "bg-slate-100" : "",
+                )}
               >
                 <TableIcon className="h-4 w-4" />
               </button>
               <button
                 onClick={() => setView("card")}
-                className={cn("flex h-9 w-9 items-center justify-center border-l", view === "card" ? "bg-slate-100" : "")}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center border-l",
+                  view === "card" ? "bg-slate-100" : "",
+                )}
               >
                 <LayoutGrid className="h-4 w-4" />
               </button>
@@ -154,23 +190,25 @@ function CustomersPage() {
           </div>
           <div className="scrollbar-thin mt-3 flex gap-1.5 overflow-x-auto pb-1">
             {SEGMENT_FILTERS.map((s) => (
-                <button
-                  key={s.id}
-                  onClick={() => setSegment(s.id)}
-                  className={cn(
-                    "flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium",
-                    segment === s.id ? "border-slate-400 bg-slate-100" : "border-slate-200 bg-white hover:bg-slate-50",
-                  )}
-                >
-                  {s.id === "all" ? (
-                    <Users className="h-3 w-3 shrink-0 text-slate-500" aria-hidden />
-                  ) : (
-                    <SegmentIcon segment={s.id} />
-                  )}
-                  {s.label}
-                  <span className="opacity-60">{segmentCounts[s.id] ?? 0}</span>
-                </button>
-              ))}
+              <button
+                key={s.id}
+                onClick={() => setSegment(s.id)}
+                className={cn(
+                  "flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2.5 py-1 text-xs font-medium",
+                  segment === s.id
+                    ? "border-slate-400 bg-slate-100"
+                    : "border-slate-200 bg-white hover:bg-slate-50",
+                )}
+              >
+                {s.id === "all" ? (
+                  <Users className="h-3 w-3 shrink-0 text-slate-500" aria-hidden />
+                ) : (
+                  <SegmentIcon segment={s.id} />
+                )}
+                {s.label}
+                <span className="opacity-60">{segmentCounts[s.id] ?? 0}</span>
+              </button>
+            ))}
           </div>
         </div>
 
@@ -198,7 +236,9 @@ function CustomersPage() {
                   {filtered.map((e, i) => {
                     const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
                     const share = shareBadgeFor(agent, e.customer);
-                    const sharedBy = share ? agents.find((a) => a.id === share.sharedByAgentId) : null;
+                    const sharedBy = share
+                      ? agents.find((a) => a.id === share.sharedByAgentId)
+                      : null;
                     const lastP = e.customer.purchases.length
                       ? e.customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
                       : null;
@@ -213,7 +253,10 @@ function CustomersPage() {
                             ? "text-amber-600 font-semibold"
                             : "text-slate-600";
                     return (
-                      <tr key={e.customer.id} className="border-t border-slate-100 hover:bg-slate-50">
+                      <tr
+                        key={e.customer.id}
+                        className="border-t border-slate-100 hover:bg-slate-50"
+                      >
                         <td className="px-3 py-2 text-slate-400">{i + 1}</td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
@@ -224,14 +267,21 @@ function CustomersPage() {
                             />
                             <span className="font-medium">{e.customer.name}</span>
                             {share && (
-                              <span className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700" title={`Dibagikan oleh ${sharedBy?.name ?? ""}`}>
+                              <span
+                                className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700"
+                                title={`Dibagikan oleh ${sharedBy?.name ?? ""}`}
+                              >
                                 Dibagikan · {sharedBy?.name ?? "-"}
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="px-3 py-2 font-mono text-xs">{getFieldDisplay("phone", e.customer.phone, role, fieldRules)}</td>
-                        <td className="px-3 py-2"><SegmentBadge segment={e.rfm.segment} /></td>
+                        <td className="px-3 py-2 font-mono text-xs">
+                          {getFieldDisplay("phone", e.customer.phone, role, fieldRules)}
+                        </td>
+                        <td className="px-3 py-2">
+                          <SegmentBadge segment={e.rfm.segment} />
+                        </td>
                         <td className="px-3 py-2">
                           <div className="flex items-center gap-2">
                             <div className="h-1.5 w-12 rounded-full bg-slate-200">
@@ -264,18 +314,31 @@ function CustomersPage() {
                                 <div className="text-[10px]">Due {days}d</div>
                               )}
                             </>
-                          ) : "—"}
+                          ) : (
+                            "—"
+                          )}
                         </td>
-                        <td className="px-3 py-2 text-right font-mono text-xs">{formatRupiah(e.clv.clv12months)}</td>
-                        <td className="px-3 py-2 text-right font-mono text-xs">{e.rfm.frequency}x</td>
-                        <td className="px-3 py-2 font-mono text-xs">{lastP ? formatDate(lastP.date) : "-"}</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs">
+                          {formatRupiah(e.clv.clv12months)}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono text-xs">
+                          {e.rfm.frequency}x
+                        </td>
+                        <td className="px-3 py-2 font-mono text-xs">
+                          {lastP ? formatDate(lastP.date) : "-"}
+                        </td>
                         <td className="px-3 py-2">
                           {ag ? (
                             <span className="inline-flex items-center gap-1.5">
-                              <span className="h-2 w-2 rounded-full" style={{ backgroundColor: ag.color }} />
+                              <span
+                                className="h-2 w-2 rounded-full"
+                                style={{ backgroundColor: ag.color }}
+                              />
                               {ag.name}
                             </span>
-                          ) : "-"}
+                          ) : (
+                            "-"
+                          )}
                         </td>
                         <td className="px-3 py-2 text-right">
                           <Button
@@ -283,7 +346,10 @@ function CustomersPage() {
                             variant="ghost"
                             className="h-7 px-2 text-xs"
                             onClick={() =>
-                              navigate({ to: "/chat/$customerId", params: { customerId: e.customer.id } })
+                              navigate({
+                                to: "/chat/$customerId",
+                                params: { customerId: e.customer.id },
+                              })
                             }
                           >
                             <MessageSquare className="h-3 w-3" /> Chat
@@ -303,7 +369,9 @@ function CustomersPage() {
                 </tbody>
               </table>
               {filtered.length === 0 && (
-                <div className="p-8 text-center text-sm text-slate-500">Tidak ada customer cocok dengan filter.</div>
+                <div className="p-8 text-center text-sm text-slate-500">
+                  Tidak ada customer cocok dengan filter.
+                </div>
               )}
             </div>
           ) : (
@@ -370,7 +438,10 @@ function CustomersPage() {
                           size="sm"
                           className="h-7 bg-[#25D366] px-2 text-xs text-white hover:bg-[#128C7E]"
                           onClick={() =>
-                            navigate({ to: "/chat/$customerId", params: { customerId: e.customer.id } })
+                            navigate({
+                              to: "/chat/$customerId",
+                              params: { customerId: e.customer.id },
+                            })
                           }
                         >
                           Chat
@@ -421,21 +492,26 @@ function CustomersPage() {
         />
       )}
 
-      <AddCustomerModal open={addOpen} onClose={() => setAddOpen(false)} agents={agents} onAdd={(d) => {
-        const c = addCustomer({
-          name: d.name,
-          phone: d.phone,
-          joinDate: new Date().toISOString(),
-          assignedAgentId: d.agentId,
-          tags: d.tags,
-          notes: d.notes,
-          orderStatus: "dalam_proses",
-          conversationStatus: "open",
-          priority: "normal",
-        });
-        toast.success(`Customer ${c.name} berhasil ditambahkan`);
-        setAddOpen(false);
-      }} />
+      <AddCustomerModal
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        agents={agents}
+        onAdd={(d) => {
+          const c = addCustomer({
+            name: d.name,
+            phone: d.phone,
+            joinDate: new Date().toISOString(),
+            assignedAgentId: d.agentId,
+            tags: d.tags,
+            notes: d.notes,
+            orderStatus: "dalam_proses",
+            conversationStatus: "open",
+            priority: "normal",
+          });
+          toast.success(`Customer ${c.name} berhasil ditambahkan`);
+          setAddOpen(false);
+        }}
+      />
     </AppShell>
   );
 }
@@ -513,20 +589,34 @@ function CustomerDetailModal({
               <Avatar name={customer.name} color={meta.color} size={56} ringColor={meta.color} />
               <div>
                 <div className="text-lg font-semibold">{customer.name}</div>
-                <div className="font-mono text-xs text-slate-500">{getFieldDisplay("phone", customer.phone, role, fieldRules)}</div>
-                <div className="text-[11px] text-slate-400">Bergabung {formatDate(customer.joinDate)}</div>
+                <div className="font-mono text-xs text-slate-500">
+                  {getFieldDisplay("phone", customer.phone, role, fieldRules)}
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  Bergabung {formatDate(customer.joinDate)}
+                </div>
               </div>
-              <div className="ml-auto"><SegmentBadge segment={rfm.segment} size="md" /></div>
+              <div className="ml-auto">
+                <SegmentBadge segment={rfm.segment} size="md" />
+              </div>
             </div>
             <div className="grid grid-cols-3 gap-3 text-sm">
-              <ScoreCard label="Recency" score={rfm.r} desc={`Terakhir beli ${rfm.recencyDays} hari lalu`} />
+              <ScoreCard
+                label="Recency"
+                score={rfm.r}
+                desc={`Terakhir beli ${rfm.recencyDays} hari lalu`}
+              />
               <ScoreCard label="Frequency" score={rfm.f} desc={`${rfm.frequency} transaksi`} />
               <ScoreCard label="Monetary" score={rfm.m} desc={formatRupiah(rfm.monetary)} />
             </div>
             <div className="rounded-xl bg-slate-50 p-3 text-sm">
               <div className="font-semibold">CLV</div>
-              <div>Total Spent: <span className="font-semibold">{formatRupiah(clv.totalSpent)}</span></div>
-              <div className="text-xs text-slate-500">Estimasi 12 bln: {formatRupiah(clv.clv12months)}</div>
+              <div>
+                Total Spent: <span className="font-semibold">{formatRupiah(clv.totalSpent)}</span>
+              </div>
+              <div className="text-xs text-slate-500">
+                Estimasi 12 bln: {formatRupiah(clv.clv12months)}
+              </div>
             </div>
             <div className="rounded-xl border border-slate-200 p-3 text-sm">
               <div className="flex items-center justify-between">
@@ -534,12 +624,18 @@ function CustomerDetailModal({
                   <CalendarClock className="h-4 w-4 text-emerald-600" /> Siklus Pembelian
                 </div>
                 <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
-                  {CADENCE_LABEL_TEXT[cad.label]} · Konsistensi {cad.confidence === "high" ? "Tinggi" : cad.confidence === "medium" ? "Sedang" : "Rendah"}
+                  {CADENCE_LABEL_TEXT[cad.label]} · Konsistensi{" "}
+                  {cad.confidence === "high"
+                    ? "Tinggi"
+                    : cad.confidence === "medium"
+                      ? "Sedang"
+                      : "Rendah"}
                 </span>
               </div>
               {cad.avgDaysBetweenOrders ? (
                 <div className="mt-1 text-xs text-slate-600">
-                  Rata-rata tiap <span className="font-semibold">{cad.avgDaysBetweenOrders} hari</span>
+                  Rata-rata tiap{" "}
+                  <span className="font-semibold">{cad.avgDaysBetweenOrders} hari</span>
                   {cad.isManualOverride && (
                     <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] text-emerald-700">
                       Manual: {cad.manualOverrideDays}d
@@ -550,17 +646,22 @@ function CustomerDetailModal({
                 <div className="mt-1 text-xs text-slate-400 italic">Belum cukup data</div>
               )}
               {cad.predictedNextOrderDate && (
-                <div className={cn(
-                  "mt-1 text-xs",
-                  cad.daysUntilPredicted! < 0
-                    ? "text-red-700 font-semibold"
-                    : cad.daysUntilPredicted! <= 3
-                      ? "text-amber-700 font-semibold"
-                      : "text-slate-600",
-                )}>
+                <div
+                  className={cn(
+                    "mt-1 text-xs",
+                    cad.daysUntilPredicted! < 0
+                      ? "text-red-700 font-semibold"
+                      : cad.daysUntilPredicted! <= 3
+                        ? "text-amber-700 font-semibold"
+                        : "text-slate-600",
+                  )}
+                >
                   Prediksi order berikutnya: {formatDate(cad.predictedNextOrderDate)}
-                  {cad.daysUntilPredicted! < 0 && ` · Overdue ${Math.abs(cad.daysUntilPredicted!)} hari`}
-                  {cad.daysUntilPredicted! >= 0 && cad.daysUntilPredicted! <= 3 && ` · Due ${cad.daysUntilPredicted} hari`}
+                  {cad.daysUntilPredicted! < 0 &&
+                    ` · Overdue ${Math.abs(cad.daysUntilPredicted!)} hari`}
+                  {cad.daysUntilPredicted! >= 0 &&
+                    cad.daysUntilPredicted! <= 3 &&
+                    ` · Due ${cad.daysUntilPredicted} hari`}
                 </div>
               )}
               {cad.gaps.length > 0 && (
@@ -580,7 +681,13 @@ function CustomerDetailModal({
           <TabsContent value="purchases">
             <table className="w-full text-sm">
               <thead className="text-xs text-slate-500">
-                <tr><th className="text-left">No</th><th className="text-left">Layanan</th><th className="text-left">Tanggal</th><th className="text-right">Harga</th><th>Catatan</th></tr>
+                <tr>
+                  <th className="text-left">No</th>
+                  <th className="text-left">Layanan</th>
+                  <th className="text-left">Tanggal</th>
+                  <th className="text-right">Harga</th>
+                  <th>Catatan</th>
+                </tr>
               </thead>
               <tbody>
                 {customer.purchases.map((p, i) => (
@@ -595,7 +702,8 @@ function CustomerDetailModal({
               </tbody>
             </table>
             <div className="mt-2 text-xs text-slate-500">
-              {customer.purchases.length} transaksi · Total {formatRupiah(rfm.monetary)} · Rata-rata {formatRupiah(avg)}
+              {customer.purchases.length} transaksi · Total {formatRupiah(rfm.monetary)} · Rata-rata{" "}
+              {formatRupiah(avg)}
             </div>
           </TabsContent>
           <TabsContent value="segments">
@@ -605,7 +713,10 @@ function CustomerDetailModal({
                   <div className="font-mono text-xs text-slate-400">{formatDate(h.date)}</div>
                   <div>
                     {h.fromSegment ? `${SEGMENT_META[h.fromSegment].label} → ` : "→ "}
-                    <span style={{ color: SEGMENT_META[h.toSegment].color }} className="font-semibold">
+                    <span
+                      style={{ color: SEGMENT_META[h.toSegment].color }}
+                      className="font-semibold"
+                    >
                       {SEGMENT_META[h.toSegment].label}
                     </span>
                   </div>
@@ -623,7 +734,9 @@ function CustomerDetailModal({
               className={!canEdit ? "bg-slate-50 text-slate-600" : undefined}
             />
             {!canEdit && (
-              <p className="mt-1 text-xs text-slate-500">Akses lihat saja — catatan tidak bisa diedit.</p>
+              <p className="mt-1 text-xs text-slate-500">
+                Akses lihat saja — catatan tidak bisa diedit.
+              </p>
             )}
             <Button
               className="mt-2"
@@ -646,36 +759,55 @@ function CustomerDetailModal({
                 <div className="mb-2 text-sm font-semibold">Bagikan ke CS lain</div>
                 <div className="grid grid-cols-2 gap-2">
                   <Select value={shareAgentId} onValueChange={setShareAgentId}>
-                    <SelectTrigger><SelectValue placeholder="Pilih CS" /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih CS" />
+                    </SelectTrigger>
                     <SelectContent>
-                      {csAgents.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+                      {csAgents.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
-                  <Select value={sharePermission} onValueChange={(v) => setSharePermission(v as any)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select
+                    value={sharePermission}
+                    onValueChange={(v) => setSharePermission(v as any)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="view">Lihat saja</SelectItem>
                       <SelectItem value="edit">Bisa edit</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={shareDuration} onValueChange={(v) => setShareDuration(v as any)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="24h">24 jam</SelectItem>
                       <SelectItem value="7d">7 hari</SelectItem>
                       <SelectItem value="permanent">Permanen</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Input value={shareReason} onChange={(e) => setShareReason(e.target.value)} placeholder="Alasan (contoh: backup saat cuti)" />
+                  <Input
+                    value={shareReason}
+                    onChange={(e) => setShareReason(e.target.value)}
+                    placeholder="Alasan (contoh: backup saat cuti)"
+                  />
                 </div>
                 <Button
                   className="mt-2 bg-[#25D366] text-white hover:bg-[#128C7E]"
                   disabled={!shareAgentId || !shareReason.trim()}
                   onClick={() => {
                     const expiresAt =
-                      shareDuration === "permanent" ? undefined :
-                      shareDuration === "24h" ? new Date(Date.now() + 24 * 3600 * 1000).toISOString() :
-                      new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
+                      shareDuration === "permanent"
+                        ? undefined
+                        : shareDuration === "24h"
+                          ? new Date(Date.now() + 24 * 3600 * 1000).toISOString()
+                          : new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
                     onShare({
                       customerId: customer.id,
                       sharedWithAgentId: shareAgentId,
@@ -690,7 +822,9 @@ function CustomerDetailModal({
                 </Button>
               </div>
               <div className="rounded-xl border p-3">
-                <div className="mb-2 text-sm font-semibold">Akses aktif ({activeShares.length})</div>
+                <div className="mb-2 text-sm font-semibold">
+                  Akses aktif ({activeShares.length})
+                </div>
                 {activeShares.length === 0 ? (
                   <div className="text-xs text-slate-500">Belum ada akses manual yang aktif.</div>
                 ) : (
@@ -699,14 +833,27 @@ function CustomerDetailModal({
                       const a = agents.find((x) => x.id === s.sharedWithAgentId);
                       const by = agents.find((x) => x.id === s.sharedByAgentId);
                       return (
-                        <li key={s.id} className="flex items-center justify-between rounded border bg-slate-50 p-2 text-xs">
+                        <li
+                          key={s.id}
+                          className="flex items-center justify-between rounded border bg-slate-50 p-2 text-xs"
+                        >
                           <div>
-                            <div className="font-semibold">{a?.name ?? "—"} · <span className="text-slate-500">{s.permission === "edit" ? "Bisa edit" : "Lihat saja"}</span></div>
+                            <div className="font-semibold">
+                              {a?.name ?? "—"} ·{" "}
+                              <span className="text-slate-500">
+                                {s.permission === "edit" ? "Bisa edit" : "Lihat saja"}
+                              </span>
+                            </div>
                             <div className="text-slate-500">
-                              {s.reason} · oleh {by?.name ?? "—"} · {s.expiresAt ? `expires ${formatDate(s.expiresAt)}` : "permanen"}
+                              {s.reason} · oleh {by?.name ?? "—"} ·{" "}
+                              {s.expiresAt ? `expires ${formatDate(s.expiresAt)}` : "permanen"}
                             </div>
                           </div>
-                          <Button size="sm" variant="ghost" onClick={() => onRevoke(customer.id, s.id)}>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => onRevoke(customer.id, s.id)}
+                          >
                             <X className="h-4 w-4 text-red-500" />
                           </Button>
                         </li>
@@ -719,7 +866,10 @@ function CustomerDetailModal({
           )}
         </Tabs>
         <DialogFooter>
-          <Button onClick={() => onOpenChat(customer.id)} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
+          <Button
+            onClick={() => onOpenChat(customer.id)}
+            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+          >
             Buka Chat
           </Button>
         </DialogFooter>
@@ -739,12 +889,21 @@ function ScoreCard({ label, score, desc }: { label: string; score: number; desc:
 }
 
 function AddCustomerModal({
-  open, onClose, agents, onAdd,
+  open,
+  onClose,
+  agents,
+  onAdd,
 }: {
   open: boolean;
   onClose: () => void;
   agents: ReturnType<typeof useCustomers>["agents"];
-  onAdd: (d: { name: string; phone: string; agentId: string; tags: string[]; notes: string }) => void;
+  onAdd: (d: {
+    name: string;
+    phone: string;
+    agentId: string;
+    tags: string[];
+    notes: string;
+  }) => void;
 }) {
   const defaultAgentId = agents.find((a) => a.role === "cs")?.id ?? agents[0]?.id ?? "";
 
@@ -786,7 +945,9 @@ function AddCustomerModal({
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
       <DialogContent>
-        <DialogHeader><DialogTitle>Tambah Customer Baru</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Tambah Customer Baru</DialogTitle>
+        </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
             <FormField
@@ -823,12 +984,18 @@ function AddCustomerModal({
                   <FormLabel className="text-xs font-medium">Pilih CS *</FormLabel>
                   <Select value={field.value} onValueChange={field.onChange}>
                     <FormControl>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {agents.filter((a) => a.role === "cs").map((a) => (
-                        <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                      ))}
+                      {agents
+                        .filter((a) => a.role === "cs")
+                        .map((a) => (
+                          <SelectItem key={a.id} value={a.id}>
+                            {a.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -862,7 +1029,9 @@ function AddCustomerModal({
               )}
             />
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={onClose}>Batal</Button>
+              <Button type="button" variant="ghost" onClick={onClose}>
+                Batal
+              </Button>
               <Button
                 type="submit"
                 disabled={!form.formState.isValid}

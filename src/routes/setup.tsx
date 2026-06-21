@@ -16,10 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
-import {
-  completeSetupFormSchema,
-  type CompleteSetupFormInput,
-} from "@/lib/schemas/setup";
+import { completeSetupFormSchema, type CompleteSetupFormInput } from "@/lib/schemas/setup";
 import {
   completeInstanceSetupServerFn,
   getInstanceSetupStatusServerFn,

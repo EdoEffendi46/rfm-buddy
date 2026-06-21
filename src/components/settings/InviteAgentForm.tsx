@@ -4,13 +4,7 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import {
   Select,
   SelectContent,
@@ -26,11 +20,7 @@ import type { Agent, Role } from "@/types";
 
 const AVATAR_COLORS = ["#0EA5E9", "#8B5CF6", "#EC4899", "#F59E0B", "#22C55E", "#EF4444"];
 
-export function InviteAgentForm({
-  onInvited,
-}: {
-  onInvited: (agent: Agent) => void;
-}) {
+export function InviteAgentForm({ onInvited }: { onInvited: (agent: Agent) => void }) {
   const form = useForm<InviteAgentFormInput>({
     resolver: zodResolver(inviteAgentFormSchema),
     defaultValues: { name: "", email: "", role: "cs", color: "#0EA5E9" },

@@ -9,20 +9,54 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import {
-  Lock, Plus, Trash2, Edit2, Check, X, Info, ShieldAlert, ClipboardList, ShieldCheck, History,
-  CreditCard, Download, FileDown, Search as SearchIcon, ChevronDown, ChevronRight, User, Users,
-  Zap, Tag, Wrench, RefreshCw, Timer, Clock, CheckCircle, type LucideIcon,
+  Lock,
+  Plus,
+  Trash2,
+  Edit2,
+  Check,
+  X,
+  Info,
+  ShieldAlert,
+  ClipboardList,
+  ShieldCheck,
+  History,
+  CreditCard,
+  Download,
+  FileDown,
+  Search as SearchIcon,
+  ChevronDown,
+  ChevronRight,
+  User,
+  Users,
+  Zap,
+  Tag,
+  Wrench,
+  RefreshCw,
+  Timer,
+  Clock,
+  CheckCircle,
+  KeyRound,
+  type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { categoryBadgeClass } from "@/lib/serviceCategory";
-import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
+import { hasPermission, canViewAuditEntry, hasFlag, type Permission } from "@/lib/permissions";
+import { PermissionManager } from "@/components/settings/PermissionManager";
 import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
 import { PendingInviteActions } from "@/components/settings/PendingInviteActions";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
@@ -36,12 +70,28 @@ export const Route = createFileRoute("/settings")({
 });
 
 type Section =
-  | "profile" | "agents" | "templates" | "tags" | "services"
-  | "workflow" | "sla" | "hours" | "field_visibility"
-  | "audit_log" | "export_approval" | "role_history"
-  | "billing" | "export_data" | "about";
+  | "profile"
+  | "agents"
+  | "templates"
+  | "tags"
+  | "services"
+  | "workflow"
+  | "sla"
+  | "hours"
+  | "field_visibility"
+  | "audit_log"
+  | "export_approval"
+  | "role_history"
+  | "billing"
+  | "export_data"
+  | "about";
 
-const SECTIONS: { id: Section; label: string; icon: LucideIcon; requires?: Permission | "owner_only" | "sup_or_owner" }[] = [
+const SECTIONS: {
+  id: Section;
+  label: string;
+  icon: LucideIcon;
+  requires?: Permission | "owner_only" | "sup_or_owner";
+}[] = [
   { id: "profile", label: "Profil Saya", icon: User },
   { id: "agents", label: "Manajemen Agent", icon: Users, requires: "manage_agents" },
   { id: "templates", label: "Template Balasan", icon: Zap },
@@ -50,10 +100,25 @@ const SECTIONS: { id: Section; label: string; icon: LucideIcon; requires?: Permi
   { id: "workflow", label: "Status & Workflow", icon: RefreshCw },
   { id: "sla", label: "SLA & Notifikasi", icon: Timer, requires: "manage_sla_notifications" },
   { id: "hours", label: "Jam Operasional", icon: Clock, requires: "manage_business_hours" },
-  { id: "field_visibility", label: "Visibilitas Field", icon: ShieldCheck, requires: "manage_field_visibility_rules" },
+  {
+    id: "field_visibility",
+    label: "Visibilitas Field",
+    icon: ShieldCheck,
+    requires: "manage_field_visibility_rules",
+  },
   { id: "audit_log", label: "Audit Log", icon: ClipboardList, requires: "view_audit_log" },
-  { id: "export_approval", label: "Persetujuan Export", icon: CheckCircle, requires: "approve_export_requests" },
-  { id: "role_history", label: "Riwayat Perubahan Role", icon: History, requires: "view_permission_history" },
+  {
+    id: "export_approval",
+    label: "Persetujuan Export",
+    icon: CheckCircle,
+    requires: "approve_export_requests",
+  },
+  {
+    id: "role_history",
+    label: "Riwayat Perubahan Role",
+    icon: History,
+    requires: "view_permission_history",
+  },
   { id: "billing", label: "Billing & Subscription", icon: CreditCard, requires: "manage_billing" },
   { id: "export_data", label: "Export Data", icon: Download, requires: "export_data" },
   { id: "about", label: "Tentang Aplikasi", icon: Info },
@@ -62,7 +127,8 @@ const SECTIONS: { id: Section; label: string; icon: LucideIcon; requires?: Permi
 function SettingsPage() {
   const [section, setSection] = useState<Section>("profile");
   const { role } = useAuth();
-  const isUnlocked = (s: typeof SECTIONS[number]) => !s.requires || hasPermission(role, s.requires as Permission);
+  const isUnlocked = (s: (typeof SECTIONS)[number]) =>
+    !s.requires || hasPermission(role, s.requires as Permission);
   return (
     <AppShell>
       <div className="flex h-full">
@@ -77,8 +143,11 @@ function SettingsPage() {
                   onClick={() => setSection(s.id)}
                   className={cn(
                     "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm",
-                    section === s.id ? "bg-emerald-50 font-semibold text-emerald-700" :
-                    unlocked ? "text-slate-600 hover:bg-slate-50" : "text-slate-400 hover:bg-slate-50",
+                    section === s.id
+                      ? "bg-emerald-50 font-semibold text-emerald-700"
+                      : unlocked
+                        ? "text-slate-600 hover:bg-slate-50"
+                        : "text-slate-400 hover:bg-slate-50",
                   )}
                 >
                   <s.icon className="h-4 w-4 shrink-0" />
@@ -91,19 +160,55 @@ function SettingsPage() {
         </aside>
         <div className="flex-1 overflow-y-auto p-6">
           {section === "profile" && <ProfileSection />}
-          {section === "agents" && <Gated perm="manage_agents"><AgentsSection /></Gated>}
+          {section === "agents" && (
+            <Gated perm="manage_agents">
+              <AgentsSection />
+            </Gated>
+          )}
           {section === "templates" && <TemplatesSection />}
           {section === "tags" && <TagsSection />}
           {section === "services" && <ServicesSection />}
           {section === "workflow" && <WorkflowSection />}
-          {section === "sla" && <Gated perm="manage_sla_notifications"><NotificationsSection /></Gated>}
-          {section === "hours" && <Gated perm="manage_business_hours"><HoursSection /></Gated>}
-          {section === "field_visibility" && <Gated perm="manage_field_visibility_rules"><FieldVisibilitySection /></Gated>}
-          {section === "audit_log" && <Gated perm="view_audit_log"><AuditLogSection /></Gated>}
-          {section === "export_approval" && <Gated perm="approve_export_requests"><ExportApprovalSection /></Gated>}
-          {section === "role_history" && <Gated perm="view_permission_history"><RoleHistorySection /></Gated>}
-          {section === "billing" && <Gated perm="manage_billing"><BillingSection /></Gated>}
-          {section === "export_data" && <Gated perm="export_data"><ExportDataSection /></Gated>}
+          {section === "sla" && (
+            <Gated perm="manage_sla_notifications">
+              <NotificationsSection />
+            </Gated>
+          )}
+          {section === "hours" && (
+            <Gated perm="manage_business_hours">
+              <HoursSection />
+            </Gated>
+          )}
+          {section === "field_visibility" && (
+            <Gated perm="manage_field_visibility_rules">
+              <FieldVisibilitySection />
+            </Gated>
+          )}
+          {section === "audit_log" && (
+            <Gated perm="view_audit_log">
+              <AuditLogSection />
+            </Gated>
+          )}
+          {section === "export_approval" && (
+            <Gated perm="approve_export_requests">
+              <ExportApprovalSection />
+            </Gated>
+          )}
+          {section === "role_history" && (
+            <Gated perm="view_permission_history">
+              <RoleHistorySection />
+            </Gated>
+          )}
+          {section === "billing" && (
+            <Gated perm="manage_billing">
+              <BillingSection />
+            </Gated>
+          )}
+          {section === "export_data" && (
+            <Gated perm="export_data">
+              <ExportDataSection />
+            </Gated>
+          )}
           {section === "about" && <AboutSection />}
         </div>
       </div>
@@ -137,12 +242,19 @@ function ProfileSection() {
         <div className="flex-1">
           <Input value={name} onChange={(e) => setName(e.target.value)} />
           <div className="mt-1 text-xs text-slate-500">
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">{agent.role}</span>
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">
+              {agent.role}
+            </span>
           </div>
         </div>
         <Button
-          onClick={() => { updateAgent(agent.id, { name }); toast.success("Profil diperbarui"); }}
-        >Simpan</Button>
+          onClick={() => {
+            updateAgent(agent.id, { name });
+            toast.success("Profil diperbarui");
+          }}
+        >
+          Simpan
+        </Button>
       </div>
       <div className="mt-4 flex items-center justify-between rounded-lg border p-3">
         <div>
@@ -156,23 +268,42 @@ function ProfileSection() {
           <div className="text-sm font-medium">Password</div>
           <div className="font-mono text-xs text-slate-500">●●●●●●●●</div>
         </div>
-        <Button variant="outline" onClick={() => toast.info("Fitur segera hadir")}>Ubah Password</Button>
+        <Button variant="outline" onClick={() => toast.info("Fitur segera hadir")}>
+          Ubah Password
+        </Button>
       </div>
     </Card>
   );
 }
 
 function AgentsSection() {
-  const { role } = useAuth();
-  const { agents, customers, addAgent, registerInvitedAgent, changeAgentRole, deleteAgent, updateAgent } = useStore();
+  const { role, agent: viewer } = useAuth();
+  const {
+    agents,
+    customers,
+    addAgent,
+    registerInvitedAgent,
+    changeAgentRole,
+    deleteAgent,
+    updateAgent,
+  } = useStore();
   const [name, setName] = useState("");
   const [newRole, setNewRole] = useState<Role>("cs");
   const [color, setColor] = useState("#0EA5E9");
+  const [permAgentId, setPermAgentId] = useState<string | null>(null);
   const usesAuth = isSupabaseConfigured();
   const canDelete = hasPermission(role, "delete_agent_account");
   const canChangeRole = hasPermission(role, "change_agent_role");
   const canInvite = usesAuth && role === "owner";
   const canAddLocal = !usesAuth && hasPermission(role, "manage_agents");
+  const canOverridePerms = hasFlag(viewer, "settings_override_agent_permissions");
+  const canManagePermsFor = (a: (typeof agents)[number]) => {
+    if (!canOverridePerms || !viewer) return false;
+    if (viewer.id === a.id) return false;
+    if (viewer.role === "owner") return true;
+    return a.role === "cs";
+  };
+  const permAgent = agents.find((a) => a.id === permAgentId) ?? null;
 
   return (
     <Card title="Manajemen Agent">
@@ -191,15 +322,25 @@ function AgentsSection() {
         <tbody>
           {agents.map((a) => (
             <tr key={a.id} className="border-t border-slate-100">
-              <td className="py-2"><AgentAvatar agent={a} size={28} /></td>
+              <td className="py-2">
+                <AgentAvatar agent={a} size={28} />
+              </td>
               <td>{a.name}</td>
               {usesAuth && (
                 <td className="max-w-[160px] truncate text-xs text-slate-600">{a.email ?? "—"}</td>
               )}
               <td>
                 {canChangeRole && a.role !== "owner" ? (
-                  <Select value={a.role} onValueChange={(v) => { changeAgentRole(a.id, v as Role); toast.success(`Role ${a.name} → ${v}`); }}>
-                    <SelectTrigger className="h-7 w-28 text-xs"><SelectValue /></SelectTrigger>
+                  <Select
+                    value={a.role}
+                    onValueChange={(v) => {
+                      changeAgentRole(a.id, v as Role);
+                      toast.success(`Role ${a.name} → ${v}`);
+                    }}
+                  >
+                    <SelectTrigger className="h-7 w-28 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="cs">CS</SelectItem>
                       <SelectItem value="supervisor">Supervisor</SelectItem>
@@ -207,17 +348,27 @@ function AgentsSection() {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">{a.role}</span>
+                  <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">
+                    {a.role}
+                  </span>
                 )}
               </td>
-              <td className="text-right font-mono text-xs">{customers.filter((c) => c.assignedAgentId === a.id).length}</td>
+              <td className="text-right font-mono text-xs">
+                {customers.filter((c) => c.assignedAgentId === a.id).length}
+              </td>
               <td className="text-center">
                 {usesAuth && a.invitationStatus === "pending" ? (
                   <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-700">
                     Menunggu
                   </span>
                 ) : (
-                  <span className={cn("inline-block h-2 w-2 rounded-full", a.isOnline ? "bg-emerald-500" : "bg-slate-300")} title={a.isOnline ? "Online" : "Offline"} />
+                  <span
+                    className={cn(
+                      "inline-block h-2 w-2 rounded-full",
+                      a.isOnline ? "bg-emerald-500" : "bg-slate-300",
+                    )}
+                    title={a.isOnline ? "Online" : "Offline"}
+                  />
                 )}
               </td>
               <td className="text-right">
@@ -245,6 +396,16 @@ function AgentsSection() {
                     </Button>
                   )
                 )}
+                {canManagePermsFor(a) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    title="Kelola izin granular agent ini"
+                    onClick={() => setPermAgentId(a.id)}
+                  >
+                    <KeyRound className="h-4 w-4 text-amber-600" />
+                  </Button>
+                )}
               </td>
             </tr>
           ))}
@@ -253,13 +414,26 @@ function AgentsSection() {
 
       {canInvite && <InviteAgentForm onInvited={registerInvitedAgent} />}
 
+      <PermissionManager
+        agent={permAgent}
+        open={!!permAgent}
+        onClose={() => setPermAgentId(null)}
+      />
+
       {canAddLocal && (
         <div className="mt-4 rounded-lg border p-3">
           <div className="mb-2 text-sm font-semibold">+ Tambah Agent (demo lokal)</div>
           <div className="flex flex-wrap items-end gap-2">
-            <Input value={name} placeholder="Nama" onChange={(e) => setName(e.target.value)} className="w-40" />
+            <Input
+              value={name}
+              placeholder="Nama"
+              onChange={(e) => setName(e.target.value)}
+              className="w-40"
+            />
             <Select value={newRole} onValueChange={(v) => setNewRole(v as Role)}>
-              <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="cs">CS</SelectItem>
                 <SelectItem value="supervisor">Supervisor</SelectItem>
@@ -267,13 +441,26 @@ function AgentsSection() {
               </SelectContent>
             </Select>
             <div className="flex gap-1">
-              {["#0EA5E9","#8B5CF6","#EC4899","#F59E0B","#22C55E","#EF4444"].map((c) => (
-                <button key={c} type="button" onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-slate-700" : "border-transparent")} style={{ backgroundColor: c }} />
+              {["#0EA5E9", "#8B5CF6", "#EC4899", "#F59E0B", "#22C55E", "#EF4444"].map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setColor(c)}
+                  className={cn(
+                    "h-7 w-7 rounded-full border-2",
+                    color === c ? "border-slate-700" : "border-transparent",
+                  )}
+                  style={{ backgroundColor: c }}
+                />
               ))}
             </div>
             <Button
               disabled={!name.trim()}
-              onClick={() => { addAgent({ name, role: newRole, color, isOnline: true }); setName(""); toast.success("Agent ditambahkan"); }}
+              onClick={() => {
+                addAgent({ name, role: newRole, color, isOnline: true });
+                setName("");
+                toast.success("Agent ditambahkan");
+              }}
               className="bg-[#25D366] text-white hover:bg-[#128C7E]"
             >
               <Plus className="h-4 w-4" /> Tambah
@@ -298,15 +485,51 @@ function TemplatesSection() {
           <div key={t.id} className="flex items-start gap-2 rounded-lg border p-3">
             {editingId === t.id ? (
               <>
-                <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="flex-1" rows={2} />
-                <Button size="sm" onClick={() => { updateTemplate(t.id, editText); setEditingId(null); toast.success("Template diperbarui"); }}><Check className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}><X className="h-4 w-4" /></Button>
+                <Textarea
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="flex-1"
+                  rows={2}
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    updateTemplate(t.id, editText);
+                    setEditingId(null);
+                    toast.success("Template diperbarui");
+                  }}
+                >
+                  <Check className="h-4 w-4" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                  <X className="h-4 w-4" />
+                </Button>
               </>
             ) : (
               <>
                 <div className="flex-1 text-sm">{t.text}</div>
-                <Button size="sm" variant="ghost" onClick={() => { setEditingId(t.id); setEditText(t.text); }}><Edit2 className="h-4 w-4" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => { if (confirm("Hapus template?")) { deleteTemplate(t.id); toast.success("Template dihapus"); } }}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    setEditingId(t.id);
+                    setEditText(t.text);
+                  }}
+                >
+                  <Edit2 className="h-4 w-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (confirm("Hapus template?")) {
+                      deleteTemplate(t.id);
+                      toast.success("Template dihapus");
+                    }
+                  }}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
               </>
             )}
           </div>
@@ -314,12 +537,24 @@ function TemplatesSection() {
       </div>
       <div className="mt-4 rounded-lg border p-3">
         <div className="text-sm font-semibold">+ Tambah Template</div>
-        <Textarea value={newText} onChange={(e) => setNewText(e.target.value)} className="mt-2" rows={2} placeholder="Tulis template..." />
+        <Textarea
+          value={newText}
+          onChange={(e) => setNewText(e.target.value)}
+          className="mt-2"
+          rows={2}
+          placeholder="Tulis template..."
+        />
         <Button
           className="mt-2 bg-[#25D366] text-white hover:bg-[#128C7E]"
           disabled={!newText.trim() || templates.length >= 20}
-          onClick={() => { addTemplate(newText); setNewText(""); toast.success("Template ditambahkan"); }}
-        >Tambah</Button>
+          onClick={() => {
+            addTemplate(newText);
+            setNewText("");
+            toast.success("Template ditambahkan");
+          }}
+        >
+          Tambah
+        </Button>
       </div>
     </Card>
   );
@@ -350,17 +585,29 @@ function TagsSection() {
       </div>
       <div className="space-y-1">
         {list.map((t) => {
-          const count = scope === "customer"
-            ? customers.filter((c) => c.tags.includes(t.name)).length
-            : customers.filter((c) => c.conversationTags.includes(t.name)).length;
+          const count =
+            scope === "customer"
+              ? customers.filter((c) => c.tags.includes(t.name)).length
+              : customers.filter((c) => c.conversationTags.includes(t.name)).length;
           return (
             <div key={t.id} className="flex items-center justify-between rounded-lg border p-2.5">
               <div className="flex items-center gap-2">
                 <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.color }} />
                 <span className="text-sm font-medium">{t.name}</span>
-                <span className="text-xs text-slate-500">· {count} {scope === "customer" ? "customer" : "percakapan"}</span>
+                <span className="text-xs text-slate-500">
+                  · {count} {scope === "customer" ? "customer" : "percakapan"}
+                </span>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => { if (confirm("Hapus tag?")) { deleteTag(t.id); toast.success("Tag dihapus"); } }}>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  if (confirm("Hapus tag?")) {
+                    deleteTag(t.id);
+                    toast.success("Tag dihapus");
+                  }
+                }}
+              >
                 <Trash2 className="h-4 w-4 text-red-500" />
               </Button>
             </div>
@@ -373,13 +620,25 @@ function TagsSection() {
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
         <div className="flex gap-1">
-          {["#22C55E","#EF4444","#F59E0B","#3B82F6","#7C3AED","#EC4899"].map((c) => (
-            <button key={c} onClick={() => setColor(c)} className={cn("h-7 w-7 rounded-full border-2", color === c ? "border-slate-700" : "border-transparent")} style={{ backgroundColor: c }} />
+          {["#22C55E", "#EF4444", "#F59E0B", "#3B82F6", "#7C3AED", "#EC4899"].map((c) => (
+            <button
+              key={c}
+              onClick={() => setColor(c)}
+              className={cn(
+                "h-7 w-7 rounded-full border-2",
+                color === c ? "border-slate-700" : "border-transparent",
+              )}
+              style={{ backgroundColor: c }}
+            />
           ))}
         </div>
         <Button
           disabled={!name.trim()}
-          onClick={() => { addTag({ name, color, scope }); setName(""); toast.success("Tag ditambahkan"); }}
+          onClick={() => {
+            addTag({ name, color, scope });
+            setName("");
+            toast.success("Tag ditambahkan");
+          }}
           className="bg-[#25D366] text-white hover:bg-[#128C7E]"
         >
           <Plus className="h-4 w-4" /> Tambah
@@ -399,26 +658,52 @@ function ServicesSection() {
     <Card title="Layanan & Produk">
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th className="text-left">Nama</th><th className="text-left">Kategori</th><th className="text-right">Harga Default</th><th></th></tr>
+          <tr>
+            <th className="text-left">Nama</th>
+            <th className="text-left">Kategori</th>
+            <th className="text-right">Harga Default</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {services.map((s) => (
             <tr key={s.id} className="border-t border-slate-100">
               <td className="py-2">{s.name}</td>
-              <td><span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", categoryBadgeClass(s.category))}>{s.category}</span></td>
+              <td>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                    categoryBadgeClass(s.category),
+                  )}
+                >
+                  {s.category}
+                </span>
+              </td>
               <td className="text-right">
                 <Input
                   type="number"
                   defaultValue={s.defaultPrice}
                   onBlur={(e) => {
                     const v = Number(e.target.value);
-                    if (v !== s.defaultPrice) { updateService(s.id, { defaultPrice: v }); toast.success("Harga diperbarui"); }
+                    if (v !== s.defaultPrice) {
+                      updateService(s.id, { defaultPrice: v });
+                      toast.success("Harga diperbarui");
+                    }
                   }}
                   className="ml-auto h-7 w-24 text-right"
                 />
               </td>
               <td className="text-right">
-                <Button size="sm" variant="ghost" onClick={() => { if (confirm("Hapus layanan?")) { deleteService(s.id); toast.success("Layanan dihapus"); } }}>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => {
+                    if (confirm("Hapus layanan?")) {
+                      deleteService(s.id);
+                      toast.success("Layanan dihapus");
+                    }
+                  }}
+                >
                   <Trash2 className="h-4 w-4 text-red-500" />
                 </Button>
               </td>
@@ -457,7 +742,10 @@ function ServicesSection() {
           <Plus className="h-4 w-4" /> Tambah
         </Button>
       </div>
-      <p className="mt-2 text-xs text-slate-500">Total nilai default semua layanan: {formatRupiah(services.reduce((s, x) => s + x.defaultPrice, 0))}</p>
+      <p className="mt-2 text-xs text-slate-500">
+        Total nilai default semua layanan:{" "}
+        {formatRupiah(services.reduce((s, x) => s + x.defaultPrice, 0))}
+      </p>
     </Card>
   );
 }
@@ -477,7 +765,10 @@ function NotificationsSection() {
         {items.map((label, i) => (
           <div key={i} className="flex items-center justify-between rounded-lg border p-3">
             <span className="text-sm">{label}</span>
-            <Switch checked={state[i]} onCheckedChange={(v) => setState((s) => s.map((x, j) => j === i ? v : x))} />
+            <Switch
+              checked={state[i]}
+              onCheckedChange={(v) => setState((s) => s.map((x, j) => (j === i ? v : x)))}
+            />
           </div>
         ))}
       </div>
@@ -489,15 +780,17 @@ function AboutSection() {
   return (
     <Card title="Tentang Aplikasi">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#25D366] text-white text-xl font-bold">CC</div>
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#25D366] text-white text-xl font-bold">
+          CC
+        </div>
         <div>
           <div className="text-xl font-bold">ChatCRM</div>
           <div className="font-mono text-xs text-slate-500">v1.0.0-demo</div>
         </div>
       </div>
       <p className="mt-4 text-sm text-slate-600">
-        Inbox WhatsApp + CRM dengan segmentasi RFM. Fleksibel untuk bisnis apa saja — sesuaikan layanan,
-        kategori, dan alur di Pengaturan.
+        Inbox WhatsApp + CRM dengan segmentasi RFM. Fleksibel untuk bisnis apa saja — sesuaikan
+        layanan, kategori, dan alur di Pengaturan.
       </p>
       <p className="mt-2 text-xs text-slate-500">
         Dibangun dengan React + TypeScript + Tailwind CSS + shadcn/ui.
@@ -506,7 +799,8 @@ function AboutSection() {
         <Info className="mt-0.5 h-4 w-4 shrink-0" />
         <div>
           <div className="font-semibold">Proteksi data customer</div>
-          Nomor telepon customer terenkripsi (masked) untuk role CS. Hanya Supervisor yang dapat melihat nomor lengkap.
+          Nomor telepon customer terenkripsi (masked) untuk role CS. Hanya Supervisor yang dapat
+          melihat nomor lengkap.
         </div>
       </div>
       <ul className="mt-4 list-inside list-disc space-y-1 text-sm text-slate-600">
@@ -547,7 +841,9 @@ function WorkflowSection() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-slate-500">Tahapan order default. Owner bisa menyesuaikan alur sesuai jenis bisnis.</p>
+      <p className="mt-3 text-xs text-slate-500">
+        Tahapan order default. Owner bisa menyesuaikan alur sesuai jenis bisnis.
+      </p>
     </Card>
   );
 }
@@ -578,15 +874,25 @@ function FieldVisibilitySection() {
   const [open, setOpen] = useState(false);
   const [field, setField] = useState("totalSpent");
   const [hideFrom, setHideFrom] = useState<Role>("cs");
-  const [pattern, setPattern] = useState<"phone" | "currency_range" | "full_hide">("currency_range");
+  const [pattern, setPattern] = useState<"phone" | "currency_range" | "full_hide">(
+    "currency_range",
+  );
   return (
     <Card title="Visibilitas Field">
       <p className="mb-3 text-xs text-slate-500">
-        Atur field mana yang disembunyikan atau dimasked untuk role tertentu. Saat ini <b>phone</b> ter-enforce penuh di seluruh UI; aturan lain bersifat illustrative dan akan diterapkan setelah backend siap.
+        Atur field mana yang disembunyikan atau dimasked untuk role tertentu. Saat ini <b>phone</b>{" "}
+        ter-enforce penuh di seluruh UI; aturan lain bersifat illustrative dan akan diterapkan
+        setelah backend siap.
       </p>
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th className="text-left">Field</th><th className="text-left">Entity</th><th className="text-left">Disembunyikan Dari</th><th className="text-left">Pola Masking</th><th></th></tr>
+          <tr>
+            <th className="text-left">Field</th>
+            <th className="text-left">Entity</th>
+            <th className="text-left">Disembunyikan Dari</th>
+            <th className="text-left">Pola Masking</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {fieldRules.map((r) => (
@@ -597,9 +903,21 @@ function FieldVisibilitySection() {
               <td className="text-xs">{r.maskPattern}</td>
               <td className="text-right">
                 {r.locked ? (
-                  <span className="text-[10px] text-slate-400" title="Aturan inti tidak dapat dihapus">Core</span>
+                  <span
+                    className="text-[10px] text-slate-400"
+                    title="Aturan inti tidak dapat dihapus"
+                  >
+                    Core
+                  </span>
                 ) : (
-                  <Button size="sm" variant="ghost" onClick={() => { deleteFieldRule(r.id); toast.success("Aturan dihapus"); }}>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      deleteFieldRule(r.id);
+                      toast.success("Aturan dihapus");
+                    }}
+                  >
                     <Trash2 className="h-4 w-4 text-red-500" />
                   </Button>
                 )}
@@ -608,25 +926,41 @@ function FieldVisibilitySection() {
           ))}
         </tbody>
       </table>
-      <Button className="mt-3 bg-[#25D366] text-white hover:bg-[#128C7E]" onClick={() => setOpen(true)}><Plus className="h-4 w-4" /> Tambah Aturan</Button>
+      <Button
+        className="mt-3 bg-[#25D366] text-white hover:bg-[#128C7E]"
+        onClick={() => setOpen(true)}
+      >
+        <Plus className="h-4 w-4" /> Tambah Aturan
+      </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Tambah Aturan Visibilitas</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>Tambah Aturan Visibilitas</DialogTitle>
+          </DialogHeader>
           <div className="space-y-3">
             <div>
               <label className="text-xs font-medium">Field</label>
               <Select value={field} onValueChange={setField}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  {AVAILABLE_FIELDS.map((f) => <SelectItem key={f.value} value={f.value}>{f.label} <span className="ml-1 font-mono text-[10px] text-slate-400">{f.value}</span></SelectItem>)}
+                  {AVAILABLE_FIELDS.map((f) => (
+                    <SelectItem key={f.value} value={f.value}>
+                      {f.label}{" "}
+                      <span className="ml-1 font-mono text-[10px] text-slate-400">{f.value}</span>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
             <div>
               <label className="text-xs font-medium">Sembunyikan dari role</label>
               <Select value={hideFrom} onValueChange={(v) => setHideFrom(v as Role)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="cs">CS</SelectItem>
                   <SelectItem value="supervisor">Supervisor</SelectItem>
@@ -636,7 +970,9 @@ function FieldVisibilitySection() {
             <div>
               <label className="text-xs font-medium">Pola Masking</label>
               <Select value={pattern} onValueChange={(v) => setPattern(v as any)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="full_hide">Sembunyikan total</SelectItem>
                   <SelectItem value="currency_range">Tampilkan range (Rp •••)</SelectItem>
@@ -646,12 +982,23 @@ function FieldVisibilitySection() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Batal</Button>
-            <Button onClick={() => {
-              addFieldRule({ fieldName: field, entityType: "customer", hiddenForRoles: [hideFrom], maskPattern: pattern });
-              setOpen(false);
-              toast.info("Pola ini akan diterapkan setelah disimpan ke backend (demo).");
-            }}>Simpan</Button>
+            <Button variant="ghost" onClick={() => setOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              onClick={() => {
+                addFieldRule({
+                  fieldName: field,
+                  entityType: "customer",
+                  hiddenForRoles: [hideFrom],
+                  maskPattern: pattern,
+                });
+                setOpen(false);
+                toast.info("Pola ini akan diterapkan setelah disimpan ke backend (demo).");
+              }}
+            >
+              Simpan
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -661,13 +1008,27 @@ function FieldVisibilitySection() {
 
 /* ----- Audit Log ----- */
 const ACTION_LABELS: Record<AuditAction, string> = {
-  customer_created: "Customer Dibuat", customer_edited: "Customer Diedit", customer_deleted: "Customer Dihapus",
-  customer_reassigned: "Customer Reassign", phone_viewed_full: "Lihat No HP Penuh", agent_role_changed: "Role Diubah",
-  agent_created: "Agent Dibuat", agent_deactivated: "Agent Dinonaktifkan", agent_deleted: "Agent Dihapus",
-  data_exported: "Data Diekspor", export_requested: "Permintaan Export", export_approved: "Export Disetujui",
-  export_denied: "Export Ditolak", manual_share_created: "Akses Dibagikan", manual_share_revoked: "Akses Dicabut",
-  conversation_transferred: "Percakapan Ditransfer", conversation_deleted_message: "Pesan Dihapus",
-  login: "Login", settings_changed: "Pengaturan Diubah",
+  customer_created: "Customer Dibuat",
+  customer_edited: "Customer Diedit",
+  customer_deleted: "Customer Dihapus",
+  customer_reassigned: "Customer Reassign",
+  phone_viewed_full: "Lihat No HP Penuh",
+  agent_role_changed: "Role Diubah",
+  agent_created: "Agent Dibuat",
+  agent_deactivated: "Agent Dinonaktifkan",
+  agent_deleted: "Agent Dihapus",
+  data_exported: "Data Diekspor",
+  export_requested: "Permintaan Export",
+  export_approved: "Export Disetujui",
+  export_denied: "Export Ditolak",
+  manual_share_created: "Akses Dibagikan",
+  manual_share_revoked: "Akses Dicabut",
+  conversation_transferred: "Percakapan Ditransfer",
+  conversation_deleted_message: "Pesan Dihapus",
+  login: "Login",
+  settings_changed: "Pengaturan Diubah",
+  permission_override_changed: "Izin Agent Diubah",
+  permission_overrides_reset: "Izin Direset ke Default",
 };
 
 function AuditLogSection() {
@@ -686,13 +1047,27 @@ function AuditLogSection() {
 
   const exportCSV = () => {
     const rows = [
-      ["timestamp","actor","role","action","target","old","new","details"],
-      ...visible.map((e) => [e.timestamp, e.actorName, e.actorRole, e.action, e.targetLabel, e.oldValue ?? "", e.newValue ?? "", e.details ?? ""]),
+      ["timestamp", "actor", "role", "action", "target", "old", "new", "details"],
+      ...visible.map((e) => [
+        e.timestamp,
+        e.actorName,
+        e.actorRole,
+        e.action,
+        e.targetLabel,
+        e.oldValue ?? "",
+        e.newValue ?? "",
+        e.details ?? "",
+      ]),
     ];
-    const csv = rows.map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const csv = rows
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href = url; a.download = "audit-log.csv"; a.click();
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "audit-log.csv";
+    a.click();
     URL.revokeObjectURL(url);
     exportDataDirect("customers");
     toast.success("Audit log diekspor");
@@ -701,44 +1076,88 @@ function AuditLogSection() {
   return (
     <Card title="Audit Log">
       <div className="mb-3 rounded-lg bg-slate-50 p-2 text-xs text-slate-600">
-        Retensi log: <b>90 hari</b>. {isOwner ? "Anda melihat semua aktivitas seluruh workspace." : "Anda melihat aktivitas tim Anda (kecuali aksi Owner-only)."}
+        Retensi log: <b>90 hari</b>.{" "}
+        {isOwner
+          ? "Anda melihat semua aktivitas seluruh workspace."
+          : "Anda melihat aktivitas tim Anda (kecuali aksi Owner-only)."}
       </div>
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <div className="relative flex-1 min-w-[200px]">
           <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <Input className="pl-9" placeholder="Cari target..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          <Input
+            className="pl-9"
+            placeholder="Cari target..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
         <Select value={actorFilter} onValueChange={setActorFilter}>
-          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Aktor" /></SelectTrigger>
+          <SelectTrigger className="w-[160px]">
+            <SelectValue placeholder="Aktor" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua aktor</SelectItem>
-            {agents.map((a) => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+            {agents.map((a) => (
+              <SelectItem key={a.id} value={a.id}>
+                {a.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={actionFilter} onValueChange={setActionFilter}>
-          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Aksi" /></SelectTrigger>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Aksi" />
+          </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Semua aksi</SelectItem>
-            {Object.entries(ACTION_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+            {Object.entries(ACTION_LABELS).map(([k, v]) => (
+              <SelectItem key={k} value={k}>
+                {v}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        {isOwner && <Button onClick={exportCSV} variant="outline"><FileDown className="h-4 w-4" /> Export CSV</Button>}
+        {isOwner && (
+          <Button onClick={exportCSV} variant="outline">
+            <FileDown className="h-4 w-4" /> Export CSV
+          </Button>
+        )}
       </div>
       <div className="overflow-hidden rounded-lg border">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 text-xs uppercase text-slate-500">
-            <tr><th className="px-2 py-2 text-left">Waktu</th><th className="px-2 py-2 text-left">Aktor</th><th className="px-2 py-2 text-left">Role</th><th className="px-2 py-2 text-left">Aksi</th><th className="px-2 py-2 text-left">Target</th><th></th></tr>
+            <tr>
+              <th className="px-2 py-2 text-left">Waktu</th>
+              <th className="px-2 py-2 text-left">Aktor</th>
+              <th className="px-2 py-2 text-left">Role</th>
+              <th className="px-2 py-2 text-left">Aksi</th>
+              <th className="px-2 py-2 text-left">Target</th>
+              <th></th>
+            </tr>
           </thead>
           <tbody>
             {visible.map((e) => (
               <Fragment key={e.id}>
-                <tr className="cursor-pointer border-t border-slate-100 hover:bg-slate-50" onClick={() => setExpanded(expanded === e.id ? null : e.id)}>
+                <tr
+                  className="cursor-pointer border-t border-slate-100 hover:bg-slate-50"
+                  onClick={() => setExpanded(expanded === e.id ? null : e.id)}
+                >
                   <td className="px-2 py-1.5 font-mono text-xs">{formatDate(e.timestamp)}</td>
                   <td className="px-2 py-1.5">{e.actorName}</td>
-                  <td className="px-2 py-1.5"><span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase">{e.actorRole}</span></td>
+                  <td className="px-2 py-1.5">
+                    <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] uppercase">
+                      {e.actorRole}
+                    </span>
+                  </td>
                   <td className="px-2 py-1.5 text-xs">{ACTION_LABELS[e.action]}</td>
                   <td className="px-2 py-1.5">{e.targetLabel}</td>
-                  <td className="px-2 py-1.5">{expanded === e.id ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}</td>
+                  <td className="px-2 py-1.5">
+                    {expanded === e.id ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
+                  </td>
                 </tr>
                 {expanded === e.id && (
                   <tr className="bg-slate-50">
@@ -746,9 +1165,13 @@ function AuditLogSection() {
                       <div>{e.details}</div>
                       {(e.oldValue || e.newValue) && (
                         <div className="mt-1 font-mono">
-                          <span className="rounded bg-red-100 px-1 text-red-700">{e.oldValue || "—"}</span>
+                          <span className="rounded bg-red-100 px-1 text-red-700">
+                            {e.oldValue || "—"}
+                          </span>
                           <span className="mx-2">→</span>
-                          <span className="rounded bg-emerald-100 px-1 text-emerald-700">{e.newValue || "—"}</span>
+                          <span className="rounded bg-emerald-100 px-1 text-emerald-700">
+                            {e.newValue || "—"}
+                          </span>
                         </div>
                       )}
                     </td>
@@ -757,7 +1180,11 @@ function AuditLogSection() {
               </Fragment>
             ))}
             {visible.length === 0 && (
-              <tr><td colSpan={6} className="py-6 text-center text-xs text-slate-400">Tidak ada entry audit yang cocok dengan filter.</td></tr>
+              <tr>
+                <td colSpan={6} className="py-6 text-center text-xs text-slate-400">
+                  Tidak ada entry audit yang cocok dengan filter.
+                </td>
+              </tr>
             )}
           </tbody>
         </table>
@@ -775,11 +1202,19 @@ function ExportApprovalSection() {
   const history = exportRequests.filter((r) => r.status !== "pending");
   return (
     <Card title="Persetujuan Export">
-      <div className="mb-3 text-xs text-slate-500">Permintaan export data dari Supervisor butuh persetujuan Owner sebelum file dirilis.</div>
+      <div className="mb-3 text-xs text-slate-500">
+        Permintaan export data dari Supervisor butuh persetujuan Owner sebelum file dirilis.
+      </div>
       <h4 className="mb-2 text-sm font-semibold">Menunggu Persetujuan ({pending.length})</h4>
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th className="text-left">Pemohon</th><th className="text-left">Tanggal</th><th className="text-left">Tipe</th><th className="text-left">Alasan</th><th></th></tr>
+          <tr>
+            <th className="text-left">Pemohon</th>
+            <th className="text-left">Tanggal</th>
+            <th className="text-left">Tipe</th>
+            <th className="text-left">Alasan</th>
+            <th></th>
+          </tr>
         </thead>
         <tbody>
           {pending.map((r) => (
@@ -789,23 +1224,51 @@ function ExportApprovalSection() {
               <td className="text-xs">{r.dataType}</td>
               <td className="text-xs">{r.reason}</td>
               <td className="text-right">
-                <Button size="sm" className="bg-emerald-600 text-white hover:bg-emerald-700" onClick={() => {
-                  approveExportRequest(r.id);
-                  toast.success(`Notifikasi terkirim ke ${r.requestedByName}: export disetujui · File CSV berhasil diunduh (demo)`);
-                }}>Setujui</Button>
-                <Button size="sm" variant="outline" className="ml-2" onClick={() => { setDenyId(r.id); setDenyNote(""); }}>Tolak</Button>
+                <Button
+                  size="sm"
+                  className="bg-emerald-600 text-white hover:bg-emerald-700"
+                  onClick={() => {
+                    approveExportRequest(r.id);
+                    toast.success(
+                      `Notifikasi terkirim ke ${r.requestedByName}: export disetujui · File CSV berhasil diunduh (demo)`,
+                    );
+                  }}
+                >
+                  Setujui
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="ml-2"
+                  onClick={() => {
+                    setDenyId(r.id);
+                    setDenyNote("");
+                  }}
+                >
+                  Tolak
+                </Button>
               </td>
             </tr>
           ))}
           {pending.length === 0 && (
-            <tr><td colSpan={5} className="py-4 text-center text-xs text-slate-400">Tidak ada permintaan yang menunggu.</td></tr>
+            <tr>
+              <td colSpan={5} className="py-4 text-center text-xs text-slate-400">
+                Tidak ada permintaan yang menunggu.
+              </td>
+            </tr>
           )}
         </tbody>
       </table>
       <h4 className="mt-5 mb-2 text-sm font-semibold">Riwayat</h4>
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th className="text-left">Pemohon</th><th className="text-left">Tanggal</th><th className="text-left">Tipe</th><th className="text-left">Status</th><th className="text-left">Catatan</th></tr>
+          <tr>
+            <th className="text-left">Pemohon</th>
+            <th className="text-left">Tanggal</th>
+            <th className="text-left">Tipe</th>
+            <th className="text-left">Status</th>
+            <th className="text-left">Catatan</th>
+          </tr>
         </thead>
         <tbody>
           {history.map((r) => (
@@ -813,7 +1276,18 @@ function ExportApprovalSection() {
               <td className="py-2">{r.requestedByName}</td>
               <td className="font-mono text-xs">{formatDate(r.requestedAt)}</td>
               <td className="text-xs">{r.dataType}</td>
-              <td><span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", r.status === "approved" ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>{r.status}</span></td>
+              <td>
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                    r.status === "approved"
+                      ? "bg-emerald-100 text-emerald-700"
+                      : "bg-red-100 text-red-700",
+                  )}
+                >
+                  {r.status}
+                </span>
+              </td>
               <td className="text-xs text-slate-500">{r.reviewNote ?? "-"}</td>
             </tr>
           ))}
@@ -822,15 +1296,29 @@ function ExportApprovalSection() {
 
       <Dialog open={!!denyId} onOpenChange={(v) => !v && setDenyId(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Tolak Permintaan Export</DialogTitle></DialogHeader>
-          <Textarea placeholder="Alasan penolakan (wajib)" value={denyNote} onChange={(e) => setDenyNote(e.target.value)} rows={3} />
+          <DialogHeader>
+            <DialogTitle>Tolak Permintaan Export</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            placeholder="Alasan penolakan (wajib)"
+            value={denyNote}
+            onChange={(e) => setDenyNote(e.target.value)}
+            rows={3}
+          />
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setDenyId(null)}>Batal</Button>
-            <Button disabled={!denyNote.trim()} onClick={() => {
-              denyExportRequest(denyId!, denyNote.trim());
-              setDenyId(null);
-              toast.success("Permintaan ditolak");
-            }}>Tolak</Button>
+            <Button variant="ghost" onClick={() => setDenyId(null)}>
+              Batal
+            </Button>
+            <Button
+              disabled={!denyNote.trim()}
+              onClick={() => {
+                denyExportRequest(denyId!, denyNote.trim());
+                setDenyId(null);
+                toast.success("Permintaan ditolak");
+              }}
+            >
+              Tolak
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -844,10 +1332,18 @@ function RoleHistorySection() {
   const rows = auditLog.filter((e) => e.action === "agent_role_changed");
   return (
     <Card title="Riwayat Perubahan Role">
-      <p className="mb-3 text-xs text-slate-500">Daftar perubahan role agent — penting untuk akuntabilitas akses.</p>
+      <p className="mb-3 text-xs text-slate-500">
+        Daftar perubahan role agent — penting untuk akuntabilitas akses.
+      </p>
       <table className="w-full text-sm">
         <thead className="text-xs text-slate-500">
-          <tr><th className="text-left">Tanggal</th><th className="text-left">Diubah Oleh</th><th className="text-left">Agent</th><th className="text-left">Role Lama → Baru</th><th className="text-left">Catatan</th></tr>
+          <tr>
+            <th className="text-left">Tanggal</th>
+            <th className="text-left">Diubah Oleh</th>
+            <th className="text-left">Agent</th>
+            <th className="text-left">Role Lama → Baru</th>
+            <th className="text-left">Catatan</th>
+          </tr>
         </thead>
         <tbody>
           {rows.map((e) => (
@@ -863,7 +1359,13 @@ function RoleHistorySection() {
               <td className="text-xs text-slate-500">{e.details}</td>
             </tr>
           ))}
-          {rows.length === 0 && <tr><td colSpan={5} className="py-4 text-center text-xs text-slate-400">Belum ada perubahan role.</td></tr>}
+          {rows.length === 0 && (
+            <tr>
+              <td colSpan={5} className="py-4 text-center text-xs text-slate-400">
+                Belum ada perubahan role.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </Card>
@@ -890,7 +1392,9 @@ function BillingSection() {
           <div className="text-sm font-semibold">INV-2026-0618 · Rp 4.800.000</div>
         </div>
       </div>
-      <Button className="mt-4" variant="outline">Kelola Tagihan</Button>
+      <Button className="mt-4" variant="outline">
+        Kelola Tagihan
+      </Button>
     </Card>
   );
 }
@@ -915,7 +1419,9 @@ function ExportDataSection() {
           <div>
             <label className="text-xs font-medium">Tipe Data</label>
             <Select value={type} onValueChange={(v) => setType(v as any)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="customers">Customer Data</SelectItem>
                 <SelectItem value="conversations">Percakapan</SelectItem>
@@ -924,8 +1430,14 @@ function ExportDataSection() {
             </Select>
           </div>
           <div>
-            <label className="text-xs font-medium">{isOwner ? "Catatan (opsional)" : "Alasan Export *"}</label>
-            <Input value={reason} onChange={(e) => setReason(e.target.value)} placeholder={isOwner ? "Catatan internal" : "Audit, analisa, dsb."} />
+            <label className="text-xs font-medium">
+              {isOwner ? "Catatan (opsional)" : "Alasan Export *"}
+            </label>
+            <Input
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder={isOwner ? "Catatan internal" : "Audit, analisa, dsb."}
+            />
           </div>
         </div>
         <Button
@@ -942,16 +1454,32 @@ function ExportDataSection() {
             }
           }}
         >
-          {isOwner ? <><Download className="h-4 w-4" /> Export Sekarang</> : <><FileDown className="h-4 w-4" /> Kirim Permintaan</>}
+          {isOwner ? (
+            <>
+              <Download className="h-4 w-4" /> Export Sekarang
+            </>
+          ) : (
+            <>
+              <FileDown className="h-4 w-4" /> Kirim Permintaan
+            </>
+          )}
         </Button>
       </div>
 
       {!isOwner && (
         <div className="mt-5">
-          <h4 className="mb-2 text-sm font-semibold">Riwayat Permintaan Saya ({myRequests.length})</h4>
+          <h4 className="mb-2 text-sm font-semibold">
+            Riwayat Permintaan Saya ({myRequests.length})
+          </h4>
           <table className="w-full text-sm">
             <thead className="text-xs text-slate-500">
-              <tr><th className="text-left">Tanggal</th><th className="text-left">Tipe</th><th className="text-left">Alasan</th><th className="text-left">Status</th><th className="text-left">Catatan</th></tr>
+              <tr>
+                <th className="text-left">Tanggal</th>
+                <th className="text-left">Tipe</th>
+                <th className="text-left">Alasan</th>
+                <th className="text-left">Status</th>
+                <th className="text-left">Catatan</th>
+              </tr>
             </thead>
             <tbody>
               {myRequests.map((r) => (
@@ -960,16 +1488,29 @@ function ExportDataSection() {
                   <td className="text-xs">{r.dataType}</td>
                   <td className="text-xs">{r.reason}</td>
                   <td>
-                    <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                      r.status === "approved" ? "bg-emerald-100 text-emerald-700" :
-                      r.status === "denied" ? "bg-red-100 text-red-700" :
-                      "bg-amber-100 text-amber-700",
-                    )}>{r.status}</span>
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                        r.status === "approved"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : r.status === "denied"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-amber-100 text-amber-700",
+                      )}
+                    >
+                      {r.status}
+                    </span>
                   </td>
                   <td className="text-xs text-slate-500">{r.reviewNote ?? "-"}</td>
                 </tr>
               ))}
-              {myRequests.length === 0 && <tr><td colSpan={5} className="py-4 text-center text-xs text-slate-400">Belum ada permintaan.</td></tr>}
+              {myRequests.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="py-4 text-center text-xs text-slate-400">
+                    Belum ada permintaan.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

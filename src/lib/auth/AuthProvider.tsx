@@ -114,7 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (agent.invitationStatus === "pending") {
         await signOutAuth();
-        throw new Error("Undangan belum diselesaikan. Buka link di email untuk mengatur profil dan password.");
+        throw new Error(
+          "Undangan belum diselesaikan. Buka link di email untuk mengatur profil dan password.",
+        );
       }
       setSession(nextSession);
       setUser(nextUser);

@@ -52,7 +52,9 @@ async function assertSetupNotComplete(admin: SupabaseClient) {
 }
 
 async function seedWorkspaceDefaults(admin: SupabaseClient) {
-  const { count: templateCount } = await admin.from("templates").select("id", { count: "exact", head: true });
+  const { count: templateCount } = await admin
+    .from("templates")
+    .select("id", { count: "exact", head: true });
   if (!templateCount) {
     const { error } = await admin.from("templates").insert(DEFAULT_TEMPLATES.map(templateToRow));
     if (error) throw error;
@@ -75,48 +77,52 @@ async function seedWorkspaceDefaults(admin: SupabaseClient) {
   }
 }
 
-export const getInstanceSetupStatusServerFn = createServerFn({ method: "GET" }).handler(async () => {
-  const { getSupabaseAdminClient } = await import("@/lib/supabase/admin.server");
-  const admin = getSupabaseAdminClient();
+export const getInstanceSetupStatusServerFn = createServerFn({ method: "GET" }).handler(
+  async () => {
+    const { getSupabaseAdminClient } = await import("@/lib/supabase/admin.server");
+    const admin = getSupabaseAdminClient();
 
-  const { data, error } = await admin
-    .from("instance_settings")
-    .select("business_name, setup_completed_at")
-    .eq("id", 1)
-    .maybeSingle();
+    const { data, error } = await admin
+      .from("instance_settings")
+      .select("business_name, setup_completed_at")
+      .eq("id", 1)
+      .maybeSingle();
 
-  if (error) {
-    if (error.code === "42P01") {
-      const { data: owner } = await admin
-        .from("agents")
-        .select("id")
-        .eq("role", "owner")
-        .not("auth_user_id", "is", null)
-        .maybeSingle();
-      return {
-        isComplete: !!owner,
-        businessName: null as string | null,
-        requiresSetupToken: !!process.env.SETUP_TOKEN,
-      };
+    if (error) {
+      if (error.code === "42P01") {
+        const { data: owner } = await admin
+          .from("agents")
+          .select("id")
+          .eq("role", "owner")
+          .not("auth_user_id", "is", null)
+          .maybeSingle();
+        return {
+          isComplete: !!owner,
+          businessName: null as string | null,
+          requiresSetupToken: !!process.env.SETUP_TOKEN,
+        };
+      }
+      throw error;
     }
-    throw error;
-  }
 
-  const ownerFallback =
-    !data?.setup_completed_at &&
-    (await admin
-      .from("agents")
-      .select("id")
-      .eq("role", "owner")
-      .not("auth_user_id", "is", null)
-      .maybeSingle()).data;
+    const ownerFallback =
+      !data?.setup_completed_at &&
+      (
+        await admin
+          .from("agents")
+          .select("id")
+          .eq("role", "owner")
+          .not("auth_user_id", "is", null)
+          .maybeSingle()
+      ).data;
 
-  return {
-    isComplete: !!data?.setup_completed_at || !!ownerFallback,
-    businessName: data?.business_name || null,
-    requiresSetupToken: !!process.env.SETUP_TOKEN,
-  };
-});
+    return {
+      isComplete: !!data?.setup_completed_at || !!ownerFallback,
+      businessName: data?.business_name || null,
+      requiresSetupToken: !!process.env.SETUP_TOKEN,
+    };
+  },
+);
 
 export const completeInstanceSetupServerFn = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => completeSetupSchema.parse(data))
@@ -133,7 +139,11 @@ export const completeInstanceSetupServerFn = createServerFn({ method: "POST" })
 
     const email = data.email.toLowerCase();
 
-    const { data: existingEmail } = await admin.from("agents").select("id").eq("email", email).maybeSingle();
+    const { data: existingEmail } = await admin
+      .from("agents")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
     if (existingEmail) {
       throw new Error("Email sudah terdaftar");
     }
@@ -183,13 +193,11 @@ export const completeInstanceSetupServerFn = createServerFn({ method: "POST" })
 
     await seedWorkspaceDefaults(admin);
 
-    const { error: settingsErr } = await admin
-      .from("instance_settings")
-      .upsert({
-        id: 1,
-        business_name: businessName,
-        setup_completed_at: new Date().toISOString(),
-      });
+    const { error: settingsErr } = await admin.from("instance_settings").upsert({
+      id: 1,
+      business_name: businessName,
+      setup_completed_at: new Date().toISOString(),
+    });
     if (settingsErr) throw settingsErr;
 
     const auditId = `al-setup-${Date.now()}`;

@@ -34,11 +34,7 @@ export async function resolveAgentForUser(user: User): Promise<Agent | null> {
   return agent;
 }
 
-export async function signInWithEmail(
-  email: string,
-  password: string,
-  rememberMe: boolean,
-) {
+export async function signInWithEmail(email: string, password: string, rememberMe: boolean) {
   setRememberMe(rememberMe);
   resetSupabaseBrowserClient();
   const client = getSupabaseBrowserClient();
@@ -78,8 +74,6 @@ export function isPasswordSetupSession(): boolean {
   if (typeof window === "undefined") return false;
   const hash = window.location.hash;
   return (
-    hash.includes("type=recovery") ||
-    hash.includes("type=invite") ||
-    hash.includes("type=signup")
+    hash.includes("type=recovery") || hash.includes("type=invite") || hash.includes("type=signup")
   );
 }
