@@ -255,6 +255,16 @@ function AgentsSection() {
                     </Button>
                   )
                 )}
+                {canManagePermsFor(a) && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    title="Kelola izin granular agent ini"
+                    onClick={() => setPermAgentId(a.id)}
+                  >
+                    <KeyRound className="h-4 w-4 text-amber-600" />
+                  </Button>
+                )}
               </td>
             </tr>
           ))}
@@ -262,6 +272,8 @@ function AgentsSection() {
       </table>
 
       {canInvite && <InviteAgentForm onInvited={registerInvitedAgent} />}
+
+      <PermissionManager agent={permAgent} open={!!permAgent} onClose={() => setPermAgentId(null)} />
 
       {canAddLocal && (
         <div className="mt-4 rounded-lg border p-3">
