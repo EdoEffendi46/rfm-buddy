@@ -6,6 +6,9 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 const SETUP_PATH = "/setup";
 
+/** Auth email links must not be redirected to /setup (hash/query would be lost). */
+const AUTH_CALLBACK_PATHS = ["/accept-invite", "/reset-password", "/forgot-password"];
+
 export function InstanceSetupGate({ children }: { children: ReactNode }) {
   const usesAuth = isSupabaseConfigured();
   const { isAuthLoading } = useAuthContext();
@@ -40,7 +43,7 @@ export function InstanceSetupGate({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!usesAuth || checking || isAuthLoading) return;
 
-    if (!isComplete && pathname !== SETUP_PATH) {
+    if (!isComplete && pathname !== SETUP_PATH && !AUTH_CALLBACK_PATHS.includes(pathname)) {
       router.navigate({ to: SETUP_PATH, replace: true });
       return;
     }

@@ -7,6 +7,11 @@
 
 project_id = "rfm-buddy"
 
+# Invite / recovery link lifetime (seconds). Hosted default ≈ 86400 (24 jam).
+# Dashboard hosted: Authentication → Providers → Email → OTP expiry (if exposed).
+[auth.email]
+otp_expiry = 86400
+
 [db]
 major_version = 15
 port = 54322

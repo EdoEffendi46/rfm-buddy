@@ -58,6 +58,25 @@ Desain: header gelap + logo **CC**, tombol hijau **full width**, tanpa emoji ata
 
 ---
 
+## Link undangan: unik & kadaluarsa
+
+Ini ditangani **Supabase Auth**, bukan di app:
+
+| Peristiwa | Efek link |
+|-----------|-----------|
+| **Invite baru** | `ConfirmationURL` berisi token **baru & unik** (signed) |
+| **Kirim ulang** | Auth user lama dihapus → link lama **mati**, email baru dengan link baru |
+| **Batal undangan** | Auth user dihapus → link **mati** |
+| **Sudah di-accept** | Akun aktif → link invite **tidak bisa dipakai lagi** |
+| **Lewat waktu** | Default **24 jam** (`otp_expiry`), lalu "Link undangan tidak valid" |
+
+Lokal: `supabase/config.toml` → `[auth.email] otp_expiry = 86400`.  
+Hosted: cek **Authentication → Providers → Email** (OTP expiry jika tersedia di project kamu).
+
+Copy di `invite.html`: *"Link berlaku 24 jam"* — sesuaikan jika mengubah `otp_expiry`.
+
+---
+
 ## Production (beli putus)
 
 Aktifkan **Custom SMTP** di Authentication → SMTP Settings agar email dari domain klien (mis. `noreply@bisnisanda.com`).

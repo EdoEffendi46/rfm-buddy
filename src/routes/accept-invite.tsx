@@ -17,11 +17,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
 import { completeInviteServerFn } from "@/lib/invite-agent.fn";
+import { useAuthCallbackReady } from "@/hooks/useAuthCallbackReady";
 import {
   acceptInviteFormSchema,
   type AcceptInviteFormInput,
 } from "@/lib/schemas/accept-invite";
-import { isPasswordSetupSession } from "@/lib/supabase/auth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ROLE_LABELS } from "@/lib/permissions";
 import type { Role } from "@/types";
@@ -35,18 +35,13 @@ export const Route = createFileRoute("/accept-invite")({
 
 function AcceptInvitePage() {
   const router = useRouter();
-  const { setNewPassword, signOut, isAuthLoading, user } = useAuthContext();
+  const { setNewPassword, signOut, user } = useAuthContext();
+  const { ready, checking } = useAuthCallbackReady({ inviteOnly: true });
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [ready, setReady] = useState(false);
 
   const inviteRole = (user?.user_metadata?.role as Role | undefined) ?? undefined;
   const defaultName = (user?.user_metadata?.name as string | undefined) ?? "";
-
-  useEffect(() => {
-    if (isAuthLoading) return;
-    setReady(isPasswordSetupSession() || window.location.hash.includes("access_token"));
-  }, [isAuthLoading]);
 
   const form = useForm<AcceptInviteFormInput>({
     resolver: zodResolver(acceptInviteFormSchema),
@@ -85,7 +80,7 @@ function AcceptInvitePage() {
     }
   };
 
-  if (isAuthLoading) {
+  if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F2F5]">
         <Loader2 className="h-8 w-8 animate-spin text-[#25D366]" />
@@ -93,7 +88,7 @@ function AcceptInvitePage() {
     );
   }
 
-  if (!ready) {
+  if (!ready && !checking) {
     return (
       <AuthLayout
         title="Link undangan tidak valid"

@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
+import { useAuthCallbackReady } from "@/hooks/useAuthCallbackReady";
 import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/schemas/auth";
-import { isPasswordSetupSession } from "@/lib/supabase/auth";
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
@@ -28,15 +28,10 @@ export const Route = createFileRoute("/reset-password")({
 
 function ResetPasswordPage() {
   const router = useRouter();
-  const { setNewPassword, isAuthLoading } = useAuthContext();
+  const { setNewPassword } = useAuthContext();
+  const { ready, checking } = useAuthCallbackReady();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    if (isAuthLoading) return;
-    setReady(isPasswordSetupSession() || window.location.hash.includes("access_token"));
-  }, [isAuthLoading]);
 
   const form = useForm<ResetPasswordInput>({
     resolver: zodResolver(resetPasswordSchema),
@@ -56,7 +51,7 @@ function ResetPasswordPage() {
     }
   };
 
-  if (isAuthLoading) {
+  if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F2F5]">
         <Loader2 className="h-8 w-8 animate-spin text-[#25D366]" />
