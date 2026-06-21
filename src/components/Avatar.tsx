@@ -20,7 +20,15 @@ function initialsOf(name: string) {
     .toUpperCase();
 }
 
-export function Avatar({ name, color = "#64748B", initials, size = 40, ringColor, className, online }: Props) {
+export function Avatar({
+  name,
+  color = "#64748B",
+  initials,
+  size = 40,
+  ringColor,
+  className,
+  online,
+}: Props) {
   const label = initials ?? initialsOf(name);
   return (
     <div className={cn("relative inline-flex", className)} style={{ width: size, height: size }}>
@@ -46,7 +54,15 @@ export function Avatar({ name, color = "#64748B", initials, size = 40, ringColor
   );
 }
 
-export function AgentAvatar({ agent, size = 32, online }: { agent: Agent; size?: number; online?: boolean }) {
+export function AgentAvatar({
+  agent,
+  size = 32,
+  online,
+}: {
+  agent: Agent;
+  size?: number;
+  online?: boolean;
+}) {
   return (
     <Avatar
       name={agent.name}

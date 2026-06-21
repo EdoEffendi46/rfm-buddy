@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 import type {
   Agent,
   Customer,
@@ -53,7 +61,9 @@ interface StoreState {
   markRead: (customerId: string) => void;
 
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
-  addCustomer: (c: Omit<Customer, "id" | "purchases" | "segmentHistory" | "conversationTags">) => Customer;
+  addCustomer: (
+    c: Omit<Customer, "id" | "purchases" | "segmentHistory" | "conversationTags">,
+  ) => Customer;
 
   setConversationStatus: (id: string, status: ConversationStatus, snoozeUntil?: string) => void;
   setOrderStatus: (id: string, status: OrderStatus) => void;
@@ -70,7 +80,9 @@ interface StoreState {
   setCadenceOverride: (id: string, days: number | null) => void;
 
   // Audit
-  logAudit: (entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => void;
+  logAudit: (
+    entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">,
+  ) => void;
 
   // Manual shares
   createManualShare: (input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => void;
@@ -135,8 +147,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [templates, setTemplates] = useState<Template[]>(USE_SUPABASE ? [] : DEFAULT_TEMPLATES);
   const [tags, setTags] = useState<Tag[]>(USE_SUPABASE ? [] : DEFAULT_TAGS);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>(USE_SUPABASE ? [] : INITIAL_AUDIT_LOG);
-  const [exportRequests, setExportRequests] = useState<ExportRequest[]>(USE_SUPABASE ? [] : INITIAL_EXPORT_REQUESTS);
-  const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(USE_SUPABASE ? [] : DEFAULT_FIELD_RULES);
+  const [exportRequests, setExportRequests] = useState<ExportRequest[]>(
+    USE_SUPABASE ? [] : INITIAL_EXPORT_REQUESTS,
+  );
+  const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(
+    USE_SUPABASE ? [] : DEFAULT_FIELD_RULES,
+  );
 
   useEffect(() => {
     if (!USE_SUPABASE) return;
@@ -177,18 +193,24 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [agents, currentAgentId],
   );
 
-  const logAuditRaw = useCallback((actor: Agent | null, entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => {
-    const full: AuditLogEntry = {
-      ...entry,
-      id: genId("al"),
-      timestamp: new Date().toISOString(),
-      actorId: actor?.id ?? "system",
-      actorName: actor?.name ?? "Sistem",
-      actorRole: actor?.role ?? "cs",
-    };
-    setAuditLog((prev) => [full, ...prev]);
-    db.persistAudit(full);
-  }, []);
+  const logAuditRaw = useCallback(
+    (
+      actor: Agent | null,
+      entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">,
+    ) => {
+      const full: AuditLogEntry = {
+        ...entry,
+        id: genId("al"),
+        timestamp: new Date().toISOString(),
+        actorId: actor?.id ?? "system",
+        actorName: actor?.name ?? "Sistem",
+        actorRole: actor?.role ?? "cs",
+      };
+      setAuditLog((prev) => [full, ...prev]);
+      db.persistAudit(full);
+    },
+    [],
+  );
 
   const logAudit = useCallback(
     (entry: Omit<AuditLogEntry, "id" | "timestamp" | "actorId" | "actorName" | "actorRole">) => {
@@ -197,20 +219,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [currentAgent, logAuditRaw],
   );
 
-  const login = useCallback((agentId: string) => {
-    setCurrentAgentId(agentId);
-    db.saveSessionAgentId(agentId);
-    const ag = agents.find((a) => a.id === agentId);
-    if (ag) {
-      logAuditRaw(ag, {
-        action: "login",
-        targetType: "system",
-        targetId: "system",
-        targetLabel: "Sistem",
-        details: "Login dari workspace web",
-      });
-    }
-  }, [agents, logAuditRaw]);
+  const login = useCallback(
+    (agentId: string) => {
+      setCurrentAgentId(agentId);
+      db.saveSessionAgentId(agentId);
+      const ag = agents.find((a) => a.id === agentId);
+      if (ag) {
+        logAuditRaw(ag, {
+          action: "login",
+          targetType: "system",
+          targetId: "system",
+          targetLabel: "Sistem",
+          details: "Login dari workspace web",
+        });
+      }
+    },
+    [agents, logAuditRaw],
+  );
 
   const setAgentSession = useCallback((agentId: string) => {
     setCurrentAgentId(agentId);
@@ -292,7 +317,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         id: genId("c"),
         purchases: [],
         segmentHistory: [
-          { date: new Date().toISOString(), fromSegment: null, toSegment: "new", reason: "Customer baru ditambahkan" },
+          {
+            date: new Date().toISOString(),
+            fromSegment: null,
+            toSegment: "new",
+            reason: "Customer baru ditambahkan",
+          },
         ],
         conversationTags: [],
       };
@@ -308,7 +338,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setCustomers((prev) => {
         const next = prev.map((c) =>
           c.id === id
-            ? { ...c, conversationStatus: status, snoozeUntil: status === "snoozed" ? snoozeUntil : undefined }
+            ? {
+                ...c,
+                conversationStatus: status,
+                snoozeUntil: status === "snoozed" ? snoozeUntil : undefined,
+              }
             : c,
         );
         const updated = next.find((c) => c.id === id);
@@ -334,28 +368,31 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
-  const assignCustomer = useCallback((id: string, agentId: string) => {
-    setCustomers((p) => {
-      const cust = p.find((c) => c.id === id);
-      const oldAg = agents.find((a) => a.id === cust?.assignedAgentId);
-      const newAg = agents.find((a) => a.id === agentId);
-      if (cust) {
-        logAuditRaw(currentAgent, {
-          action: "customer_reassigned",
-          targetType: "customer",
-          targetId: id,
-          targetLabel: cust.name,
-          oldValue: oldAg?.name ?? "—",
-          newValue: newAg?.name ?? "—",
-          details: `Reassign dari ${oldAg?.name ?? "—"} ke ${newAg?.name ?? "—"}`,
-        });
-      }
-      const next = p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
-      const updated = next.find((c) => c.id === id);
-      if (updated) db.persistCustomer(updated);
-      return next;
-    });
-  }, [agents, currentAgent, logAuditRaw]);
+  const assignCustomer = useCallback(
+    (id: string, agentId: string) => {
+      setCustomers((p) => {
+        const cust = p.find((c) => c.id === id);
+        const oldAg = agents.find((a) => a.id === cust?.assignedAgentId);
+        const newAg = agents.find((a) => a.id === agentId);
+        if (cust) {
+          logAuditRaw(currentAgent, {
+            action: "customer_reassigned",
+            targetType: "customer",
+            targetId: id,
+            targetLabel: cust.name,
+            oldValue: oldAg?.name ?? "—",
+            newValue: newAg?.name ?? "—",
+            details: `Reassign dari ${oldAg?.name ?? "—"} ke ${newAg?.name ?? "—"}`,
+          });
+        }
+        const next = p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
+        const updated = next.find((c) => c.id === id);
+        if (updated) db.persistCustomer(updated);
+        return next;
+      });
+    },
+    [agents, currentAgent, logAuditRaw],
+  );
 
   const patchCustomer = useCallback((id: string, fn: (c: Customer) => Customer) => {
     setCustomers((p) => {
@@ -366,34 +403,54 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const addConversationTag = useCallback((id: string, tag: string) => {
-    patchCustomer(id, (c) =>
-      c.conversationTags.includes(tag) ? c : { ...c, conversationTags: [...c.conversationTags, tag] },
-    );
-  }, [patchCustomer]);
-  const removeConversationTag = useCallback((id: string, tag: string) => {
-    patchCustomer(id, (c) => ({
-      ...c,
-      conversationTags: c.conversationTags.filter((t) => t !== tag),
-    }));
-  }, [patchCustomer]);
-  const addCustomerTag = useCallback((id: string, tag: string) => {
-    patchCustomer(id, (c) => (c.tags.includes(tag) ? c : { ...c, tags: [...c.tags, tag] }));
-  }, [patchCustomer]);
-  const removeCustomerTag = useCallback((id: string, tag: string) => {
-    patchCustomer(id, (c) => ({ ...c, tags: c.tags.filter((t) => t !== tag) }));
-  }, [patchCustomer]);
+  const addConversationTag = useCallback(
+    (id: string, tag: string) => {
+      patchCustomer(id, (c) =>
+        c.conversationTags.includes(tag)
+          ? c
+          : { ...c, conversationTags: [...c.conversationTags, tag] },
+      );
+    },
+    [patchCustomer],
+  );
+  const removeConversationTag = useCallback(
+    (id: string, tag: string) => {
+      patchCustomer(id, (c) => ({
+        ...c,
+        conversationTags: c.conversationTags.filter((t) => t !== tag),
+      }));
+    },
+    [patchCustomer],
+  );
+  const addCustomerTag = useCallback(
+    (id: string, tag: string) => {
+      patchCustomer(id, (c) => (c.tags.includes(tag) ? c : { ...c, tags: [...c.tags, tag] }));
+    },
+    [patchCustomer],
+  );
+  const removeCustomerTag = useCallback(
+    (id: string, tag: string) => {
+      patchCustomer(id, (c) => ({ ...c, tags: c.tags.filter((t) => t !== tag) }));
+    },
+    [patchCustomer],
+  );
 
-  const saveNotes = useCallback((id: string, notes: string) => {
-    patchCustomer(id, (c) => ({ ...c, notes }));
-  }, [patchCustomer]);
+  const saveNotes = useCallback(
+    (id: string, notes: string) => {
+      patchCustomer(id, (c) => ({ ...c, notes }));
+    },
+    [patchCustomer],
+  );
 
-  const setCadenceOverride = useCallback((id: string, days: number | null) => {
-    patchCustomer(id, (c) => ({
-      ...c,
-      cadenceOverrideDays: days ?? undefined,
-    }));
-  }, [patchCustomer]);
+  const setCadenceOverride = useCallback(
+    (id: string, days: number | null) => {
+      patchCustomer(id, (c) => ({
+        ...c,
+        cadenceOverrideDays: days ?? undefined,
+      }));
+    },
+    [patchCustomer],
+  );
 
   const addTemplate = useCallback((text: string) => {
     setTemplates((p) => {
@@ -475,19 +532,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       return next;
     });
   }, []);
-  const addAgent = useCallback((a: Omit<Agent, "id" | "initials">) => {
-    const initials = a.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
-    const newAg = { ...a, id: genId("ag"), initials };
-    db.persistAgent(newAg);
-    setAgents((p) => [...p, newAg]);
-    logAuditRaw(currentAgent, {
-      action: "agent_created",
-      targetType: "agent",
-      targetId: newAg.id,
-      targetLabel: newAg.name,
-      details: `Agent baru ditambahkan dengan role ${newAg.role}`,
-    });
-  }, [currentAgent, logAuditRaw]);
+  const addAgent = useCallback(
+    (a: Omit<Agent, "id" | "initials">) => {
+      const initials = a.name
+        .split(" ")
+        .map((w) => w[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase();
+      const newAg = { ...a, id: genId("ag"), initials };
+      db.persistAgent(newAg);
+      setAgents((p) => [...p, newAg]);
+      logAuditRaw(currentAgent, {
+        action: "agent_created",
+        targetType: "agent",
+        targetId: newAg.id,
+        targetLabel: newAg.name,
+        details: `Agent baru ditambahkan dengan role ${newAg.role}`,
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
 
   const registerInvitedAgent = useCallback(
     (agent: Agent) => {
@@ -504,43 +569,49 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [currentAgent, logAuditRaw],
   );
 
-  const changeAgentRole = useCallback((id: string, newRole: Role) => {
-    setAgents((prev) => {
-      const ag = prev.find((a) => a.id === id);
-      if (ag && ag.role !== newRole) {
-        logAuditRaw(currentAgent, {
-          action: "agent_role_changed",
-          targetType: "agent",
-          targetId: id,
-          targetLabel: ag.name,
-          oldValue: ag.role,
-          newValue: newRole,
-          details: `Role ${ag.name} diubah: ${ag.role} → ${newRole}`,
-        });
-      }
-      const next = prev.map((a) => (a.id === id ? { ...a, role: newRole } : a));
-      const updated = next.find((a) => a.id === id);
-      if (updated) db.persistAgent(updated);
-      return next;
-    });
-  }, [currentAgent, logAuditRaw]);
+  const changeAgentRole = useCallback(
+    (id: string, newRole: Role) => {
+      setAgents((prev) => {
+        const ag = prev.find((a) => a.id === id);
+        if (ag && ag.role !== newRole) {
+          logAuditRaw(currentAgent, {
+            action: "agent_role_changed",
+            targetType: "agent",
+            targetId: id,
+            targetLabel: ag.name,
+            oldValue: ag.role,
+            newValue: newRole,
+            details: `Role ${ag.name} diubah: ${ag.role} → ${newRole}`,
+          });
+        }
+        const next = prev.map((a) => (a.id === id ? { ...a, role: newRole } : a));
+        const updated = next.find((a) => a.id === id);
+        if (updated) db.persistAgent(updated);
+        return next;
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
 
-  const deleteAgent = useCallback((id: string) => {
-    setAgents((prev) => {
-      const ag = prev.find((a) => a.id === id);
-      if (ag) {
-        logAuditRaw(currentAgent, {
-          action: "agent_deleted",
-          targetType: "agent",
-          targetId: id,
-          targetLabel: ag.name,
-          details: `Agent ${ag.name} dihapus`,
-        });
-      }
-      db.persistAgentDelete(id);
-      return prev.filter((a) => a.id !== id);
-    });
-  }, [currentAgent, logAuditRaw]);
+  const deleteAgent = useCallback(
+    (id: string) => {
+      setAgents((prev) => {
+        const ag = prev.find((a) => a.id === id);
+        if (ag) {
+          logAuditRaw(currentAgent, {
+            action: "agent_deleted",
+            targetType: "agent",
+            targetId: id,
+            targetLabel: ag.name,
+            details: `Agent ${ag.name} dihapus`,
+          });
+        }
+        db.persistAgentDelete(id);
+        return prev.filter((a) => a.id !== id);
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
 
   const setAgentPermissionOverrides = useCallback(
     (id: string, overrides: Partial<import("@/types").PermissionFlags>, summary?: string) => {
@@ -572,9 +643,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const ag = prev.find((a) => a.id === id);
         if (!ag) return prev;
         const before = ag.permissionOverrides ?? {};
-        const next = prev.map((a) =>
-          a.id === id ? { ...a, permissionOverrides: undefined } : a,
-        );
+        const next = prev.map((a) => (a.id === id ? { ...a, permissionOverrides: undefined } : a));
         logAuditRaw(currentAgent, {
           action: "permission_overrides_reset",
           targetType: "agent",
@@ -593,163 +662,184 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
 
   // Manual Shares
-  const createManualShare = useCallback((input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => {
-    if (!currentAgent) return;
-    const share: ManualShare = {
-      ...input,
-      id: genId("ms"),
-      createdAt: new Date().toISOString(),
-      sharedByAgentId: currentAgent.id,
-    };
-    setCustomers((p) => {
-      const next = p.map((c) =>
-        c.id === input.customerId
-          ? { ...c, manualShares: [...(c.manualShares ?? []), share] }
-          : c,
-      );
-      const updated = next.find((c) => c.id === input.customerId);
-      if (updated) db.persistCustomer(updated);
-      return next;
-    });
-    const target = customers.find((c) => c.id === input.customerId);
-    const sharedWith = agents.find((a) => a.id === input.sharedWithAgentId);
-    logAuditRaw(currentAgent, {
-      action: "manual_share_created",
-      targetType: "customer",
-      targetId: input.customerId,
-      targetLabel: target?.name ?? input.customerId,
-      newValue: `${sharedWith?.name ?? "—"} (${input.permission})`,
-      details: input.reason,
-    });
-  }, [currentAgent, customers, agents, logAuditRaw]);
-
-  const revokeManualShare = useCallback((customerId: string, shareId: string) => {
-    setCustomers((p) => {
-      const next = p.map((c) => {
-        if (c.id !== customerId) return c;
-        const share = c.manualShares?.find((s) => s.id === shareId);
-        const sharedWith = agents.find((a) => a.id === share?.sharedWithAgentId);
-        if (share) {
-          logAuditRaw(currentAgent, {
-            action: "manual_share_revoked",
-            targetType: "customer",
-            targetId: customerId,
-            targetLabel: c.name,
-            oldValue: `${sharedWith?.name ?? "—"} (${share.permission})`,
-            details: "Akses dicabut",
-          });
-        }
-        return { ...c, manualShares: (c.manualShares ?? []).filter((s) => s.id !== shareId) };
+  const createManualShare = useCallback(
+    (input: Omit<ManualShare, "id" | "createdAt" | "sharedByAgentId">) => {
+      if (!currentAgent) return;
+      const share: ManualShare = {
+        ...input,
+        id: genId("ms"),
+        createdAt: new Date().toISOString(),
+        sharedByAgentId: currentAgent.id,
+      };
+      setCustomers((p) => {
+        const next = p.map((c) =>
+          c.id === input.customerId
+            ? { ...c, manualShares: [...(c.manualShares ?? []), share] }
+            : c,
+        );
+        const updated = next.find((c) => c.id === input.customerId);
+        if (updated) db.persistCustomer(updated);
+        return next;
       });
-      const updated = next.find((c) => c.id === customerId);
-      if (updated) db.persistCustomer(updated);
-      return next;
-    });
-  }, [agents, currentAgent, logAuditRaw]);
+      const target = customers.find((c) => c.id === input.customerId);
+      const sharedWith = agents.find((a) => a.id === input.sharedWithAgentId);
+      logAuditRaw(currentAgent, {
+        action: "manual_share_created",
+        targetType: "customer",
+        targetId: input.customerId,
+        targetLabel: target?.name ?? input.customerId,
+        newValue: `${sharedWith?.name ?? "—"} (${input.permission})`,
+        details: input.reason,
+      });
+    },
+    [currentAgent, customers, agents, logAuditRaw],
+  );
+
+  const revokeManualShare = useCallback(
+    (customerId: string, shareId: string) => {
+      setCustomers((p) => {
+        const next = p.map((c) => {
+          if (c.id !== customerId) return c;
+          const share = c.manualShares?.find((s) => s.id === shareId);
+          const sharedWith = agents.find((a) => a.id === share?.sharedWithAgentId);
+          if (share) {
+            logAuditRaw(currentAgent, {
+              action: "manual_share_revoked",
+              targetType: "customer",
+              targetId: customerId,
+              targetLabel: c.name,
+              oldValue: `${sharedWith?.name ?? "—"} (${share.permission})`,
+              details: "Akses dicabut",
+            });
+          }
+          return { ...c, manualShares: (c.manualShares ?? []).filter((s) => s.id !== shareId) };
+        });
+        const updated = next.find((c) => c.id === customerId);
+        if (updated) db.persistCustomer(updated);
+        return next;
+      });
+    },
+    [agents, currentAgent, logAuditRaw],
+  );
 
   // Export
-  const createExportRequest = useCallback((dataType: ExportRequest["dataType"], reason: string) => {
-    if (!currentAgent) return;
-    const req: ExportRequest = {
-      id: genId("exp"),
-      requestedByAgentId: currentAgent.id,
-      requestedByName: currentAgent.name,
-      requestedAt: new Date().toISOString(),
-      dataType,
-      reason,
-      status: "pending",
-    };
-    setExportRequests((p) => {
-      const next = [req, ...p];
-      db.persistExportRequest(req);
-      return next;
-    });
-    logAuditRaw(currentAgent, {
-      action: "export_requested",
-      targetType: "system",
-      targetId: req.id,
-      targetLabel: `Export ${dataType}`,
-      details: reason,
-    });
-  }, [currentAgent, logAuditRaw]);
-
-  const approveExportRequest = useCallback((id: string, note?: string) => {
-    if (!currentAgent) return;
-    setExportRequests((p) => {
-      const next = p.map((r) => {
-        if (r.id !== id) return r;
-        logAuditRaw(currentAgent, {
-          action: "export_approved",
-          targetType: "system",
-          targetId: id,
-          targetLabel: `Export ${r.dataType}`,
-          details: note ?? "Disetujui Owner",
-        });
-        const updated = {
-          ...r,
-          status: "approved" as const,
-          reviewedByAgentId: currentAgent.id,
-          reviewedByName: currentAgent.name,
-          reviewedAt: new Date().toISOString(),
-          reviewNote: note,
-        };
-        db.persistExportRequest(updated);
-        return updated;
+  const createExportRequest = useCallback(
+    (dataType: ExportRequest["dataType"], reason: string) => {
+      if (!currentAgent) return;
+      const req: ExportRequest = {
+        id: genId("exp"),
+        requestedByAgentId: currentAgent.id,
+        requestedByName: currentAgent.name,
+        requestedAt: new Date().toISOString(),
+        dataType,
+        reason,
+        status: "pending",
+      };
+      setExportRequests((p) => {
+        const next = [req, ...p];
+        db.persistExportRequest(req);
+        return next;
       });
-      return next;
-    });
-  }, [currentAgent, logAuditRaw]);
-
-  const denyExportRequest = useCallback((id: string, note: string) => {
-    if (!currentAgent) return;
-    setExportRequests((p) => {
-      const next = p.map((r) => {
-        if (r.id !== id) return r;
-        logAuditRaw(currentAgent, {
-          action: "export_denied",
-          targetType: "system",
-          targetId: id,
-          targetLabel: `Export ${r.dataType}`,
-          details: note,
-        });
-        const updated = {
-          ...r,
-          status: "denied" as const,
-          reviewedByAgentId: currentAgent.id,
-          reviewedByName: currentAgent.name,
-          reviewedAt: new Date().toISOString(),
-          reviewNote: note,
-        };
-        db.persistExportRequest(updated);
-        return updated;
+      logAuditRaw(currentAgent, {
+        action: "export_requested",
+        targetType: "system",
+        targetId: req.id,
+        targetLabel: `Export ${dataType}`,
+        details: reason,
       });
-      return next;
-    });
-  }, [currentAgent, logAuditRaw]);
+    },
+    [currentAgent, logAuditRaw],
+  );
 
-  const exportDataDirect = useCallback((dataType: ExportRequest["dataType"]) => {
-    logAuditRaw(currentAgent, {
-      action: "data_exported",
-      targetType: "system",
-      targetId: "direct-" + Date.now(),
-      targetLabel: `Export ${dataType}`,
-      details: "File CSV diunduh (akses langsung Owner)",
-    });
-  }, [currentAgent, logAuditRaw]);
+  const approveExportRequest = useCallback(
+    (id: string, note?: string) => {
+      if (!currentAgent) return;
+      setExportRequests((p) => {
+        const next = p.map((r) => {
+          if (r.id !== id) return r;
+          logAuditRaw(currentAgent, {
+            action: "export_approved",
+            targetType: "system",
+            targetId: id,
+            targetLabel: `Export ${r.dataType}`,
+            details: note ?? "Disetujui Owner",
+          });
+          const updated = {
+            ...r,
+            status: "approved" as const,
+            reviewedByAgentId: currentAgent.id,
+            reviewedByName: currentAgent.name,
+            reviewedAt: new Date().toISOString(),
+            reviewNote: note,
+          };
+          db.persistExportRequest(updated);
+          return updated;
+        });
+        return next;
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
+
+  const denyExportRequest = useCallback(
+    (id: string, note: string) => {
+      if (!currentAgent) return;
+      setExportRequests((p) => {
+        const next = p.map((r) => {
+          if (r.id !== id) return r;
+          logAuditRaw(currentAgent, {
+            action: "export_denied",
+            targetType: "system",
+            targetId: id,
+            targetLabel: `Export ${r.dataType}`,
+            details: note,
+          });
+          const updated = {
+            ...r,
+            status: "denied" as const,
+            reviewedByAgentId: currentAgent.id,
+            reviewedByName: currentAgent.name,
+            reviewedAt: new Date().toISOString(),
+            reviewNote: note,
+          };
+          db.persistExportRequest(updated);
+          return updated;
+        });
+        return next;
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
+
+  const exportDataDirect = useCallback(
+    (dataType: ExportRequest["dataType"]) => {
+      logAuditRaw(currentAgent, {
+        action: "data_exported",
+        targetType: "system",
+        targetId: "direct-" + Date.now(),
+        targetLabel: `Export ${dataType}`,
+        details: "File CSV diunduh (akses langsung Owner)",
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
 
   // Field rules
-  const addFieldRule = useCallback((rule: Omit<FieldVisibilityRule, "id">) => {
-    const full = { ...rule, id: genId("fvr") };
-    db.persistFieldRule(full);
-    setFieldRules((p) => [...p, full]);
-    logAuditRaw(currentAgent, {
-      action: "settings_changed",
-      targetType: "system",
-      targetId: "field-visibility",
-      targetLabel: "Visibilitas Field",
-      details: `Aturan baru: field ${rule.fieldName} disembunyikan dari ${rule.hiddenForRoles.join(", ")}`,
-    });
-  }, [currentAgent, logAuditRaw]);
+  const addFieldRule = useCallback(
+    (rule: Omit<FieldVisibilityRule, "id">) => {
+      const full = { ...rule, id: genId("fvr") };
+      db.persistFieldRule(full);
+      setFieldRules((p) => [...p, full]);
+      logAuditRaw(currentAgent, {
+        action: "settings_changed",
+        targetType: "system",
+        targetId: "field-visibility",
+        targetLabel: "Visibilitas Field",
+        details: `Aturan baru: field ${rule.fieldName} disembunyikan dari ${rule.hiddenForRoles.join(", ")}`,
+      });
+    },
+    [currentAgent, logAuditRaw],
+  );
 
   const deleteFieldRule = useCallback((id: string) => {
     setFieldRules((p) => {

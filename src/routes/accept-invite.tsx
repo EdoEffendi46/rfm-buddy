@@ -18,10 +18,7 @@ import { Input } from "@/components/ui/input";
 import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
 import { completeInviteServerFn } from "@/lib/invite-agent.fn";
 import { useAuthCallbackReady } from "@/hooks/useAuthCallbackReady";
-import {
-  acceptInviteFormSchema,
-  type AcceptInviteFormInput,
-} from "@/lib/schemas/accept-invite";
+import { acceptInviteFormSchema, type AcceptInviteFormInput } from "@/lib/schemas/accept-invite";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { ROLE_LABELS } from "@/lib/permissions";
 import type { Role } from "@/types";
@@ -99,7 +96,10 @@ function AcceptInvitePage() {
             Buka link undangan terbaru dari email Anda, atau hubungi owner workspace.
           </p>
         </div>
-        <Link to="/" className="mt-6 inline-block text-sm font-medium text-[#128C7E] hover:underline">
+        <Link
+          to="/"
+          className="mt-6 inline-block text-sm font-medium text-[#128C7E] hover:underline"
+        >
           Kembali ke login
         </Link>
       </AuthLayout>
@@ -113,8 +113,7 @@ function AcceptInvitePage() {
     >
       {inviteRole && (
         <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
-          Role:{" "}
-          <span className="font-semibold text-slate-900">{ROLE_LABELS[inviteRole]}</span>
+          Role: <span className="font-semibold text-slate-900">{ROLE_LABELS[inviteRole]}</span>
         </div>
       )}
 
@@ -127,7 +126,12 @@ function AcceptInvitePage() {
               <FormItem>
                 <FormLabel>Nama tampilan</FormLabel>
                 <FormControl>
-                  <Input placeholder="Nama lengkap" autoComplete="name" className="h-11" {...field} />
+                  <Input
+                    placeholder="Nama lengkap"
+                    autoComplete="name"
+                    className="h-11"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>

@@ -24,10 +24,13 @@ export function getFieldDisplay(
     return String(value);
   }
   switch (rule.maskPattern) {
-    case "phone": return maskPhone(String(value), role);
-    case "currency_range": return "Rp •••";
+    case "phone":
+      return maskPhone(String(value), role);
+    case "currency_range":
+      return "Rp •••";
     case "full_hide":
-    default: return "•••";
+    default:
+      return "•••";
   }
 }
 

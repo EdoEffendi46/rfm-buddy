@@ -1,12 +1,4 @@
-import {
-  AlertTriangle,
-  Crown,
-  Flame,
-  Moon,
-  Sprout,
-  UserPlus,
-  type LucideIcon,
-} from "lucide-react";
+import { AlertTriangle, Crown, Flame, Moon, Sprout, UserPlus, type LucideIcon } from "lucide-react";
 import type { RFMSegment } from "@/types";
 
 /** Lucide icons for RFM segments — use via `SegmentIcon`, not emoji. */

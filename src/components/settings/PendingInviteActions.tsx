@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { Loader2, RotateCcw, X } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  cancelInviteServerFn,
-  resendInviteServerFn,
-} from "@/lib/invite-agent.fn";
+import { cancelInviteServerFn, resendInviteServerFn } from "@/lib/invite-agent.fn";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { Agent } from "@/types";
 
@@ -110,7 +107,11 @@ export function PendingInviteActions({
         onClick={handleCancel}
         className="h-7 gap-1 px-2 text-xs text-red-600 hover:text-red-700"
       >
-        {busy === "cancel" ? <Loader2 className="h-3 w-3 animate-spin" /> : <X className="h-3 w-3" />}
+        {busy === "cancel" ? (
+          <Loader2 className="h-3 w-3 animate-spin" />
+        ) : (
+          <X className="h-3 w-3" />
+        )}
         Batal
       </Button>
     </div>

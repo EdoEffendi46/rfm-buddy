@@ -29,14 +29,18 @@ if (!url) {
 console.log(`✓ URL set (${url.replace(/https:\/\/([^.]+).*/, "https://$1.***.supabase.co")})`);
 
 if (isPlaceholder(publishableKey) || !publishableKey?.startsWith("sb_publishable_")) {
-  console.error("❌ VITE_SUPABASE_PUBLISHABLE_KEY must be sb_publishable_... from Settings → API Keys");
+  console.error(
+    "❌ VITE_SUPABASE_PUBLISHABLE_KEY must be sb_publishable_... from Settings → API Keys",
+  );
   process.exit(1);
 }
 console.log(`✓ Publishable key set (${maskKey(publishableKey)})`);
 
 const hasSecret = !isPlaceholder(secretKey) && secretKey!.startsWith("sb_secret_");
 if (!hasSecret) {
-  console.warn("⚠ SUPABASE_SECRET_KEY not set — paste sb_secret_... from Settings → API Keys → Secret keys");
+  console.warn(
+    "⚠ SUPABASE_SECRET_KEY not set — paste sb_secret_... from Settings → API Keys → Secret keys",
+  );
 }
 
 const client = createClient(url, publishableKey);

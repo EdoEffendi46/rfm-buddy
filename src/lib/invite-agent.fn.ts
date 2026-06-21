@@ -43,7 +43,11 @@ async function findAuthUserIdByEmail(admin: SupabaseClient, email: string) {
   return null;
 }
 
-async function deleteAuthUserIfExists(admin: SupabaseClient, authUserId: string | null, email: string) {
+async function deleteAuthUserIfExists(
+  admin: SupabaseClient,
+  authUserId: string | null,
+  email: string,
+) {
   const userId = authUserId ?? (await findAuthUserIdByEmail(admin, email));
   if (!userId) return;
   const { error } = await admin.auth.admin.deleteUser(userId);
@@ -93,7 +97,11 @@ export const inviteAgentServerFn = createServerFn({ method: "POST" })
     const email = data.email.toLowerCase();
     const sentAt = new Date().toISOString();
 
-    const { data: existingEmail } = await admin.from("agents").select("id").eq("email", email).maybeSingle();
+    const { data: existingEmail } = await admin
+      .from("agents")
+      .select("id")
+      .eq("email", email)
+      .maybeSingle();
     if (existingEmail) {
       throw new Error("Email sudah terdaftar di workspace ini");
     }

@@ -26,17 +26,27 @@ export const INITIAL_MESSAGES: Message[] = [
   m("c-dewi", "c-dewi", "Dewi Lestari", "Bagus banget kak, makasih!", 27),
   m("c-dewi", "rina", "Rina", "Sama-sama kak 🙏 Mau booking lagi minggu ini?", 26),
   m("c-dewi", "c-dewi", "Dewi Lestari", "Iya kak, hari Sabtu ya, jam 10 pagi", 2),
-  m("c-dewi", "c-dewi", "Dewi Lestari", "Sekalian Paket Premium juga ya 🙏", 1, { readStatus: "delivered" }),
+  m("c-dewi", "c-dewi", "Dewi Lestari", "Sekalian Paket Premium juga ya 🙏", 1, {
+    readStatus: "delivered",
+  }),
 
   // Andi (champion, dalam_proses)
   m("c-andi", "budi", "Budi", "Halo pak Andi, Treatment Premium sudah kami terima 4 item jas", 30),
   m("c-andi", "c-andi", "Andi Wijaya", "Oke, estimasi selesai kapan?", 29),
   m("c-andi", "budi", "Budi", "Hari Jumat sore ya pak, kami kabari kalau sudah siap 🙏", 28),
   m("c-andi", "c-andi", "Andi Wijaya", "Siap, makasih", 28),
-  m("c-andi", "admin", "Admin", "Customer VIP — prioritas pengerjaan ya tim", 26, { type: "internal_note" }),
+  m("c-andi", "admin", "Admin", "Customer VIP — prioritas pengerjaan ya tim", 26, {
+    type: "internal_note",
+  }),
 
   // Siti (loyal)
-  m("c-siti", "c-siti", "Siti Nurhaliza", "Mbak Sari, jadwal Paket Reguler aku bulan ini masih kosong nggak?", 50),
+  m(
+    "c-siti",
+    "c-siti",
+    "Siti Nurhaliza",
+    "Mbak Sari, jadwal Paket Reguler aku bulan ini masih kosong nggak?",
+    50,
+  ),
   m("c-siti", "sari", "Sari", "Halo kak Siti! Masih ada slot tanggal 22 & 24 Juni 😊", 49),
   m("c-siti", "c-siti", "Siti Nurhaliza", "Booking tgl 24 jam 2 siang ya", 48),
   m("c-siti", "sari", "Sari", "Noted kak, sudah saya catat 🙏", 47),
@@ -59,13 +69,29 @@ export const INITIAL_MESSAGES: Message[] = [
   m("c-kevin", "budi", "Budi", "Pesanan kak Kevin dalam antrian, estimasi selesai 11.30", 4),
 
   // Bambang (at risk, unread urgent)
-  m("c-bambang", "rina", "Rina", "Pak Bambang, sudah lama nggak order di tempat kami 😊 Ada promo diskon 15% nih khusus pelanggan lama!", 72),
+  m(
+    "c-bambang",
+    "rina",
+    "Rina",
+    "Pak Bambang, sudah lama nggak order di tempat kami 😊 Ada promo diskon 15% nih khusus pelanggan lama!",
+    72,
+  ),
   m("c-bambang", "c-bambang", "Bambang Sutejo", "Wah baru sempet baca", 5),
-  m("c-bambang", "c-bambang", "Bambang Sutejo", "Boleh detailnya seperti apa?", 4, { readStatus: "delivered" }),
-  m("c-bambang", "admin", "Admin", "At Risk customer — tolong dibantu retensi ya 🙏", 24, { type: "internal_note" }),
+  m("c-bambang", "c-bambang", "Bambang Sutejo", "Boleh detailnya seperti apa?", 4, {
+    readStatus: "delivered",
+  }),
+  m("c-bambang", "admin", "Admin", "At Risk customer — tolong dibantu retensi ya 🙏", 24, {
+    type: "internal_note",
+  }),
 
   // Lina (snoozed)
-  m("c-lina", "budi", "Budi", "Halo mbak Lina, sudah lama nggak order. Ada promo Paket Reguler nih 🌷", 200),
+  m(
+    "c-lina",
+    "budi",
+    "Budi",
+    "Halo mbak Lina, sudah lama nggak order. Ada promo Paket Reguler nih 🌷",
+    200,
+  ),
   m("c-lina", "c-lina", "Lina Marlina", "Aku lagi luar kota, minggu depan ya", 100),
   m("c-lina", "budi", "Budi", "Siap mbak, saya snooze percakapan ya", 99),
 
@@ -79,15 +105,29 @@ export const INITIAL_MESSAGES: Message[] = [
   m("c-nina", "budi", "Budi", "Sama-sama kak, ditunggu kunjungan berikutnya 🙏", 699),
 
   // Farhan (new)
-  m("c-farhan", "c-farhan", "Farhan Maulana", "Halo, mau order Cuci Standar 7 kg, hari ini bisa?", 48),
+  m(
+    "c-farhan",
+    "c-farhan",
+    "Farhan Maulana",
+    "Halo, mau order Cuci Standar 7 kg, hari ini bisa?",
+    48,
+  ),
   m("c-farhan", "rina", "Rina", "Bisa kak, sini diantar saja 😊", 47),
   m("c-farhan", "c-farhan", "Farhan Maulana", "Oke sudah saya antar", 46),
   m("c-farhan", "rina", "Rina", "Diterima kak, estimasi selesai besok sore 🙏", 45),
 
   // Putri (new, unread)
-  m("c-putri", "sari", "Sari", "Selamat datang kak Putri! Promo hari ini diskon 10% untuk Paket Reguler 🌸", 150),
+  m(
+    "c-putri",
+    "sari",
+    "Sari",
+    "Selamat datang kak Putri! Promo hari ini diskon 10% untuk Paket Reguler 🌸",
+    150,
+  ),
   m("c-putri", "c-putri", "Putri Ramadhani", "Aku mau coba Paket Reguler", 148),
   m("c-putri", "sari", "Sari", "Mantap kak! Bisa langsung datang ya 😊", 147),
   m("c-putri", "c-putri", "Putri Ramadhani", "Tadi udah selesai, hasilnya bagus banget", 2),
-  m("c-putri", "c-putri", "Putri Ramadhani", "Next mau coba Paket Premium juga", 1, { readStatus: "delivered" }),
+  m("c-putri", "c-putri", "Putri Ramadhani", "Next mau coba Paket Premium juga", 1, {
+    readStatus: "delivered",
+  }),
 ];

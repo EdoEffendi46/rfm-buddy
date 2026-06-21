@@ -1,6 +1,10 @@
 import { useMemo, useState } from "react";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,11 +15,13 @@ import { cn } from "@/lib/utils";
 import { useStore } from "@/lib/store";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
-import {
-  getEffectivePermissions, hasFlag, canGrantFlag,
-} from "@/lib/permissions";
+import { getEffectivePermissions, hasFlag, canGrantFlag } from "@/lib/permissions";
 import { ROLE_DEFAULTS, FLAG_LABELS, FLAG_GROUPS, ALL_FLAGS } from "@/data/roleDefaults";
 import type { Agent, PermissionFlag, PermissionFlags } from "@/types";
 
@@ -24,7 +30,9 @@ type Draft = Partial<PermissionFlags>;
 const ROLE_LABEL: Record<string, string> = { cs: "CS", supervisor: "Supervisor", owner: "Owner" };
 
 export function PermissionManager({
-  agent, open, onClose,
+  agent,
+  open,
+  onClose,
 }: {
   agent: Agent | null;
   open: boolean;
@@ -36,7 +44,10 @@ export function PermissionManager({
   const roleDefault = agent ? ROLE_DEFAULTS[agent.role] : ROLE_DEFAULTS.cs;
   const [draft, setDraft] = useState<Draft>(agent?.permissionOverrides ?? {});
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    chat: true, customer: false, dashboard: false, settings: false,
+    chat: true,
+    customer: false,
+    dashboard: false,
+    settings: false,
   });
 
   // Reset draft when opening a different agent.
@@ -47,7 +58,10 @@ export function PermissionManager({
     setDraft(agent?.permissionOverrides ?? {});
   }
 
-  const effective = useMemo<PermissionFlags>(() => ({ ...roleDefault, ...draft }), [roleDefault, draft]);
+  const effective = useMemo<PermissionFlags>(
+    () => ({ ...roleDefault, ...draft }),
+    [roleDefault, draft],
+  );
 
   if (!agent) return null;
 
@@ -81,13 +95,21 @@ export function PermissionManager({
     const next: Draft = {};
     if (preset === "readonly") {
       ALL_FLAGS.forEach((f) => {
-        const writeish = /^(chat_(reply|write|delete|add|remove|change|assign|reassign|transfer|snooze|mark|reopen)|customer_(create|edit|delete|add|remove|override|create_manual|revoke)|settings_(create|edit|delete|change|deactivate|override|toggle|reorder|approve|request|export)|dashboard_)/.test(f);
+        const writeish =
+          /^(chat_(reply|write|delete|add|remove|change|assign|reassign|transfer|snooze|mark|reopen)|customer_(create|edit|delete|add|remove|override|create_manual|revoke)|settings_(create|edit|delete|change|deactivate|override|toggle|reorder|approve|request|export)|dashboard_)/.test(
+            f,
+          );
         if (writeish && roleDefault[f]) next[f] = false;
       });
     } else if (preset === "trainee") {
       // CS baseline minus dangerous ops.
-      ["chat_delete_any_message","chat_transfer","chat_reassign_to_others",
-        "customer_delete","customer_edit_assigned_cs"].forEach((f) => {
+      [
+        "chat_delete_any_message",
+        "chat_transfer",
+        "chat_reassign_to_others",
+        "customer_delete",
+        "customer_edit_assigned_cs",
+      ].forEach((f) => {
         if (roleDefault[f as PermissionFlag]) next[f as PermissionFlag] = false;
       });
     } else if (preset === "full") {
@@ -111,11 +133,16 @@ export function PermissionManager({
     );
     const summary = changedFlags.length
       ? `Mengubah ${changedFlags.length} izin untuk ${agent.name}: ` +
-        changedFlags.slice(0, 3).map((f) => {
-          const before = (agent.permissionOverrides?.[f] ?? roleDefault[f]) ? "Aktif" : "Nonaktif";
-          const after = allowed[f] ? "Aktif" : "Nonaktif";
-          return `${FLAG_LABELS[f]} (${before}→${after})`;
-        }).join(", ") + (changedFlags.length > 3 ? "…" : "")
+        changedFlags
+          .slice(0, 3)
+          .map((f) => {
+            const before =
+              (agent.permissionOverrides?.[f] ?? roleDefault[f]) ? "Aktif" : "Nonaktif";
+            const after = allowed[f] ? "Aktif" : "Nonaktif";
+            return `${FLAG_LABELS[f]} (${before}→${after})`;
+          })
+          .join(", ") +
+        (changedFlags.length > 3 ? "…" : "")
       : `Izin ${agent.name} tidak berubah`;
     setAgentPermissionOverrides(agent.id, allowed, summary);
     toast.success(`Izin ${agent.name} berhasil diperbarui`);
@@ -126,7 +153,8 @@ export function PermissionManager({
   };
 
   const handleResetAll = () => {
-    if (!confirm(`Reset semua izin ${agent.name} ke default role ${ROLE_LABEL[agent.role]}?`)) return;
+    if (!confirm(`Reset semua izin ${agent.name} ke default role ${ROLE_LABEL[agent.role]}?`))
+      return;
     resetAgentPermissionOverrides(agent.id);
     toast.success(`Izin ${agent.name} direset`);
     onClose();
@@ -141,12 +169,18 @@ export function PermissionManager({
             <div className="flex-1">
               <div>Kelola Izin - {agent.name}</div>
               <div className="mt-1 text-xs font-normal text-slate-500">
-                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">{ROLE_LABEL[agent.role]}</span>
-                <span className="ml-2">Menggunakan: {defaultCount} default, {overrideCount} override manual</span>
+                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold uppercase">
+                  {ROLE_LABEL[agent.role]}
+                </span>
+                <span className="ml-2">
+                  Menggunakan: {defaultCount} default, {overrideCount} override manual
+                </span>
               </div>
             </div>
             <Select onValueChange={(v) => applyPreset(v as "readonly" | "trainee" | "full")}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Preset cepat..." /></SelectTrigger>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Preset cepat..." />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="readonly">Read-Only Observer</SelectItem>
                 <SelectItem value="trainee">Trainee CS</SelectItem>
@@ -182,18 +216,26 @@ export function PermissionManager({
                         {groupOverrides} override
                       </span>
                     )}
-                    {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                    {isOpen ? (
+                      <ChevronDown className="h-4 w-4" />
+                    ) : (
+                      <ChevronRight className="h-4 w-4" />
+                    )}
                   </span>
                 </button>
                 {isOpen && (
                   <div className="divide-y divide-slate-100 border-t border-slate-100">
                     {group.flags.map((flag) => {
                       const value = effective[flag];
-                      const isOverridden = draft[flag] !== undefined && draft[flag] !== roleDefault[flag];
+                      const isOverridden =
+                        draft[flag] !== undefined && draft[flag] !== roleDefault[flag];
                       const wouldBeNext = !value;
                       const lockedByCeiling = !canGrantFlag(viewer, flag, wouldBeNext);
                       return (
-                        <div key={flag} className="flex items-center justify-between gap-3 px-4 py-2">
+                        <div
+                          key={flag}
+                          className="flex items-center justify-between gap-3 px-4 py-2"
+                        >
                           <div className="min-w-0 flex-1">
                             <div className="text-sm">{FLAG_LABELS[flag]}</div>
                             <div className="mt-0.5 flex items-center gap-1.5 text-[10px]">
@@ -244,11 +286,16 @@ export function PermissionManager({
             <RotateCcw className="h-4 w-4" /> Reset Semua ke Default
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Batal</Button>
+            <Button variant="outline" onClick={onClose}>
+              Batal
+            </Button>
             <Button
               disabled={!hasChanges}
               onClick={handleSave}
-              className={cn("bg-[#25D366] text-white hover:bg-[#128C7E]", !hasChanges && "opacity-50")}
+              className={cn(
+                "bg-[#25D366] text-white hover:bg-[#128C7E]",
+                !hasChanges && "opacity-50",
+              )}
             >
               Simpan Perubahan
             </Button>

@@ -57,7 +57,12 @@ export function Sidebar() {
         CC
       </div>
       <nav className="flex flex-1 flex-col items-center gap-2">
-        <NavItem to="/dashboard" icon={BarChart3} label="Dashboard" active={pathname === "/dashboard"} />
+        <NavItem
+          to="/dashboard"
+          icon={BarChart3}
+          label="Dashboard"
+          active={pathname === "/dashboard"}
+        />
         <NavItem
           to="/chat"
           icon={MessageSquare}
@@ -66,7 +71,12 @@ export function Sidebar() {
           badge={unread}
         />
         <NavItem to="/customers" icon={Users} label="Customer" active={pathname === "/customers"} />
-        <NavItem to="/settings" icon={Settings} label="Pengaturan" active={pathname === "/settings"} />
+        <NavItem
+          to="/settings"
+          icon={Settings}
+          label="Pengaturan"
+          active={pathname === "/settings"}
+        />
       </nav>
       <div className="flex flex-col items-center gap-3">
         {agent && <AgentAvatar agent={agent} size={36} online />}

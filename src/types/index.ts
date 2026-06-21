@@ -1,11 +1,5 @@
 export type Role = "cs" | "supervisor" | "owner";
-export type RFMSegment =
-  | "champions"
-  | "loyal"
-  | "at_risk"
-  | "dormant"
-  | "new"
-  | "promising";
+export type RFMSegment = "champions" | "loyal" | "at_risk" | "dormant" | "new" | "promising";
 export type ConversationStatus = "open" | "resolved" | "snoozed";
 export type OrderStatus = "dalam_proses" | "siap_diambil" | "selesai";
 export type Priority = "high" | "normal" | "low";
@@ -107,14 +101,27 @@ export interface ManualShare {
 }
 
 export type AuditAction =
-  | "customer_created" | "customer_edited" | "customer_deleted"
-  | "customer_reassigned" | "phone_viewed_full" | "agent_role_changed"
-  | "agent_created" | "agent_deactivated" | "agent_deleted"
-  | "data_exported" | "export_requested" | "export_approved" | "export_denied"
-  | "manual_share_created" | "manual_share_revoked"
-  | "conversation_transferred" | "conversation_deleted_message"
-  | "login" | "settings_changed"
-  | "permission_override_changed" | "permission_overrides_reset";
+  | "customer_created"
+  | "customer_edited"
+  | "customer_deleted"
+  | "customer_reassigned"
+  | "phone_viewed_full"
+  | "agent_role_changed"
+  | "agent_created"
+  | "agent_deactivated"
+  | "agent_deleted"
+  | "data_exported"
+  | "export_requested"
+  | "export_approved"
+  | "export_denied"
+  | "manual_share_created"
+  | "manual_share_revoked"
+  | "conversation_transferred"
+  | "conversation_deleted_message"
+  | "login"
+  | "settings_changed"
+  | "permission_override_changed"
+  | "permission_overrides_reset";
 
 export interface AuditLogEntry {
   id: string;

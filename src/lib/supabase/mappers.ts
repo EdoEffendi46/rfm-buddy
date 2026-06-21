@@ -92,12 +92,7 @@ export function tagToRow(t: Tag) {
   return { id: t.id, name: t.name, color: t.color, scope: t.scope };
 }
 
-export function rowToTag(r: {
-  id: string;
-  name: string;
-  color: string;
-  scope: Tag["scope"];
-}): Tag {
+export function rowToTag(r: { id: string; name: string; color: string; scope: Tag["scope"] }): Tag {
   return { id: r.id, name: r.name, color: r.color, scope: r.scope };
 }
 
@@ -306,9 +301,7 @@ export function rowToExport(
     reviewedAt: r.resolved_at ?? undefined,
     reviewedByAgentId: r.resolved_by_agent_id ?? undefined,
     reviewNote: r.resolution_note ?? undefined,
-    reviewedByName: r.resolved_by_agent_id
-      ? agentNames.get(r.resolved_by_agent_id)
-      : undefined,
+    reviewedByName: r.resolved_by_agent_id ? agentNames.get(r.resolved_by_agent_id) : undefined,
   };
 }
 
@@ -343,7 +336,7 @@ export function rowToFieldRule(r: {
 
 export function assembleCustomers(
   rows: ReturnType<typeof customerToRow>[],
-  purchases: Purchase[][] ,
+  purchases: Purchase[][],
   shares: ManualShare[][],
 ): Customer[] {
   return rows.map((row, i) => ({
