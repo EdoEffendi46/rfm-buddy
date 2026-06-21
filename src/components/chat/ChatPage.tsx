@@ -6,7 +6,7 @@ import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
 import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
-import { canEditCustomer } from "@/lib/permissions";
+import { canEditCustomer, hasFlag } from "@/lib/permissions";
 import { useStore } from "@/lib/store";
 import { formatTime, formatRupiah, formatDate, relativeDay, relativeTime, minutesBetween } from "@/lib/format";
 import { Avatar } from "@/components/Avatar";
@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/select";
 import {
   Search, Send, Zap, Tag as TagIcon, Paperclip, MoreVertical, Clock,
-  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock, Moon, Pencil, Users,
+  CheckCheck, Check as CheckIcon, AlertTriangle, Crown, X, CalendarClock, Moon, Pencil, Users, Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
