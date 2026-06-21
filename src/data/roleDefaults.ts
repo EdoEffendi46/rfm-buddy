@@ -37,21 +37,21 @@ export const ALL_FLAGS: PermissionFlag[] = [
 ];
 
 function allFalse(): PermissionFlags {
-  const o = {} as PermissionFlags;
-  ALL_FLAGS.forEach((f) => { (o as Record<string, boolean>)[f] = false; });
-  return o;
+  const o: Record<string, boolean> = {};
+  ALL_FLAGS.forEach((f) => { o[f] = false; });
+  return o as unknown as PermissionFlags;
 }
 
 function allTrue(): PermissionFlags {
-  const o = {} as PermissionFlags;
-  ALL_FLAGS.forEach((f) => { (o as Record<string, boolean>)[f] = true; });
-  return o;
+  const o: Record<string, boolean> = {};
+  ALL_FLAGS.forEach((f) => { o[f] = true; });
+  return o as unknown as PermissionFlags;
 }
 
 function withFlags(base: PermissionFlags, flags: PermissionFlag[], value: boolean): PermissionFlags {
-  const o = { ...base };
-  flags.forEach((f) => { (o as Record<string, boolean>)[f] = value; });
-  return o;
+  const o: Record<string, boolean> = { ...(base as unknown as Record<string, boolean>) };
+  flags.forEach((f) => { o[f] = value; });
+  return o as unknown as PermissionFlags;
 }
 
 const CS_TRUE: PermissionFlag[] = [
