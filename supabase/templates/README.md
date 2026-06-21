@@ -29,7 +29,7 @@ Pastikan **URL Configuration** sudah benar:
 | **Confirm signup** | `Konfirmasi email ChatCRM` |
 | **Change email** | `Konfirmasi perubahan email ChatCRM` |
 | **Magic link** | `Link masuk ChatCRM` |
-| **Password changed** (Security) | `Password ChatCRM Anda diperbarui` |
+| **Password changed** (Security) | `Password ChatCRM Anda diperbarui` — hanya setelah **reset password** (`/reset-password`), bukan accept invite |
 
 ---
 

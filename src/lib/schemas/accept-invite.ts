@@ -14,6 +14,7 @@ export const acceptInviteFormSchema = z
 export const completeInviteSchema = z.object({
   accessToken: z.string().min(1),
   name: z.string().trim().min(2, "Nama minimal 2 karakter"),
+  password: z.string().min(8, "Password minimal 8 karakter"),
 });
 
 export type AcceptInviteFormInput = z.infer<typeof acceptInviteFormSchema>;

@@ -35,7 +35,7 @@ export const Route = createFileRoute("/accept-invite")({
 
 function AcceptInvitePage() {
   const router = useRouter();
-  const { setNewPassword, signOut, user } = useAuthContext();
+  const { signOut, user } = useAuthContext();
   const { ready, checking } = useAuthCallbackReady({ inviteOnly: true });
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -62,12 +62,11 @@ function AcceptInvitePage() {
       const { data: sessionData } = await client.auth.getSession();
       if (!sessionData.session) throw new Error("Sesi undangan tidak valid");
 
-      await setNewPassword(values.password);
-
       await completeInviteServerFn({
         data: {
           accessToken: sessionData.session.access_token,
           name: values.name.trim(),
+          password: values.password,
         },
       });
 

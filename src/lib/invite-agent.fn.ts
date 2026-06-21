@@ -237,6 +237,9 @@ export const completeInviteServerFn = createServerFn({ method: "POST" })
       .maybeSingle();
     if (agentErr) throw agentErr;
     if (!agent) throw new Error("Profil agent tidak ditemukan");
+    if (agent.invitation_status !== "pending") {
+      throw new Error("Undangan sudah diselesaikan. Silakan masuk.");
+    }
 
     const name = data.name.trim();
     const initials = initialsFromName(name);
@@ -251,13 +254,16 @@ export const completeInviteServerFn = createServerFn({ method: "POST" })
       .eq("id", agent.id);
     if (updateErr) throw updateErr;
 
-    await admin.auth.admin.updateUserById(userData.user.id, {
+    // Admin API — avoids Supabase "password changed" email (invite is first-time setup, not reset)
+    const { error: authUpdateErr } = await admin.auth.admin.updateUserById(userData.user.id, {
+      password: data.password,
       user_metadata: {
         ...userData.user.user_metadata,
         name,
         agent_id: agent.id,
       },
     });
+    if (authUpdateErr) throw authUpdateErr;
 
     return { agentId: agent.id, name };
   });
