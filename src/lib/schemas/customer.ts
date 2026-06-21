@@ -9,8 +9,8 @@ export const customerCreateSchema = z.object({
     .max(15, "Nomor HP terlalu panjang")
     .regex(/^[\d+\-\s()]+$/, "Format nomor HP tidak valid"),
   agentId: z.string().min(1, "Pilih CS"),
-  tagsInput: z.string().optional().default(""),
-  notes: z.string().optional().default(""),
+  tagsInput: z.string().default(""),
+  notes: z.string().default(""),
 });
 
 export type CustomerCreateInput = z.infer<typeof customerCreateSchema>;
