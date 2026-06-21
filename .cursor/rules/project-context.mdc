@@ -7,7 +7,7 @@ alwaysApply: true
 
 > **Cursor & Lovable:** Policy in root `AGENTS.md` (Lovable always reads it) + `.cursor/rules/` (Cursor). Keep both in sync when editing rules.
 
-**ChatCRM** — omnichannel inbox + CRM for laundry/salon businesses. Demo app; all data in `src/lib/store.tsx`.
+**ChatCRM** — omnichannel inbox + CRM fleksibel untuk bisnis apa saja. Demo app; all data in `src/lib/store.tsx`.
 
 ## Stack
 

@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Product
 
-ChatCRM serves **laundry & salon** businesses in Indonesia. Currency: **IDR** via `formatRupiah()`. Dates: Indonesian labels via `formatDate()`.
+ChatCRM is **vertical-agnostic** — cocok untuk bisnis apa saja yang punya customer, transaksi, dan tim CS (WhatsApp). Owner menyesuaikan nama layanan, kategori, tag, dan status order. Currency: **IDR** via `formatRupiah()`. Dates: Indonesian labels via `formatDate()`.
 
 ## RFM segments
 

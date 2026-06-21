@@ -89,7 +89,7 @@ Embody: **PM** (minimal scope), **BA** (RFM, cadence, audit terms), **Dev** (reu
 
 ## Project context
 
-**ChatCRM** — omnichannel inbox + CRM for Indonesian laundry/salon businesses. **MVP 1 = beli putus** (single tenant), **bukan SaaS** — see `mvp1-product.mdc`.
+**ChatCRM** — omnichannel inbox + CRM **fleksibel untuk bisnis apa saja** (owner menyesuaikan layanan, kategori, dan alur). **MVP 1 = beli putus** (single tenant), **bukan SaaS** — see `mvp1-product.mdc`.
 
 **Stack:** TanStack Start + Router, React 19, TypeScript, Tailwind 4, shadcn/ui, Recharts, Bun, Supabase (when configured).
 
@@ -99,6 +99,8 @@ Embody: **PM** (minimal scope), **BA** (RFM, cadence, audit terms), **Dev** (reu
 - **Owner invites** team via Settings → email → `/accept-invite` set password
 - **No self-signup** in app or DB trigger
 - First owner seeded at deploy; demo shortcuts on login for dev only
+
+**Production deploy (beli putus):** `db:migrate` only → client opens URL → `/setup` → owner login → invite team. Optional demo: `db:seed` + `db:seed-auth`.
 
 **Key paths:**
 

@@ -92,5 +92,6 @@ Yang Anda mau: **build berbeda per environment** (local vs Lovable host) dengan 
 | Lovable OK, local demo picker | Buat/isi `.env.local`, restart `bun dev` |
 | Login OK, invite gagal | `SUPABASE_SECRET_KEY` belum di env target tersebut |
 | Email invite redirect error | Redirect URL salah project (local vs Cloud beda dashboard) |
+| Email invite masih default English | Template belum di Dashboard → Authentication → Email Templates → **Invite user** (project yang sama dengan `VITE_SUPABASE_URL`) |
 
 Detail preview: [lovable-preview-setup.md](./lovable-preview-setup.md)

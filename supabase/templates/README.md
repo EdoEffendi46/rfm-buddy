@@ -2,11 +2,17 @@
 
 Template HTML bertema ChatCRM (`#25D366`, `#111B21`) dengan copy Bahasa Indonesia.
 
-## Cara pasang (Supabase Dashboard)
+> **Penting:** File di folder ini **hanya referensi di git**. Supabase **tidak** membacanya otomatis saat deploy / invite dari app. Email tetap default English (`You've been invited` dari `noreply@mail.app.supabase.io`) sampai template dipasang di **Dashboard project yang sama** dengan `VITE_SUPABASE_URL` app kamu.
 
-1. Buka **Authentication → Email Templates**
-2. Pilih template → paste **Subject** + **Body (HTML)** dari tabel bawah
-3. **Save**
+## Cara pasang (Supabase Dashboard) — wajib untuk hosted
+
+1. Buka project Supabase yang dipakai app (cek `VITE_SUPABASE_URL` di `.env.local` — ref project di subdomain URL).
+2. **Authentication → Email Templates**
+3. Pilih **Invite user** → paste **Subject** + **Body (HTML)** dari tabel bawah → **Save**
+4. Ulangi untuk Recovery / Confirm jika perlu
+5. Kirim undangan **baru** (email lama tidak berubah)
+
+**Dual backend:** kalau local pakai project pribadi dan Lovable pakai Cloud — template harus dipasang **di masing-masing project**, bukan cuma satu.
 
 Pastikan **URL Configuration** sudah benar:
 - Site URL: `http://localhost:8080` (dev) / domain production
@@ -52,7 +58,7 @@ Buka file → **Select All → Copy** → paste ke field **Message body** di Das
 
 ## Production (beli putus)
 
-Aktifkan **Custom SMTP** di Authentication → SMTP Settings agar email dari domain klien (mis. `noreply@laundryanda.com`).
+Aktifkan **Custom SMTP** di Authentication → SMTP Settings agar email dari domain klien (mis. `noreply@bisnisanda.com`).
 
 Matikan **email tracking** di provider SMTP agar link auth tidak rusak.
 

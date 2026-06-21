@@ -21,12 +21,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { formatRupiah } from "@/lib/format";
+import { categoryBadgeClass } from "@/lib/serviceCategory";
 import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
 import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
-import { formatDate } from "@/lib/format";
+import { formatDate, formatRupiah } from "@/lib/format";
 import type { Role, AuditAction, FieldVisibilityRule } from "@/types";
 
 export const Route = createFileRoute("/settings")({
@@ -373,7 +373,7 @@ function ServicesSection() {
   const { services, addService, updateService, deleteService } = useStore();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [category, setCategory] = useState<"laundry" | "salon">("laundry");
+  const [category, setCategory] = useState("Perawatan");
 
   return (
     <Card title="Layanan & Produk">
@@ -385,7 +385,7 @@ function ServicesSection() {
           {services.map((s) => (
             <tr key={s.id} className="border-t border-slate-100">
               <td className="py-2">{s.name}</td>
-              <td><span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase", s.category === "laundry" ? "bg-sky-100 text-sky-700" : "bg-pink-100 text-pink-700")}>{s.category}</span></td>
+              <td><span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", categoryBadgeClass(s.category))}>{s.category}</span></td>
               <td className="text-right">
                 <Input
                   type="number"
@@ -411,23 +411,27 @@ function ServicesSection() {
           <label className="text-xs font-medium">Nama Layanan</label>
           <Input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
-        <div className="w-32">
+        <div className="w-36">
           <label className="text-xs font-medium">Kategori</label>
-          <Select value={category} onValueChange={(v) => setCategory(v as any)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="laundry">Laundry</SelectItem>
-              <SelectItem value="salon">Salon</SelectItem>
-            </SelectContent>
-          </Select>
+          <Input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Mis. Perawatan"
+          />
         </div>
         <div className="w-32">
           <label className="text-xs font-medium">Harga</label>
           <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
         </div>
         <Button
-          disabled={!name.trim() || !price}
-          onClick={() => { addService({ name, category, defaultPrice: Number(price) }); setName(""); setPrice(""); toast.success("Layanan ditambahkan"); }}
+          disabled={!name.trim() || !price || !category.trim()}
+          onClick={() => {
+            if (!category.trim()) return;
+            addService({ name, category: category.trim(), defaultPrice: Number(price) });
+            setName("");
+            setPrice("");
+            toast.success("Layanan ditambahkan");
+          }}
           className="bg-[#25D366] text-white hover:bg-[#128C7E]"
         >
           <Plus className="h-4 w-4" /> Tambah
@@ -472,6 +476,10 @@ function AboutSection() {
         </div>
       </div>
       <p className="mt-4 text-sm text-slate-600">
+        Inbox WhatsApp + CRM dengan segmentasi RFM. Fleksibel untuk bisnis apa saja — sesuaikan layanan,
+        kategori, dan alur di Pengaturan.
+      </p>
+      <p className="mt-2 text-xs text-slate-500">
         Dibangun dengan React + TypeScript + Tailwind CSS + shadcn/ui.
       </p>
       <div className="mt-3 flex items-start gap-2 rounded-lg bg-emerald-50 p-3 text-xs text-emerald-800">
@@ -519,7 +527,7 @@ function WorkflowSection() {
           </div>
         ))}
       </div>
-      <p className="mt-3 text-xs text-slate-500">Tahapan order standar laundry & salon. Hubungi Owner untuk menambah status custom.</p>
+      <p className="mt-3 text-xs text-slate-500">Tahapan order default. Owner bisa menyesuaikan alur sesuai jenis bisnis.</p>
     </Card>
   );
 }

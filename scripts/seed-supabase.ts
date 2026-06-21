@@ -40,5 +40,18 @@ await seedAppSnapshot(client, {
   fieldRules: DEFAULT_FIELD_RULES,
 });
 
+const { error: settingsErr } = await client.from("instance_settings").upsert({
+  id: 1,
+  business_name: "ChatCRM Demo",
+  setup_completed_at: new Date().toISOString(),
+});
+
+if (settingsErr && settingsErr.code !== "42P01") {
+  console.warn(`  ⚠ instance_settings: ${settingsErr.message}`);
+} else if (!settingsErr) {
+  console.log("  ✓ instance_settings marked setup complete (demo mode)");
+}
+
 const { count } = await client.from("customers").select("*", { count: "exact", head: true });
-console.log(`✓ Seed complete — ${count ?? 0} customers in database`);
+console.log(`\n✓ Seed complete — ${count ?? 0} customers in database`);
+console.log("  Next: bun run db:seed-auth  (link demo login accounts)");

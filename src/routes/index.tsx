@@ -34,7 +34,7 @@ export const Route = createFileRoute("/")({
       { title: "Masuk — ChatCRM" },
       { name: "description", content: "Masuk ke ChatCRM untuk kelola inbox WA dan customer." },
       { property: "og:title", content: "Masuk — ChatCRM" },
-      { property: "og:description", content: "Inbox & CRM untuk laundry & salon." },
+      { property: "og:description", content: "Inbox & CRM fleksibel untuk bisnis apa saja." },
     ],
   }),
   component: LoginPage,

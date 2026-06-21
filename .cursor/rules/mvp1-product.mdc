@@ -18,14 +18,16 @@ alwaysApply: true
 
 ## Auth & onboarding (MVP 1)
 
-1. **Login only** — email + password (Supabase Auth when configured).
-2. **First owner** — seeded at deploy (`hartono@chatcrm.demo` or setup script); bukan self-register.
-3. **CS / Supervisor / Owner tambahan** — hanya **Owner** yang mengundang:
+1. **First visit (fresh deploy)** — `/setup` wizard (WordPress-style): nama bisnis, owner, email, password. One-time only; blocked after `instance_settings.setup_completed_at` is set.
+2. **Login** — email + password (Supabase Auth when configured).
+3. **Existing / dev installs** — migration 005 backfills setup complete if owner already linked; demo uses `db:seed` + `db:seed-auth` (optional).
+4. **CS / Supervisor / Owner tambahan** — hanya **Owner** yang mengundang:
    - Settings → Manajemen Agent → **Undang via email**
    - Supabase `inviteUserByEmail` → email link → halaman set password (`/accept-invite`)
    - Trigger DB link `auth.users` ke baris `agents` via `user_metadata.agent_id`
-4. **Forgot password** — tetap ada untuk semua role.
-5. **Demo shortcuts** di login — hanya dev/demo; label jujur.
+5. **Forgot password** — tetap ada untuk semua role.
+6. **Demo shortcuts** di login — hanya dev/demo; label jujur.
+7. **Optional `SETUP_TOKEN`** env — wajib di form setup jika diset (production deploy).
 
 ## Role rules (unchanged)
 
@@ -40,11 +42,12 @@ Invite permission: **`role === 'owner'` only** — not `manage_agents` alone.
 - Login footer: *"Belum punya akun? Hubungi owner bisnis Anda."* — **not** "Daftar sekarang"
 - Invite success: *"Undangan dikirim ke {email}"*
 - Accept invite page: *"Atur password untuk akun ChatCRM Anda"*
+- Setup page: *"Setup awal ChatCRM"* / *"Isi data bisnis dan akun owner"*
 
 ## Technical constraints
 
 - Invite **must** use server function + `SUPABASE_SECRET_KEY` (admin API) — never expose secret in client.
-- No `signUp` / public registration in app code.
+- No `signUp` / public registration in app code — **except** one-time `/setup` server fn on fresh instance.
 - DB trigger `handle_new_user`: link via `agent_id` metadata only — **do not** auto-create agent on orphan signup.
 - Agent row created **before** invite (status `pending`); becomes `active` after user sets password.
 

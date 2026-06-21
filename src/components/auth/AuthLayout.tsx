@@ -4,6 +4,7 @@ import { Check, MessageCircle } from "lucide-react";
 const FEATURES = [
   "Inbox WA terpusat untuk seluruh tim CS",
   "Segmentasi RFM otomatis dari data transaksi",
+  "Layanan & kategori disesuaikan per bisnis",
   "Proteksi data customer dari CS",
 ];
 
@@ -30,8 +31,8 @@ export function AuthLayout({
             Kelola customer & chat dalam satu platform
           </h1>
           <p className="mt-4 text-slate-400">
-            Inbox WhatsApp, segmentasi RFM, dan proteksi data — semua dalam satu workspace untuk tim
-            CS Anda.
+            Inbox WhatsApp, segmentasi RFM, dan proteksi data — fleksibel untuk bisnis apa saja, dalam satu
+            workspace untuk tim CS Anda.
           </p>
           <ul className="mt-8 space-y-3">
             {FEATURES.map((f) => (

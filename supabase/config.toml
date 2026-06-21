@@ -1,5 +1,9 @@
 # Supabase CLI config — dipakai `supabase db push` (lokal & GitHub Actions)
 # Project ref asli di-set saat `supabase link` atau lewat secret CI.
+#
+# Email templates: file HTML di supabase/templates/ TIDAK otomatis ke hosted project.
+# Hosted → paste manual di Dashboard → Authentication → Email Templates (lihat templates/README.md).
+# Local `supabase start` → blok [auth.email.template.*] di bawah.
 
 project_id = "rfm-buddy"
 
@@ -10,3 +14,24 @@ shadow_port = 54320
 
 [db.migrations]
 enabled = true
+
+# --- Auth email templates (local Supabase CLI only) ---
+[auth.email.template.invite]
+subject = "Undangan bergabung ke ChatCRM"
+content_path = "./supabase/templates/invite.html"
+
+[auth.email.template.recovery]
+subject = "Reset password ChatCRM"
+content_path = "./supabase/templates/recovery.html"
+
+[auth.email.template.confirmation]
+subject = "Konfirmasi email ChatCRM"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.email_change]
+subject = "Konfirmasi perubahan email ChatCRM"
+content_path = "./supabase/templates/confirmation.html"
+
+[auth.email.template.magic_link]
+subject = "Link masuk ChatCRM"
+content_path = "./supabase/templates/recovery.html"

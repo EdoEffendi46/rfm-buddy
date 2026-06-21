@@ -1,6 +1,6 @@
 # ChatCRM
 
-An omnichannel inbox and CRM demo for laundry and salon businesses. ChatCRM combines a WhatsApp-style conversation workspace with customer segmentation (RFM), order cadence predictions, and a Salesforce-inspired permission model — all in a single web app.
+An omnichannel inbox and CRM **flexible for any business** — laundry, salon, retail, F&B, clinic, and more. Owner configures services, categories, and workflow. ChatCRM combines a WhatsApp-style conversation workspace with customer segmentation (RFM), order cadence predictions, and a Salesforce-inspired permission model in a single web app.
 
 Built with **TanStack Start**, **React 19**, and **TypeScript**. Data is stored in-memory for demo purposes; no external database is required.
 
@@ -167,6 +167,30 @@ This is a **frontend demo** with seeded data:
 
 ---
 
+## Production deploy (beli putus)
+
+1. Create Supabase project for the client.
+2. Set env vars (`VITE_SUPABASE_*`, `SUPABASE_SECRET_KEY`; optional `SETUP_TOKEN`).
+3. Run migrations: `bun run db:migrate`
+4. Deploy the app (Lovable / your host).
+5. Client opens the URL → redirected to **`/setup`** → fills business name + owner account.
+6. Owner invites CS/supervisor from Settings.
+
+**Dev / demo** (optional): `bun run db:demo` for pre-filled demo users.
+
+### Local: test both modes
+
+Same `.env.local` + Supabase project — switch with scripts:
+
+| Mode | Command | Then in browser |
+|------|---------|-----------------|
+| **Fresh setup** (like new client) | `bun run db:reset-fresh` | Incognito → `/setup` wizard |
+| **Demo seeded** | `bun run db:demo` | Login `hartono@chatcrm.demo` / `Demo1234!` |
+
+Requires migration 005 applied (`bun run db:migrate`). After reset, sign out or use incognito so old session tidak mengganggu.
+
+---
+
 ## Scripts
 
 | Command | Description |
@@ -176,7 +200,11 @@ This is a **frontend demo** with seeded data:
 | `bun run build:dev` | Development-mode build |
 | `bun run preview` | Preview production build locally |
 | `bun run lint` | Run ESLint |
-| `bun run format` | Format code with Prettier |
+| `bun run db:migrate` | Apply SQL migrations |
+| `bun run db:demo` | Seed demo data + auth users (dev) |
+| `bun run db:reset-fresh` | Wipe data → test `/setup` wizard |
+| `bun run db:seed` | Seed demo data only |
+| `bun run db:seed-auth` | Link demo auth users (after db:seed) |
 
 ---
 

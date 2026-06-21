@@ -27,7 +27,7 @@ export interface Service {
   id: string;
   name: string;
   defaultPrice: number;
-  category: "laundry" | "salon";
+  category: string;
 }
 
 export interface Purchase {
