@@ -29,6 +29,9 @@ import { useAuth } from "@/hooks/useAuth";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 
 export const Route = createFileRoute("/")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    invite: typeof search.invite === "string" ? search.invite : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Masuk — ChatCRM" },
@@ -54,17 +57,26 @@ function LoginPage() {
     return <DemoPickerLogin onLogin={demoLogin} />;
   }
 
-  return <EmailLoginForm signIn={auth.signIn} />;
+  return <EmailLoginForm signIn={auth.signIn} inviteDone={Route.useSearch().invite === "done"} />;
 }
 
 function EmailLoginForm({
   signIn,
+  inviteDone,
 }: {
   signIn: (email: string, password: string, rememberMe: boolean) => Promise<void>;
+  inviteDone?: boolean;
 }) {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (inviteDone) {
+      toast.success("Akun aktif. Silakan masuk dengan email dan password Anda.");
+      router.navigate({ to: "/", search: {}, replace: true });
+    }
+  }, [inviteDone, router]);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),

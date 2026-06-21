@@ -24,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { categoryBadgeClass } from "@/lib/serviceCategory";
 import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
 import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
+import { PendingInviteActions } from "@/components/settings/PendingInviteActions";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
 import { formatDate, formatRupiah } from "@/lib/format";
@@ -163,7 +164,7 @@ function ProfileSection() {
 
 function AgentsSection() {
   const { role } = useAuth();
-  const { agents, customers, addAgent, registerInvitedAgent, changeAgentRole, deleteAgent } = useStore();
+  const { agents, customers, addAgent, registerInvitedAgent, changeAgentRole, deleteAgent, updateAgent } = useStore();
   const [name, setName] = useState("");
   const [newRole, setNewRole] = useState<Role>("cs");
   const [color, setColor] = useState("#0EA5E9");
@@ -220,10 +221,29 @@ function AgentsSection() {
                 )}
               </td>
               <td className="text-right">
-                {canDelete && a.role !== "owner" && (
-                  <Button size="sm" variant="ghost" onClick={() => { if (confirm(`Hapus akun agent ${a.name}?`)) { deleteAgent(a.id); toast.success("Agent dihapus"); } }}>
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
+                {usesAuth && a.invitationStatus === "pending" && canInvite ? (
+                  <PendingInviteActions
+                    agent={a}
+                    onResent={(id, invitationSentAt) => updateAgent(id, { invitationSentAt })}
+                    onCancelled={(id) => deleteAgent(id)}
+                  />
+                ) : (
+                  canDelete &&
+                  a.role !== "owner" &&
+                  a.invitationStatus !== "pending" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm(`Hapus akun agent ${a.name}?`)) {
+                          deleteAgent(a.id);
+                          toast.success("Agent dihapus");
+                        }
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4 text-red-500" />
+                    </Button>
+                  )
                 )}
               </td>
             </tr>

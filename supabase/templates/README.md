@@ -44,6 +44,8 @@ Pastikan **URL Configuration** sudah benar:
 
 Buka file → **Select All → Copy** → paste ke field **Message body** di Dashboard.
 
+Desain: header gelap + logo **CC**, tombol hijau **full width**, tanpa emoji atau simbol panah di teks tombol.
+
 ---
 
 ## Variabel Supabase (sudah dipakai)

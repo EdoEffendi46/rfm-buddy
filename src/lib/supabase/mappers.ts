@@ -34,6 +34,7 @@ export function agentToRow(a: Agent) {
     is_online: a.isOnline,
     ...(a.email != null ? { email: a.email } : {}),
     ...(a.invitationStatus != null ? { invitation_status: a.invitationStatus } : {}),
+    ...(a.invitationSentAt != null ? { invitation_sent_at: a.invitationSentAt } : {}),
   };
 }
 
@@ -46,6 +47,7 @@ export function rowToAgent(r: {
   is_online: boolean;
   email?: string | null;
   invitation_status?: "pending" | "active" | null;
+  invitation_sent_at?: string | null;
 }): Agent {
   return {
     id: r.id,
@@ -56,6 +58,7 @@ export function rowToAgent(r: {
     isOnline: r.is_online,
     email: r.email ?? null,
     invitationStatus: r.invitation_status ?? "active",
+    invitationSentAt: r.invitation_sent_at ?? null,
   };
 }
 

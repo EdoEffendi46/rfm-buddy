@@ -16,8 +16,15 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { authErrorMessage, useAuthContext } from "@/lib/auth/AuthProvider";
-import { resetPasswordSchema, type ResetPasswordInput } from "@/lib/schemas/auth";
+import { completeInviteServerFn } from "@/lib/invite-agent.fn";
+import {
+  acceptInviteFormSchema,
+  type AcceptInviteFormInput,
+} from "@/lib/schemas/accept-invite";
 import { isPasswordSetupSession } from "@/lib/supabase/auth";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { ROLE_LABELS } from "@/lib/permissions";
+import type { Role } from "@/types";
 
 export const Route = createFileRoute("/accept-invite")({
   head: () => ({
@@ -28,27 +35,49 @@ export const Route = createFileRoute("/accept-invite")({
 
 function AcceptInvitePage() {
   const router = useRouter();
-  const { setNewPassword, isAuthLoading } = useAuthContext();
+  const { setNewPassword, signOut, isAuthLoading, user } = useAuthContext();
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [ready, setReady] = useState(false);
+
+  const inviteRole = (user?.user_metadata?.role as Role | undefined) ?? undefined;
+  const defaultName = (user?.user_metadata?.name as string | undefined) ?? "";
 
   useEffect(() => {
     if (isAuthLoading) return;
     setReady(isPasswordSetupSession() || window.location.hash.includes("access_token"));
   }, [isAuthLoading]);
 
-  const form = useForm<ResetPasswordInput>({
-    resolver: zodResolver(resetPasswordSchema),
-    defaultValues: { password: "", confirmPassword: "" },
+  const form = useForm<AcceptInviteFormInput>({
+    resolver: zodResolver(acceptInviteFormSchema),
+    defaultValues: { name: "", password: "", confirmPassword: "" },
   });
 
-  const onSubmit = async (values: ResetPasswordInput) => {
+  useEffect(() => {
+    if (defaultName) {
+      form.setValue("name", defaultName, { shouldValidate: true });
+    }
+  }, [defaultName, form]);
+
+  const onSubmit = async (values: AcceptInviteFormInput) => {
     setSubmitting(true);
     try {
+      const client = getSupabaseBrowserClient();
+      if (!client) throw new Error("Supabase belum dikonfigurasi");
+      const { data: sessionData } = await client.auth.getSession();
+      if (!sessionData.session) throw new Error("Sesi undangan tidak valid");
+
       await setNewPassword(values.password);
-      toast.success("Password berhasil dibuat. Selamat datang di ChatCRM!");
-      router.navigate({ to: "/dashboard" });
+
+      await completeInviteServerFn({
+        data: {
+          accessToken: sessionData.session.access_token,
+          name: values.name.trim(),
+        },
+      });
+
+      await signOut();
+      router.navigate({ to: "/", search: { invite: "done" } });
     } catch (err) {
       toast.error(authErrorMessage(err));
     } finally {
@@ -85,17 +114,38 @@ function AcceptInvitePage() {
 
   return (
     <AuthLayout
-      title="Atur password untuk akun ChatCRM Anda"
-      subtitle="Anda diundang ke workspace ini. Buat password untuk mulai menggunakan ChatCRM."
+      title="Lengkapi profil Anda"
+      subtitle="Anda diundang ke workspace ini. Atur nama tampilan dan password untuk mengaktifkan akun."
     >
+      {inviteRole && (
+        <div className="mb-4 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+          Role:{" "}
+          <span className="font-semibold text-slate-900">{ROLE_LABELS[inviteRole]}</span>
+        </div>
+      )}
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Nama tampilan</FormLabel>
+                <FormControl>
+                  <Input placeholder="Nama lengkap" autoComplete="name" className="h-11" {...field} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Password baru</FormLabel>
+                <FormLabel>Password</FormLabel>
                 <FormControl>
                   <div className="relative">
                     <Input

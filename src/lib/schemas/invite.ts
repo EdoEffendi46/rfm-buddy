@@ -12,5 +12,12 @@ export const inviteAgentSchema = inviteAgentFormSchema.extend({
   appOrigin: z.string().url("Origin tidak valid"),
 });
 
+export const inviteActionSchema = z.object({
+  accessToken: z.string().min(1),
+  agentId: z.string().min(1),
+  appOrigin: z.string().url("Origin tidak valid"),
+});
+
 export type InviteAgentFormInput = z.infer<typeof inviteAgentFormSchema>;
 export type InviteAgentInput = z.infer<typeof inviteAgentSchema>;
+export type InviteActionInput = z.infer<typeof inviteActionSchema>;

@@ -47,12 +47,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
       const agent = await resolveAgentForUser(nextUser);
-      if (agent) {
-        setAgentSession(agent.id);
-        if (auditLogin) logAuthLogin(agent);
-      } else {
+      if (!agent) {
         clearAgentSession();
+        return;
       }
+      if (agent.invitationStatus === "pending") {
+        clearAgentSession();
+        return;
+      }
+      setAgentSession(agent.id);
+      if (auditLogin) logAuthLogin(agent);
     },
     [clearAgentSession, logAuthLogin, setAgentSession],
   );
@@ -107,6 +111,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!agent) {
         await signOutAuth();
         throw new Error("Profil agent tidak ditemukan. Hubungi owner bisnis.");
+      }
+      if (agent.invitationStatus === "pending") {
+        await signOutAuth();
+        throw new Error("Undangan belum diselesaikan. Buka link di email untuk mengatur profil dan password.");
       }
       setSession(nextSession);
       setUser(nextUser);

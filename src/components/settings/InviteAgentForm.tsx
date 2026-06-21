@@ -75,6 +75,7 @@ export function InviteAgentForm({
         isOnline: false,
         email: result.email,
         invitationStatus: "pending",
+        invitationSentAt: result.invitationSentAt,
       });
       toast.success(`Undangan dikirim ke ${result.email}`);
       form.reset({ name: "", email: "", role: "cs", color: "#0EA5E9" });

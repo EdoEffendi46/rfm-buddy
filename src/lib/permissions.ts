@@ -44,6 +44,12 @@ export function isTeamView(role: Role | undefined | null): boolean {
   return hasPermission(role, "view_team_dashboard");
 }
 
+export const ROLE_LABELS: Record<Role, string> = {
+  cs: "Customer Service",
+  supervisor: "Supervisor",
+  owner: "Owner",
+};
+
 export const ROLE_DISPLAY: Record<
   Role,
   { subtitle: string; badgeClass: string; dashboardSubtitle: string }
