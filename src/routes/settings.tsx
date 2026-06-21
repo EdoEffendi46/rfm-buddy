@@ -17,12 +17,13 @@ import {
 import {
   Lock, Plus, Trash2, Edit2, Check, X, Info, ShieldAlert, ClipboardList, ShieldCheck, History,
   CreditCard, Download, FileDown, Search as SearchIcon, ChevronDown, ChevronRight, User, Users,
-  Zap, Tag, Wrench, RefreshCw, Timer, Clock, CheckCircle, type LucideIcon,
+  Zap, Tag, Wrench, RefreshCw, Timer, Clock, CheckCircle, KeyRound, type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { categoryBadgeClass } from "@/lib/serviceCategory";
-import { hasPermission, canViewAuditEntry, type Permission } from "@/lib/permissions";
+import { hasPermission, canViewAuditEntry, hasFlag, type Permission } from "@/lib/permissions";
+import { PermissionManager } from "@/components/settings/PermissionManager";
 import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
 import { PendingInviteActions } from "@/components/settings/PendingInviteActions";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
