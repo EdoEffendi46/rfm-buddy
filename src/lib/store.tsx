@@ -107,6 +107,14 @@ interface StoreState {
   registerInvitedAgent: (agent: Agent) => void;
   changeAgentRole: (id: string, newRole: Role) => void;
   deleteAgent: (id: string) => void;
+
+  // Granular permission overrides
+  setAgentPermissionOverrides: (
+    id: string,
+    overrides: Partial<import("@/types").PermissionFlags>,
+    summary?: string,
+  ) => void;
+  resetAgentPermissionOverrides: (id: string) => void;
 }
 
 const StoreContext = createContext<StoreState | null>(null);
