@@ -20,7 +20,7 @@ alwaysApply: true
 
 1. **First visit (fresh deploy)** — `/setup` wizard (WordPress-style): nama bisnis, owner, email, password. One-time only; blocked after `instance_settings.setup_completed_at` is set.
 2. **Login** — email + password (Supabase Auth when configured).
-3. **Existing / dev installs** — migration 005 backfills setup complete if owner already linked; demo uses `db:seed` + `db:seed-auth` (optional).
+3. **Existing / dev installs** — migration 005 backfills setup complete if owner already linked; demo uses `db:demo` (optional).
 4. **CS / Supervisor / Owner tambahan** — hanya **Owner** yang mengundang:
    - Settings → Manajemen Agent → **Undang via email**
    - Supabase `inviteUserByEmail` → email link → halaman set password (`/accept-invite`)

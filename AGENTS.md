@@ -100,7 +100,7 @@ Embody: **PM** (minimal scope), **BA** (RFM, cadence, audit terms), **Dev** (reu
 - **No self-signup** in app or DB trigger
 - First owner seeded at deploy; demo shortcuts on login for dev only
 
-**Production deploy (beli putus):** `db:migrate` only → client opens URL → `/setup` → owner login → invite team. Optional demo: `db:seed` + `db:seed-auth`.
+**Production deploy (beli putus):** `db:migrate` only → client opens URL → `/setup` → owner login → invite team. Dev demo: `db:demo`.
 
 **Key paths:**
 

@@ -115,6 +115,8 @@ export const inviteAgentServerFn = createServerFn({ method: "POST" })
     if (insertErr) throw insertErr;
 
     try {
+      // Orphan auth user (cancelled invite, failed rollback) — not removed by db:seed
+      await deleteAuthUserIfExists(admin, null, email);
       await sendInviteEmail(admin, {
         email,
         agentId,

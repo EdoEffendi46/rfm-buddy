@@ -6,7 +6,7 @@ Satu codebase, **dua Supabase project**, dipilih lewat **environment variables**
 |---|-------------------|---------------------|
 | Backend | Supabase **pribadi** (`btdoqpowkfbssfdyygpm`) | **Lovable Cloud** (project terpisah) |
 | Env file | `.env.local` (gitignored) | **Cloud → Secrets** (auto dari connector) |
-| Migration | `bun run db:migrate` / SQL Editor pribadi | Lovable Cloud tools / port SQL dari repo |
+| Migration | `bun db:migrate` / SQL Editor pribadi | Lovable Cloud tools / port SQL dari repo |
 | Auth URLs | `localhost:8080` di dashboard **pribadi** | `*.lovable.app` di **Cloud** (Lovable atur) |
 | Secret key | `SUPABASE_SECRET_KEY` di `.env.local` | `SUPABASE_SECRET_KEY` di Cloud Secrets |
 
@@ -27,8 +27,8 @@ cp .env.example .env.local
 
 ```bash
 bun dev                    # Vite baca .env.local otomatis
-bun run db:migrate         # scripts baca .env.local
-bun run db:seed-auth
+bun db:migrate
+bun db:demo
 ```
 
 3. **Supabase pribadi** → Authentication → URL Configuration:

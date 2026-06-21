@@ -223,7 +223,7 @@ export async function deleteFieldRuleRow(client: SupabaseClient, id: string) {
   throwIf((await client.from("field_visibility_rules").delete().eq("id", id)).error);
 }
 
-export async function seedAppSnapshot(client: SupabaseClient, snapshot: AppSnapshot) {
+export async function wipeAppData(client: SupabaseClient) {
   throwIf((await client.from("messages").delete().neq("id", "")).error);
   throwIf((await client.from("manual_shares").delete().neq("id", "")).error);
   throwIf((await client.from("purchases").delete().neq("id", "")).error);
@@ -235,46 +235,82 @@ export async function seedAppSnapshot(client: SupabaseClient, snapshot: AppSnaps
   throwIf((await client.from("services").delete().neq("id", "")).error);
   throwIf((await client.from("templates").delete().neq("id", "")).error);
   throwIf((await client.from("tags").delete().neq("id", "")).error);
+}
 
+/** Insert or update demo rows by id — does not delete existing data. */
+export async function seedAppSnapshot(client: SupabaseClient, snapshot: AppSnapshot) {
   if (snapshot.agents.length) {
-    throwIf((await client.from("agents").insert(snapshot.agents.map(agentToRow))).error);
+    throwIf(
+      (await client.from("agents").upsert(snapshot.agents.map(agentToRow), { onConflict: "id" })).error,
+    );
   }
   if (snapshot.services.length) {
-    throwIf((await client.from("services").insert(snapshot.services.map(serviceToRow))).error);
+    throwIf(
+      (await client.from("services").upsert(snapshot.services.map(serviceToRow), { onConflict: "id" }))
+        .error,
+    );
   }
   if (snapshot.templates.length) {
-    throwIf((await client.from("templates").insert(snapshot.templates.map(templateToRow))).error);
+    throwIf(
+      (await client.from("templates").upsert(snapshot.templates.map(templateToRow), { onConflict: "id" }))
+        .error,
+    );
   }
   if (snapshot.tags.length) {
-    throwIf((await client.from("tags").insert(snapshot.tags.map(tagToRow))).error);
+    throwIf((await client.from("tags").upsert(snapshot.tags.map(tagToRow), { onConflict: "id" })).error);
   }
   if (snapshot.customers.length) {
     throwIf(
-      (await client.from("customers").insert(snapshot.customers.map((c) => customerToRow(c)))).error,
+      (
+        await client.from("customers").upsert(
+          snapshot.customers.map((c) => customerToRow(c)),
+          { onConflict: "id" },
+        )
+      ).error,
     );
     const allPurchases = snapshot.customers.flatMap((c) =>
       c.purchases.map((p) => purchaseToRow(p, c.id)),
     );
     if (allPurchases.length) {
-      throwIf((await client.from("purchases").insert(allPurchases)).error);
+      throwIf(
+        (await client.from("purchases").upsert(allPurchases, { onConflict: "id" })).error,
+      );
     }
     const allShares = snapshot.customers.flatMap((c) => (c.manualShares ?? []).map(shareToRow));
     if (allShares.length) {
-      throwIf((await client.from("manual_shares").insert(allShares)).error);
+      throwIf(
+        (await client.from("manual_shares").upsert(allShares, { onConflict: "id" })).error,
+      );
     }
   }
   if (snapshot.messages.length) {
-    throwIf((await client.from("messages").insert(snapshot.messages.map(messageToRow))).error);
+    throwIf(
+      (await client.from("messages").upsert(snapshot.messages.map(messageToRow), { onConflict: "id" }))
+        .error,
+    );
   }
   if (snapshot.auditLog.length) {
-    throwIf((await client.from("audit_log").insert(snapshot.auditLog.map(auditToRow))).error);
+    throwIf(
+      (await client.from("audit_log").upsert(snapshot.auditLog.map(auditToRow), { onConflict: "id" }))
+        .error,
+    );
   }
   if (snapshot.exportRequests.length) {
-    throwIf((await client.from("export_requests").insert(snapshot.exportRequests.map(exportToRow))).error);
+    throwIf(
+      (
+        await client.from("export_requests").upsert(snapshot.exportRequests.map(exportToRow), {
+          onConflict: "id",
+        })
+      ).error,
+    );
   }
   if (snapshot.fieldRules.length) {
     throwIf(
-      (await client.from("field_visibility_rules").insert(snapshot.fieldRules.map(fieldRuleToRow))).error,
+      (
+        await client.from("field_visibility_rules").upsert(snapshot.fieldRules.map(fieldRuleToRow), {
+          onConflict: "id",
+        })
+      ).error,
     );
   }
 }

@@ -170,24 +170,31 @@ This is a **frontend demo** with seeded data:
 ## Production deploy (beli putus)
 
 1. Create Supabase project for the client.
-2. Set env vars (`VITE_SUPABASE_*`, `SUPABASE_SECRET_KEY`; optional `SETUP_TOKEN`).
-3. Run migrations: `bun run db:migrate`
+2. Set env vars (`VITE_SUPABASE_*`, `SUPABASE_SECRET_KEY`, `APP_ENV=production`; optional `SETUP_TOKEN`).
+3. Run migrations: `bun db:migrate`
 4. Deploy the app (Lovable / your host).
 5. Client opens the URL → redirected to **`/setup`** → fills business name + owner account.
 6. Owner invites CS/supervisor from Settings.
 
-**Dev / demo** (optional): `bun run db:demo` for pre-filled demo users.
+**Dev / demo** (optional): `bun db:demo`
 
 ### Local: test both modes
 
-Same `.env.local` + Supabase project — switch with scripts:
+| Mode | Command | Browser |
+|------|---------|---------|
+| **Pending migrations** | `bun db:migrate` | — |
+| **Fresh empty** | `bun db:migrate:fresh` | Incognito → `/setup` |
+| **Fresh + defaults** | `bun db:migrate:fresh --seed` | `/setup` (catalogs pre-filled) |
+| **Fresh + demo** | `bun db:demo` | `hartono@chatcrm.demo` / `Demo1234!` |
 
-| Mode | Command | Then in browser |
-|------|---------|-----------------|
-| **Fresh setup** (like new client) | `bun run db:reset-fresh` | Incognito → `/setup` wizard |
-| **Demo seeded** | `bun run db:demo` | Login `hartono@chatcrm.demo` / `Demo1234!` |
+**Non-destructive upsert:**
 
-Requires migration 005 applied (`bun run db:migrate`). After reset, sign out or use incognito so old session tidak mengganggu.
+| Command | Effect |
+|---------|--------|
+| `bun db:seed` | Upsert catalogs |
+| `bun db:seed --demo` | Upsert demo data + auth |
+
+Flags langsung setelah command — **tanpa** `--` pemisah: `bun db:migrate:fresh --seed --demo`
 
 ---
 
@@ -200,11 +207,13 @@ Requires migration 005 applied (`bun run db:migrate`). After reset, sign out or 
 | `bun run build:dev` | Development-mode build |
 | `bun run preview` | Preview production build locally |
 | `bun run lint` | Run ESLint |
-| `bun run db:migrate` | Apply SQL migrations |
-| `bun run db:demo` | Seed demo data + auth users (dev) |
-| `bun run db:reset-fresh` | Wipe data → test `/setup` wizard |
-| `bun run db:seed` | Seed demo data only |
-| `bun run db:seed-auth` | Link demo auth users (after db:seed) |
+| `bun db:migrate` | Apply pending SQL migrations |
+| `bun db:migrate:fresh` | Drop schema + re-run all migrations + clear auth |
+| `bun db:migrate:fresh --seed` | Fresh + base catalogs → `/setup` |
+| `bun db:migrate:fresh --seed --demo` | Fresh + full demo (local dev only) |
+| `bun db:seed --demo` | Upsert demo data + auth (non-destructive) |
+
+**Production guard:** set `APP_ENV=production` on client deploys. `db:migrate:fresh` is blocked unless `--force` is passed; `--demo` is never allowed in production.
 
 ---
 

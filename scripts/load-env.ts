@@ -25,6 +25,16 @@ export function loadEnvFile(): Record<string, string> {
   const localPath = resolve(root, ".env.local");
   if (existsSync(localPath)) Object.assign(out, parseEnvFile(localPath));
 
+  // Shell / CI overrides file (e.g. APP_ENV=production)
+  for (const key of Object.keys(out)) {
+    const fromShell = process.env[key];
+    if (fromShell !== undefined && fromShell !== "") out[key] = fromShell;
+  }
+  for (const key of ["APP_ENV", "NODE_ENV"] as const) {
+    const fromShell = process.env[key];
+    if (fromShell) out[key] = fromShell;
+  }
+
   if (!Object.keys(out).length) {
     console.error("❌ No .env or .env.local found");
     process.exit(1);

@@ -1,6 +1,6 @@
 import type { Role } from "@/types";
 
-/** Demo credentials — seeded via `bun run db:seed` */
+/** Demo credentials — `bun db:seed --demo` or `bun db:demo` */
 export const DEMO_PASSWORD = "Demo1234!";
 
 export interface DemoAccount {

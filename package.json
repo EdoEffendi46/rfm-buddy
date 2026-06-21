@@ -11,11 +11,13 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "db:test": "bun run scripts/test-supabase-connection.ts",
-    "db:migrate": "bun run scripts/migrate-supabase.ts",
-    "db:seed": "bun run scripts/seed-supabase.ts",
+    "db": "bun scripts/db-cli.ts",
+    "db:migrate": "bun scripts/db-cli.ts migrate",
+    "db:migrate:fresh": "bun scripts/db-cli.ts migrate:fresh",
+    "db:seed": "bun scripts/db-cli.ts seed",
     "db:seed-auth": "bun run scripts/seed-auth-users.ts",
-    "db:demo": "bun run db:seed && bun run db:seed-auth",
-    "db:reset-fresh": "bun run scripts/reset-fresh-instance.ts --yes",
+    "db:demo": "bun scripts/db-cli.ts migrate:fresh --seed --demo",
+    "db:reset-fresh": "bun scripts/db-cli.ts migrate:fresh --seed",
     "db:push": "supabase db push"
   },
   "dependencies": {
