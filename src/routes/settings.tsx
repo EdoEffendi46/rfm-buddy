@@ -668,6 +668,7 @@ const ACTION_LABELS: Record<AuditAction, string> = {
   export_denied: "Export Ditolak", manual_share_created: "Akses Dibagikan", manual_share_revoked: "Akses Dicabut",
   conversation_transferred: "Percakapan Ditransfer", conversation_deleted_message: "Pesan Dihapus",
   login: "Login", settings_changed: "Pengaturan Diubah",
+  permission_override_changed: "Izin Agent Diubah", permission_overrides_reset: "Izin Direset ke Default",
 };
 
 function AuditLogSection() {
