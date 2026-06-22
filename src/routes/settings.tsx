@@ -63,6 +63,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
 import { formatDate, formatRupiah } from "@/lib/format";
 import type { Role, AuditAction, FieldVisibilityRule } from "@/types";
+import { defaultProfileFor, type BusinessType, type BusinessProfile } from "@/lib/businessProfile";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Pengaturan — ChatCRM" }] }),
