@@ -683,8 +683,11 @@ function CustomerDetailModal({
               <thead className="text-xs text-slate-500">
                 <tr>
                   <th className="text-left">No</th>
+                  <th className="text-left">No. Pesanan</th>
                   <th className="text-left">Layanan</th>
                   <th className="text-left">Tanggal</th>
+                  <th className="text-left">Jenis</th>
+                  <th className="text-left">Bayar</th>
                   <th className="text-right">Harga</th>
                   <th>Catatan</th>
                 </tr>
@@ -693,8 +696,19 @@ function CustomerDetailModal({
                 {customer.purchases.map((p, i) => (
                   <tr key={p.id} className="border-t border-slate-100">
                     <td className="py-1.5 text-slate-400">{i + 1}</td>
+                    <td className="font-mono text-[11px]">{p.orderNumber ?? "-"}</td>
                     <td>{p.serviceName}</td>
                     <td className="font-mono text-xs">{formatDate(p.date)}</td>
+                    <td className="text-xs">
+                      {p.transactionType === "penjualan_langsung"
+                        ? "Langsung"
+                        : p.transactionType === "reservasi"
+                          ? "Reservasi"
+                          : p.transactionType === "pesanan_proses"
+                            ? "Pesanan"
+                            : "-"}
+                    </td>
+                    <td className="text-xs">{p.paymentMethod ?? "-"}</td>
                     <td className="text-right font-mono text-xs">{formatRupiah(p.price)}</td>
                     <td className="text-xs text-slate-500">{p.notes ?? "-"}</td>
                   </tr>
