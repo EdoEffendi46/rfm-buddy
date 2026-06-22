@@ -19,11 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useStore } from "@/lib/store";
 import { formatRupiah, formatDate } from "@/lib/format";
-import {
-  BUSINESS_TYPE_SHORT,
-  generateOrderNumber,
-  unitFor,
-} from "@/lib/businessProfile";
+import { BUSINESS_TYPE_SHORT, generateOrderNumber, unitFor } from "@/lib/businessProfile";
 import { Avatar } from "@/components/Avatar";
 import { Plus, Trash2, ChevronDown, ChevronUp, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
@@ -66,9 +62,8 @@ export function OrderBuilderModal({
   const { services, businessProfile, addPurchase, currentAgent, logAudit } = useStore();
   const [orderNumber] = useState(() => generateOrderNumber());
   const [orderDate, setOrderDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [transactionType, setTransactionType] = useState<Purchase["transactionType"]>(
-    "pesanan_proses",
-  );
+  const [transactionType, setTransactionType] =
+    useState<Purchase["transactionType"]>("pesanan_proses");
   const [items, setItems] = useState<LineItem[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [poNumber, setPoNumber] = useState("");
@@ -159,8 +154,7 @@ export function OrderBuilderModal({
       const taxableLinesGross = lineCalcs
         .filter((i) => i.taxable)
         .reduce((s, i) => s + (discountMode === "item" ? i.net : i.gross), 0);
-      const taxableShareOfOverall =
-        subtotal > 0 ? (taxableLinesGross / subtotal) * overall : 0;
+      const taxableShareOfOverall = subtotal > 0 ? (taxableLinesGross / subtotal) * overall : 0;
       taxableBase += Math.max(0, taxableLinesGross - taxableShareOfOverall);
       taxableBase += fees.filter((f) => f.taxable).reduce((s, f) => s + f.amount, 0);
     }
@@ -219,9 +213,7 @@ export function OrderBuilderModal({
     const purchase: Omit<Purchase, "id"> = {
       serviceId: primary.serviceId,
       serviceName:
-        items.length === 1
-          ? primary.name
-          : `${primary.name} +${items.length - 1} item lain`,
+        items.length === 1 ? primary.name : `${primary.name} +${items.length - 1} item lain`,
       date: new Date(orderDate).toISOString(),
       price: calc.total,
       qty: primary.qty,
@@ -233,7 +225,9 @@ export function OrderBuilderModal({
         : undefined,
       discountAmount: calc.totalDiscount,
       taxAmount: calc.tax,
-      additionalFees: fees.length ? fees.map((f) => ({ name: f.name, amount: f.amount, taxable: f.taxable })) : undefined,
+      additionalFees: fees.length
+        ? fees.map((f) => ({ name: f.name, amount: f.amount, taxable: f.taxable }))
+        : undefined,
       paymentMethod,
       paymentDueDate: paymentMethod === "Belum Dibayar (Tempo)" && dueDate ? dueDate : undefined,
       paymentTerm: paymentMethod === "Belum Dibayar (Tempo)" ? paymentTerm : undefined,
@@ -377,7 +371,7 @@ export function OrderBuilderModal({
                   const showStockWarn =
                     businessProfile.usesStock &&
                     svc?.stockQty != null &&
-                    i.qty >= (svc.stockQty - (svc.lowStockThreshold ?? 0));
+                    i.qty >= svc.stockQty - (svc.lowStockThreshold ?? 0);
                   return (
                     <div
                       key={i.rowId}
@@ -435,7 +429,9 @@ export function OrderBuilderModal({
                             }
                           />
                         </div>
-                        <div className="w-12 pb-2 text-[11px] text-slate-500">{i.unit ?? "pcs"}</div>
+                        <div className="w-12 pb-2 text-[11px] text-slate-500">
+                          {i.unit ?? "pcs"}
+                        </div>
                         <div className="w-28">
                           <label className="text-[10px] font-medium text-slate-500">
                             Harga Satuan
@@ -634,10 +630,7 @@ export function OrderBuilderModal({
                         size="sm"
                         variant="outline"
                         onClick={() =>
-                          setFees((p) => [
-                            ...p,
-                            { id: rid(), name: "", amount: 0, taxable: false },
-                          ])
+                          setFees((p) => [...p, { id: rid(), name: "", amount: 0, taxable: false }])
                         }
                       >
                         <Plus className="h-3 w-3" /> Biaya
@@ -651,9 +644,7 @@ export function OrderBuilderModal({
                             value={f.name}
                             onChange={(e) =>
                               setFees((p) =>
-                                p.map((x) =>
-                                  x.id === f.id ? { ...x, name: e.target.value } : x,
-                                ),
+                                p.map((x) => (x.id === f.id ? { ...x, name: e.target.value } : x)),
                               )
                             }
                             className="flex-1"
@@ -708,9 +699,7 @@ export function OrderBuilderModal({
                         <SelectItem value="Transfer Bank">Transfer Bank</SelectItem>
                         <SelectItem value="QRIS">QRIS</SelectItem>
                         <SelectItem value="Kartu Debit/Kredit">Kartu Debit/Kredit</SelectItem>
-                        <SelectItem value="Belum Dibayar (Tempo)">
-                          Belum Dibayar (Tempo)
-                        </SelectItem>
+                        <SelectItem value="Belum Dibayar (Tempo)">Belum Dibayar (Tempo)</SelectItem>
                       </SelectContent>
                     </Select>
                     {paymentMethod === "Belum Dibayar (Tempo)" && (
@@ -763,10 +752,7 @@ export function OrderBuilderModal({
                   {/* Delivery */}
                   <div>
                     <label className="flex items-center gap-2 text-xs font-medium">
-                      <Switch
-                        checked={deliveryEnabled}
-                        onCheckedChange={setDeliveryEnabled}
-                      />
+                      <Switch checked={deliveryEnabled} onCheckedChange={setDeliveryEnabled} />
                       Perlu Pengiriman/Antar?
                     </label>
                     {deliveryEnabled && (
@@ -812,7 +798,13 @@ export function OrderBuilderModal({
             </section>
 
             {/* SECTION 4 — Summary sticky */}
-            <SummaryBox calc={calc} taxEnabled={taxEnabled} taxRate={taxRate} fees={fees} depositEnabled={depositEnabled} />
+            <SummaryBox
+              calc={calc}
+              taxEnabled={taxEnabled}
+              taxRate={taxRate}
+              fees={fees}
+              depositEnabled={depositEnabled}
+            />
           </div>
         ) : (
           <ReceiptPreview
@@ -879,7 +871,15 @@ function SummaryBox({
   fees,
   depositEnabled,
 }: {
-  calc: { subtotal: number; totalDiscount: number; feesTotal: number; tax: number; total: number; depAmt: number; remaining: number };
+  calc: {
+    subtotal: number;
+    totalDiscount: number;
+    feesTotal: number;
+    tax: number;
+    total: number;
+    depAmt: number;
+    remaining: number;
+  };
   taxEnabled: boolean;
   taxRate: number;
   fees: ExtraFee[];
@@ -889,7 +889,11 @@ function SummaryBox({
     <section className="sticky bottom-0 -mx-6 border-t border-slate-200 bg-emerald-50/60 px-6 py-3 text-sm">
       <Row label="Subtotal" value={formatRupiah(calc.subtotal)} />
       {calc.totalDiscount > 0 && (
-        <Row label="Diskon" value={`-${formatRupiah(calc.totalDiscount)}`} className="text-rose-600" />
+        <Row
+          label="Diskon"
+          value={`-${formatRupiah(calc.totalDiscount)}`}
+          className="text-rose-600"
+        />
       )}
       {fees.length > 0 && calc.feesTotal > 0 && (
         <Row label="Biaya Tambahan" value={formatRupiah(calc.feesTotal)} />
@@ -901,7 +905,11 @@ function SummaryBox({
       <Row label="Total" value={formatRupiah(calc.total)} className="text-base font-semibold" />
       {depositEnabled && calc.depAmt > 0 && (
         <>
-          <Row label="DP Dibayar" value={`-${formatRupiah(calc.depAmt)}`} className="text-emerald-700" />
+          <Row
+            label="DP Dibayar"
+            value={`-${formatRupiah(calc.depAmt)}`}
+            className="text-emerald-700"
+          />
           <div className="my-1 border-t border-slate-300" />
           <Row
             label="Sisa Pembayaran"
@@ -945,7 +953,15 @@ function ReceiptPreview({
   orderDate: string;
   transactionType: Purchase["transactionType"];
   items: (LineItem & { gross: number; net: number })[];
-  calc: { subtotal: number; totalDiscount: number; feesTotal: number; tax: number; total: number; depAmt: number; remaining: number };
+  calc: {
+    subtotal: number;
+    totalDiscount: number;
+    feesTotal: number;
+    tax: number;
+    total: number;
+    depAmt: number;
+    remaining: number;
+  };
   taxEnabled: boolean;
   taxRate: number;
   fees: ExtraFee[];
@@ -1002,7 +1018,9 @@ function ReceiptPreview({
         {fees.length > 0 &&
           fees
             .filter((f) => f.amount > 0)
-            .map((f) => <Row key={f.id} label={f.name || "Biaya"} value={formatRupiah(f.amount)} />)}
+            .map((f) => (
+              <Row key={f.id} label={f.name || "Biaya"} value={formatRupiah(f.amount)} />
+            ))}
         {taxEnabled && calc.tax > 0 && (
           <Row label={`PPN (${taxRate}%)`} value={formatRupiah(calc.tax)} />
         )}

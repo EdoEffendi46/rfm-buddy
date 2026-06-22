@@ -1171,11 +1171,7 @@ function CustomerSidePanel({
         />
         <div className="mt-1 text-[10px] text-slate-400">Hanya terlihat oleh tim internal</div>
       </div>
-      <OrderBuilderModal
-        open={orderOpen}
-        onClose={() => setOrderOpen(false)}
-        customer={customer}
-      />
+      <OrderBuilderModal open={orderOpen} onClose={() => setOrderOpen(false)} customer={customer} />
     </aside>
   );
 }

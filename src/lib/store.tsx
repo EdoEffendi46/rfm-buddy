@@ -164,8 +164,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(
     USE_SUPABASE ? [] : DEFAULT_FIELD_RULES,
   );
-  const [businessProfile, setBusinessProfileState] = useState<BusinessProfile>(
-    () => (typeof window !== "undefined" ? loadBusinessProfile() : DEFAULT_BUSINESS_PROFILE),
+  const [businessProfile, setBusinessProfileState] = useState<BusinessProfile>(() =>
+    typeof window !== "undefined" ? loadBusinessProfile() : DEFAULT_BUSINESS_PROFILE,
   );
 
   const setBusinessProfile = useCallback((p: BusinessProfile) => {

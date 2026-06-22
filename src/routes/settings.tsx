@@ -650,8 +650,14 @@ function TagsSection() {
 }
 
 function ServicesSection() {
-  const { services, addService, updateService, deleteService, businessProfile, setBusinessProfile } =
-    useStore();
+  const {
+    services,
+    addService,
+    updateService,
+    deleteService,
+    businessProfile,
+    setBusinessProfile,
+  } = useStore();
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("Perawatan");
@@ -661,225 +667,249 @@ function ServicesSection() {
 
   return (
     <>
-    <Card title="Tipe Bisnis">
-      <p className="text-xs text-slate-500">
-        Pilih jenis usaha untuk menyesuaikan field default di builder pesanan.
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
-        {([
-          { id: "jasa", label: "Jasa", desc: "Laundry/Salon/dst" },
-          { id: "retail", label: "Retail", desc: "Barang Fisik" },
-          { id: "fnb", label: "F&B", desc: "Makanan/Minuman" },
-          { id: "campuran", label: "Campuran", desc: "Semua Jenis" },
-        ] as { id: BusinessType; label: string; desc: string }[]).map((b) => {
-          const active = businessProfile.type === b.id;
-          return (
-            <button
-              key={b.id}
-              onClick={() => {
-                const next: BusinessProfile = defaultProfileFor(b.id);
-                setBusinessProfile(next);
-                toast.success(`Tipe bisnis: ${b.label}`);
-              }}
-              className={cn(
-                "rounded-xl border p-3 text-left transition",
-                active
-                  ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500"
-                  : "border-slate-200 hover:border-slate-300",
-              )}
-            >
-              <div className="text-sm font-semibold">{b.label}</div>
-              <div className="text-[11px] text-slate-500">{b.desc}</div>
-            </button>
-          );
-        })}
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
-        <ProfileToggle label="Pakai SKU" checked={businessProfile.usesSKU} onChange={(v) => setBusinessProfile({ ...businessProfile, usesSKU: v })} />
-        <ProfileToggle label="Pakai Varian" checked={businessProfile.usesVariants} onChange={(v) => setBusinessProfile({ ...businessProfile, usesVariants: v })} />
-        <ProfileToggle label="Lacak Stok" checked={businessProfile.usesStock} onChange={(v) => setBusinessProfile({ ...businessProfile, usesStock: v })} />
-        <ProfileToggle label="Durasi Layanan" checked={businessProfile.usesServiceDuration} onChange={(v) => setBusinessProfile({ ...businessProfile, usesServiceDuration: v })} />
-        <ProfileToggle label="PPN Default" checked={businessProfile.defaultTaxEnabled} onChange={(v) => setBusinessProfile({ ...businessProfile, defaultTaxEnabled: v })} />
-        <div className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1">
-          <span className="text-slate-700">Tarif PPN</span>
-          <Input
-            type="number"
-            value={businessProfile.defaultTaxRate}
-            onChange={(e) => setBusinessProfile({ ...businessProfile, defaultTaxRate: Number(e.target.value) })}
-            className="h-7 w-16"
-          />
-          <span className="text-slate-500">%</span>
+      <Card title="Tipe Bisnis">
+        <p className="text-xs text-slate-500">
+          Pilih jenis usaha untuk menyesuaikan field default di builder pesanan.
+        </p>
+        <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+          {(
+            [
+              { id: "jasa", label: "Jasa", desc: "Laundry/Salon/dst" },
+              { id: "retail", label: "Retail", desc: "Barang Fisik" },
+              { id: "fnb", label: "F&B", desc: "Makanan/Minuman" },
+              { id: "campuran", label: "Campuran", desc: "Semua Jenis" },
+            ] as { id: BusinessType; label: string; desc: string }[]
+          ).map((b) => {
+            const active = businessProfile.type === b.id;
+            return (
+              <button
+                key={b.id}
+                onClick={() => {
+                  const next: BusinessProfile = defaultProfileFor(b.id);
+                  setBusinessProfile(next);
+                  toast.success(`Tipe bisnis: ${b.label}`);
+                }}
+                className={cn(
+                  "rounded-xl border p-3 text-left transition",
+                  active
+                    ? "border-emerald-500 bg-emerald-50 ring-1 ring-emerald-500"
+                    : "border-slate-200 hover:border-slate-300",
+                )}
+              >
+                <div className="text-sm font-semibold">{b.label}</div>
+                <div className="text-[11px] text-slate-500">{b.desc}</div>
+              </button>
+            );
+          })}
         </div>
-      </div>
-    </Card>
-    <Card title="Layanan & Produk">
-      <table className="w-full text-sm">
-        <thead className="text-xs text-slate-500">
-          <tr>
-            <th className="text-left">Nama</th>
-            <th className="text-left">Kategori</th>
-            {businessProfile.usesSKU && <th className="text-left">SKU</th>}
-            <th className="text-left">Unit</th>
-            {businessProfile.usesStock && <th className="text-right">Stok</th>}
-            <th className="text-right">Harga Default</th>
-            <th className="text-center">Pajak</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {services.map((s) => (
-            <tr key={s.id} className="border-t border-slate-100">
-              <td className="py-2">{s.name}</td>
-              <td>
-                <span
-                  className={cn(
-                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                    categoryBadgeClass(s.category),
-                  )}
-                >
-                  {s.category}
-                </span>
-              </td>
-              {businessProfile.usesSKU && (
+        <div className="mt-3 grid grid-cols-2 gap-2 text-xs md:grid-cols-3">
+          <ProfileToggle
+            label="Pakai SKU"
+            checked={businessProfile.usesSKU}
+            onChange={(v) => setBusinessProfile({ ...businessProfile, usesSKU: v })}
+          />
+          <ProfileToggle
+            label="Pakai Varian"
+            checked={businessProfile.usesVariants}
+            onChange={(v) => setBusinessProfile({ ...businessProfile, usesVariants: v })}
+          />
+          <ProfileToggle
+            label="Lacak Stok"
+            checked={businessProfile.usesStock}
+            onChange={(v) => setBusinessProfile({ ...businessProfile, usesStock: v })}
+          />
+          <ProfileToggle
+            label="Durasi Layanan"
+            checked={businessProfile.usesServiceDuration}
+            onChange={(v) => setBusinessProfile({ ...businessProfile, usesServiceDuration: v })}
+          />
+          <ProfileToggle
+            label="PPN Default"
+            checked={businessProfile.defaultTaxEnabled}
+            onChange={(v) => setBusinessProfile({ ...businessProfile, defaultTaxEnabled: v })}
+          />
+          <div className="flex items-center gap-2 rounded-md border border-slate-200 px-2 py-1">
+            <span className="text-slate-700">Tarif PPN</span>
+            <Input
+              type="number"
+              value={businessProfile.defaultTaxRate}
+              onChange={(e) =>
+                setBusinessProfile({ ...businessProfile, defaultTaxRate: Number(e.target.value) })
+              }
+              className="h-7 w-16"
+            />
+            <span className="text-slate-500">%</span>
+          </div>
+        </div>
+      </Card>
+      <Card title="Layanan & Produk">
+        <table className="w-full text-sm">
+          <thead className="text-xs text-slate-500">
+            <tr>
+              <th className="text-left">Nama</th>
+              <th className="text-left">Kategori</th>
+              {businessProfile.usesSKU && <th className="text-left">SKU</th>}
+              <th className="text-left">Unit</th>
+              {businessProfile.usesStock && <th className="text-right">Stok</th>}
+              <th className="text-right">Harga Default</th>
+              <th className="text-center">Pajak</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {services.map((s) => (
+              <tr key={s.id} className="border-t border-slate-100">
+                <td className="py-2">{s.name}</td>
+                <td>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      categoryBadgeClass(s.category),
+                    )}
+                  >
+                    {s.category}
+                  </span>
+                </td>
+                {businessProfile.usesSKU && (
+                  <td>
+                    <Input
+                      defaultValue={s.sku ?? ""}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v !== (s.sku ?? "")) updateService(s.id, { sku: v || undefined });
+                      }}
+                      className="h-7 w-24 text-xs"
+                      placeholder="-"
+                    />
+                  </td>
+                )}
                 <td>
                   <Input
-                    defaultValue={s.sku ?? ""}
+                    defaultValue={s.unit ?? ""}
                     onBlur={(e) => {
                       const v = e.target.value.trim();
-                      if (v !== (s.sku ?? "")) updateService(s.id, { sku: v || undefined });
+                      if (v !== (s.unit ?? "")) updateService(s.id, { unit: v || undefined });
                     }}
-                    className="h-7 w-24 text-xs"
-                    placeholder="-"
+                    className="h-7 w-20 text-xs"
+                    placeholder="pcs"
                   />
                 </td>
-              )}
-              <td>
-                <Input
-                  defaultValue={s.unit ?? ""}
-                  onBlur={(e) => {
-                    const v = e.target.value.trim();
-                    if (v !== (s.unit ?? "")) updateService(s.id, { unit: v || undefined });
-                  }}
-                  className="h-7 w-20 text-xs"
-                  placeholder="pcs"
-                />
-              </td>
-              {businessProfile.usesStock && (
+                {businessProfile.usesStock && (
+                  <td className="text-right">
+                    <Input
+                      type="number"
+                      defaultValue={s.stockQty ?? ""}
+                      onBlur={(e) => {
+                        const raw = e.target.value;
+                        const v = raw === "" ? undefined : Number(raw);
+                        if (v !== s.stockQty) updateService(s.id, { stockQty: v });
+                      }}
+                      className="ml-auto h-7 w-20 text-right text-xs"
+                      placeholder="∞"
+                    />
+                  </td>
+                )}
                 <td className="text-right">
                   <Input
                     type="number"
-                    defaultValue={s.stockQty ?? ""}
+                    defaultValue={s.defaultPrice}
                     onBlur={(e) => {
-                      const raw = e.target.value;
-                      const v = raw === "" ? undefined : Number(raw);
-                      if (v !== s.stockQty) updateService(s.id, { stockQty: v });
+                      const v = Number(e.target.value);
+                      if (v !== s.defaultPrice) {
+                        updateService(s.id, { defaultPrice: v });
+                        toast.success("Harga diperbarui");
+                      }
                     }}
-                    className="ml-auto h-7 w-20 text-right text-xs"
-                    placeholder="∞"
+                    className="ml-auto h-7 w-24 text-right"
                   />
                 </td>
-              )}
-              <td className="text-right">
-                <Input
-                  type="number"
-                  defaultValue={s.defaultPrice}
-                  onBlur={(e) => {
-                    const v = Number(e.target.value);
-                    if (v !== s.defaultPrice) {
-                      updateService(s.id, { defaultPrice: v });
-                      toast.success("Harga diperbarui");
-                    }
-                  }}
-                  className="ml-auto h-7 w-24 text-right"
-                />
-              </td>
-              <td className="text-center">
-                <Switch
-                  checked={s.taxable !== false}
-                  onCheckedChange={(v) => updateService(s.id, { taxable: v })}
-                />
-              </td>
-              <td className="text-right">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => {
-                    if (confirm("Hapus layanan?")) {
-                      deleteService(s.id);
-                      toast.success("Layanan dihapus");
-                    }
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 text-red-500" />
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border p-3">
-        <div className="min-w-[160px] flex-1">
-          <label className="text-xs font-medium">Nama Layanan</label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} />
-        </div>
-        <div className="w-36">
-          <label className="text-xs font-medium">Kategori</label>
-          <Input
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="Mis. Perawatan"
-          />
-        </div>
-        {businessProfile.usesSKU && (
-          <div className="w-28">
-            <label className="text-xs font-medium">SKU</label>
-            <Input value={sku} onChange={(e) => setSku(e.target.value)} />
+                <td className="text-center">
+                  <Switch
+                    checked={s.taxable !== false}
+                    onCheckedChange={(v) => updateService(s.id, { taxable: v })}
+                  />
+                </td>
+                <td className="text-right">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => {
+                      if (confirm("Hapus layanan?")) {
+                        deleteService(s.id);
+                        toast.success("Layanan dihapus");
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="mt-4 flex flex-wrap items-end gap-2 rounded-lg border p-3">
+          <div className="min-w-[160px] flex-1">
+            <label className="text-xs font-medium">Nama Layanan</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-        )}
-        <div className="w-24">
-          <label className="text-xs font-medium">Unit</label>
-          <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="pcs" />
-        </div>
-        {businessProfile.usesStock && (
+          <div className="w-36">
+            <label className="text-xs font-medium">Kategori</label>
+            <Input
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              placeholder="Mis. Perawatan"
+            />
+          </div>
+          {businessProfile.usesSKU && (
+            <div className="w-28">
+              <label className="text-xs font-medium">SKU</label>
+              <Input value={sku} onChange={(e) => setSku(e.target.value)} />
+            </div>
+          )}
           <div className="w-24">
-            <label className="text-xs font-medium">Stok</label>
-            <Input type="number" value={stockQty} onChange={(e) => setStockQty(e.target.value)} />
+            <label className="text-xs font-medium">Unit</label>
+            <Input value={unit} onChange={(e) => setUnit(e.target.value)} placeholder="pcs" />
           </div>
-        )}
-        <div className="w-32">
-          <label className="text-xs font-medium">Harga</label>
-          <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+          {businessProfile.usesStock && (
+            <div className="w-24">
+              <label className="text-xs font-medium">Stok</label>
+              <Input type="number" value={stockQty} onChange={(e) => setStockQty(e.target.value)} />
+            </div>
+          )}
+          <div className="w-32">
+            <label className="text-xs font-medium">Harga</label>
+            <Input type="number" value={price} onChange={(e) => setPrice(e.target.value)} />
+          </div>
+          <Button
+            disabled={!name.trim() || !price || !category.trim()}
+            onClick={() => {
+              if (!category.trim()) return;
+              addService({
+                name,
+                category: category.trim(),
+                defaultPrice: Number(price),
+                sku: sku.trim() || undefined,
+                unit: unit.trim() || undefined,
+                stockQty: stockQty === "" ? undefined : Number(stockQty),
+                taxable: true,
+              });
+              setName("");
+              setPrice("");
+              setSku("");
+              setUnit("");
+              setStockQty("");
+              toast.success("Layanan ditambahkan");
+            }}
+            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+          >
+            <Plus className="h-4 w-4" /> Tambah
+          </Button>
         </div>
-        <Button
-          disabled={!name.trim() || !price || !category.trim()}
-          onClick={() => {
-            if (!category.trim()) return;
-            addService({
-              name,
-              category: category.trim(),
-              defaultPrice: Number(price),
-              sku: sku.trim() || undefined,
-              unit: unit.trim() || undefined,
-              stockQty: stockQty === "" ? undefined : Number(stockQty),
-              taxable: true,
-            });
-            setName("");
-            setPrice("");
-            setSku("");
-            setUnit("");
-            setStockQty("");
-            toast.success("Layanan ditambahkan");
-          }}
-          className="bg-[#25D366] text-white hover:bg-[#128C7E]"
-        >
-          <Plus className="h-4 w-4" /> Tambah
-        </Button>
-      </div>
-      <p className="mt-2 text-xs text-slate-500">
-        Total nilai default semua layanan:{" "}
-        {formatRupiah(services.reduce((s, x) => s + x.defaultPrice, 0))}
-      </p>
-    </Card>
+        <p className="mt-2 text-xs text-slate-500">
+          Total nilai default semua layanan:{" "}
+          {formatRupiah(services.reduce((s, x) => s + x.defaultPrice, 0))}
+        </p>
+      </Card>
     </>
   );
 }
