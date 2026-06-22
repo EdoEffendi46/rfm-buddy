@@ -27,6 +27,21 @@ export interface Service {
   name: string;
   defaultPrice: number;
   category: string;
+  /** Stock-keeping unit (retail). */
+  sku?: string;
+  /** Available stock; undefined = not tracked / unlimited. */
+  stockQty?: number;
+  /** Warn when stock falls at/below this. */
+  lowStockThreshold?: number;
+  /** Unit label shown next to qty (kg, pcs, jam, porsi, paket, ...). */
+  unit?: string;
+  /** Item has variant choices (size, sugar level, color, ...). */
+  hasVariants?: boolean;
+  variantOptions?: { name: string; choices: string[] }[];
+  /** For services: estimated duration in minutes. */
+  estimatedDurationMinutes?: number;
+  /** Whether the item is subject to PPN. Defaults to true. */
+  taxable?: boolean;
 }
 
 export interface Purchase {
@@ -36,6 +51,37 @@ export interface Purchase {
   date: string;
   price: number;
   notes?: string;
+  // Order Builder (all optional; legacy seed purchases skip these)
+  orderNumber?: string;
+  transactionType?: "penjualan_langsung" | "pesanan_proses" | "reservasi";
+  variantSelections?: Record<string, string>;
+  qty?: number;
+  unit?: string;
+  discountAmount?: number;
+  taxAmount?: number;
+  additionalFees?: { name: string; amount: number; taxable?: boolean }[];
+  paymentMethod?: string;
+  paymentDueDate?: string;
+  paymentTerm?: string;
+  depositPaid?: number;
+  remainingBalance?: number;
+  deliveryRequired?: boolean;
+  deliveryAddress?: string;
+  deliveryAt?: string;
+  customerFacingNote?: string;
+  internalNote?: string;
+  source?: "chat_generated" | "seed_data" | "manual";
+  /** Snapshot of all line items if the purchase came from the Order Builder. */
+  items?: {
+    serviceId: string;
+    name: string;
+    qty: number;
+    unit?: string;
+    unitPrice: number;
+    variantSelections?: Record<string, string>;
+    taxable?: boolean;
+    subtotal: number;
+  }[];
 }
 
 export interface SegmentHistoryEntry {

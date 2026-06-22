@@ -65,6 +65,7 @@ import {
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { Customer, ConversationStatus, OrderStatus, Priority, RFMSegment } from "@/types";
+import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
 
 const STATUS_TABS: { id: string; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -981,6 +982,7 @@ function CustomerSidePanel({
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
   const cadence = cadenceFor(customer.purchases, customer.cadenceOverrideDays);
+  const [orderOpen, setOrderOpen] = useState(false);
 
   return (
     <aside className="scrollbar-thin w-[300px] overflow-y-auto border-l border-slate-200 bg-white p-4">
@@ -1082,7 +1084,17 @@ function CustomerSidePanel({
 
       {/* Purchase history */}
       <div className="mt-4">
-        <div className="text-xs font-semibold text-slate-700">Riwayat Pembelian</div>
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-semibold text-slate-700">Riwayat Pembelian</div>
+          {canEdit && hasFlag(agent, "customer_add_purchase_manual") && (
+            <button
+              onClick={() => setOrderOpen(true)}
+              className="text-[11px] font-medium text-emerald-600 hover:text-emerald-800"
+            >
+              + Buat Pesanan
+            </button>
+          )}
+        </div>
         <div className="mt-1 space-y-1">
           {purchases.length === 0 && (
             <div className="text-[11px] text-slate-400">Belum ada transaksi</div>
@@ -1159,6 +1171,7 @@ function CustomerSidePanel({
         />
         <div className="mt-1 text-[10px] text-slate-400">Hanya terlihat oleh tim internal</div>
       </div>
+      <OrderBuilderModal open={orderOpen} onClose={() => setOrderOpen(false)} customer={customer} />
     </aside>
   );
 }

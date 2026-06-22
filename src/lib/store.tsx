@@ -33,6 +33,13 @@ import { INITIAL_EXPORT_REQUESTS } from "@/data/exportRequests";
 import { DEFAULT_FIELD_RULES } from "@/lib/fieldVisibility";
 import * as db from "@/lib/supabase/persist";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  type BusinessProfile,
+  DEFAULT_BUSINESS_PROFILE,
+  loadBusinessProfile,
+  saveBusinessProfile,
+} from "@/lib/businessProfile";
+import type { Purchase } from "@/types";
 
 const USE_SUPABASE = db.isSupabaseConfigured();
 
@@ -50,6 +57,8 @@ interface StoreState {
   auditLog: AuditLogEntry[];
   exportRequests: ExportRequest[];
   fieldRules: FieldVisibilityRule[];
+  businessProfile: BusinessProfile;
+  setBusinessProfile: (p: BusinessProfile) => void;
 
   login: (agentId: string) => void;
   logout: () => void;
@@ -78,6 +87,8 @@ interface StoreState {
   saveNotes: (id: string, notes: string) => void;
 
   setCadenceOverride: (id: string, days: number | null) => void;
+
+  addPurchase: (customerId: string, purchase: Omit<Purchase, "id">) => Purchase;
 
   // Audit
   logAudit: (
@@ -153,6 +164,27 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [fieldRules, setFieldRules] = useState<FieldVisibilityRule[]>(
     USE_SUPABASE ? [] : DEFAULT_FIELD_RULES,
   );
+  const [businessProfile, setBusinessProfileState] = useState<BusinessProfile>(() =>
+    typeof window !== "undefined" ? loadBusinessProfile() : DEFAULT_BUSINESS_PROFILE,
+  );
+
+  const setBusinessProfile = useCallback((p: BusinessProfile) => {
+    setBusinessProfileState(p);
+    saveBusinessProfile(p);
+  }, []);
+
+  const addPurchase = useCallback((customerId: string, purchase: Omit<Purchase, "id">) => {
+    const full: Purchase = { ...purchase, id: genId("p") };
+    setCustomers((p) => {
+      const next = p.map((c) =>
+        c.id === customerId ? { ...c, purchases: [full, ...c.purchases] } : c,
+      );
+      const updated = next.find((c) => c.id === customerId);
+      if (updated) db.persistCustomer(updated);
+      return next;
+    });
+    return full;
+  }, []);
 
   useEffect(() => {
     if (!USE_SUPABASE) return;
@@ -908,6 +940,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     deleteAgent,
     setAgentPermissionOverrides,
     resetAgentPermissionOverrides,
+    businessProfile,
+    setBusinessProfile,
+    addPurchase,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
