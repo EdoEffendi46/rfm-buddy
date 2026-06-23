@@ -135,7 +135,7 @@ function CustomersPage() {
           {hasFlag(agent, "customer_create") && (
             <Button
               onClick={() => setAddOpen(true)}
-              className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+              className="bg-[#16A34A] text-white hover:bg-[#15803D]"
             >
               <Plus className="h-4 w-4" /> Customer Baru
             </Button>
@@ -436,7 +436,7 @@ function CustomersPage() {
                         </Button>
                         <Button
                           size="sm"
-                          className="h-7 bg-[#25D366] px-2 text-xs text-white hover:bg-[#128C7E]"
+                          className="h-7 bg-[#16A34A] px-2 text-xs text-white hover:bg-[#15803D]"
                           onClick={() =>
                             navigate({
                               to: "/chat/$customerId",
@@ -813,7 +813,7 @@ function CustomerDetailModal({
                   />
                 </div>
                 <Button
-                  className="mt-2 bg-[#25D366] text-white hover:bg-[#128C7E]"
+                  className="mt-2 bg-[#16A34A] text-white hover:bg-[#15803D]"
                   disabled={!shareAgentId || !shareReason.trim()}
                   onClick={() => {
                     const expiresAt =
@@ -882,7 +882,7 @@ function CustomerDetailModal({
         <DialogFooter>
           <Button
             onClick={() => onOpenChat(customer.id)}
-            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+            className="bg-[#16A34A] text-white hover:bg-[#15803D]"
           >
             Buka Chat
           </Button>
@@ -1049,7 +1049,7 @@ function AddCustomerModal({
               <Button
                 type="submit"
                 disabled={!form.formState.isValid}
-                className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+                className="bg-[#16A34A] text-white hover:bg-[#15803D]"
               >
                 Tambah
               </Button>

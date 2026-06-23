@@ -54,7 +54,7 @@ function ResetPasswordPage() {
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F2F5]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#25D366]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
       </div>
     );
   }
@@ -66,7 +66,7 @@ function ResetPasswordPage() {
         subtitle="Link reset password kadaluarsa atau sudah dipakai."
       >
         <Link to="/forgot-password">
-          <Button className="w-full bg-[#25D366] hover:bg-[#128C7E]">Minta link baru</Button>
+          <Button className="w-full bg-[#16A34A] hover:bg-[#15803D]">Minta link baru</Button>
         </Link>
       </AuthLayout>
     );
@@ -129,7 +129,7 @@ function ResetPasswordPage() {
           <Button
             type="submit"
             disabled={submitting}
-            className="h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+            className="h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
           >
             {submitting ? (
               <>

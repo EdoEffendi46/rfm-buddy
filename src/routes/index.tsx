@@ -136,7 +136,7 @@ function EmailLoginForm({
                   <FormLabel>Password</FormLabel>
                   <Link
                     to="/forgot-password"
-                    className="text-xs font-medium text-[#128C7E] hover:underline"
+                    className="text-xs font-medium text-[#15803D] hover:underline"
                   >
                     Lupa password?
                   </Link>
@@ -183,7 +183,7 @@ function EmailLoginForm({
           <Button
             type="submit"
             disabled={submitting}
-            className="h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+            className="h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
           >
             {submitting ? (
               <>
@@ -231,7 +231,7 @@ function DemoPickerLogin({ onLogin }: { onLogin: (agentId: string) => void }) {
             className={cn(
               "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
               selected === a.id
-                ? "border-[#25D366] bg-[#25D366]/5 shadow-sm"
+                ? "border-[#16A34A] bg-[#16A34A]/5 shadow-sm"
                 : "border-slate-200 hover:border-slate-300",
             )}
           >
@@ -253,7 +253,7 @@ function DemoPickerLogin({ onLogin }: { onLogin: (agentId: string) => void }) {
       </div>
       <Button
         onClick={handleLogin}
-        className="mt-6 h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+        className="mt-6 h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
       >
         Masuk
         <ArrowRight className="ml-1 h-4 w-4" />

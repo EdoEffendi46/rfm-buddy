@@ -844,7 +844,7 @@ export function OrderBuilderModal({
               >
                 Preview Struk
               </Button>
-              <Button onClick={handleSave} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
+              <Button onClick={handleSave} className="bg-[#16A34A] text-white hover:bg-[#15803D]">
                 Simpan Pesanan
               </Button>
             </>
@@ -853,7 +853,7 @@ export function OrderBuilderModal({
               <Button variant="outline" onClick={() => setShowPreview(false)}>
                 Kembali Edit
               </Button>
-              <Button onClick={handleSave} className="bg-[#25D366] text-white hover:bg-[#128C7E]">
+              <Button onClick={handleSave} className="bg-[#16A34A] text-white hover:bg-[#15803D]">
                 Konfirmasi & Simpan
               </Button>
             </>

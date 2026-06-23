@@ -25,7 +25,7 @@ function NavItem({
       to={to}
       className={cn(
         "group relative flex h-11 w-11 items-center justify-center rounded-xl transition-all",
-        active ? "bg-[#25D366] text-white" : "text-slate-400 hover:bg-white/10 hover:text-white",
+        active ? "bg-[#16A34A] text-white" : "text-slate-400 hover:bg-white/10 hover:text-white",
       )}
       title={label}
     >
@@ -53,7 +53,7 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-screen w-16 flex-col items-center bg-[#111B21] py-4">
-      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#25D366] font-bold text-white">
+      <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-[#16A34A] font-bold text-white">
         CC
       </div>
       <nav className="flex flex-1 flex-col items-center gap-2">

@@ -75,7 +75,7 @@ export function InviteAgentForm({ onInvited }: { onInvited: (agent: Agent) => vo
   };
 
   return (
-    <div className="mt-4 rounded-lg border border-[#25D366]/20 bg-[#25D366]/5 p-3">
+    <div className="mt-4 rounded-lg border border-[#16A34A]/20 bg-[#16A34A]/5 p-3">
       <div className="mb-1 text-sm font-semibold text-slate-900">+ Undang anggota tim</div>
       <p className="mb-3 text-xs text-slate-500">
         Kirim email undangan. Penerima mengatur password lewat link di inbox.
@@ -153,7 +153,7 @@ export function InviteAgentForm({ onInvited }: { onInvited: (agent: Agent) => vo
           <Button
             type="submit"
             disabled={inviting || !form.formState.isValid}
-            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+            className="bg-[#16A34A] text-white hover:bg-[#15803D]"
           >
             <Plus className="h-4 w-4" /> {inviting ? "Mengirim…" : "Kirim undangan"}
           </Button>

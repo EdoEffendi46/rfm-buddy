@@ -304,7 +304,7 @@ function DashboardPage() {
                     <XAxis dataKey="month" fontSize={11} />
                     <YAxis fontSize={11} tickFormatter={(v) => `${v / 1000}k`} />
                     <Tooltip formatter={(v: number) => formatRupiah(v)} />
-                    <Bar dataKey="total" fill="#25D366" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="total" fill="#16A34A" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -359,7 +359,7 @@ function DashboardPage() {
                           <td className="text-right">
                             <Button
                               size="sm"
-                              className="h-7 bg-[#25D366] text-xs text-white hover:bg-[#128C7E]"
+                              className="h-7 bg-[#16A34A] text-xs text-white hover:bg-[#15803D]"
                               onClick={() =>
                                 navigate({
                                   to: "/chat/$customerId",
@@ -459,7 +459,7 @@ function DashboardPage() {
                       <td className="text-right">
                         <Button
                           size="sm"
-                          className="h-7 bg-[#25D366] text-xs text-white hover:bg-[#128C7E]"
+                          className="h-7 bg-[#16A34A] text-xs text-white hover:bg-[#15803D]"
                           onClick={() =>
                             navigate({
                               to: "/chat/$customerId",
