@@ -143,7 +143,7 @@ function CustomersPage() {
         </div>
 
         {/* filter bar */}
-        <div className="mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="mt-6 rounded-xl border border-[var(--border-soft)] bg-white p-5">
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative min-w-[220px] flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
@@ -384,7 +384,7 @@ function CustomersPage() {
                 return (
                   <div
                     key={e.customer.id}
-                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-shadow hover:shadow-md"
+                    className="rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-shadow hover:shadow-md"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">

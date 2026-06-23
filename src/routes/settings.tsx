@@ -997,7 +997,7 @@ function AboutSection() {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
       <h3 className="mb-4 text-base font-semibold">{title}</h3>
       {children}
     </div>

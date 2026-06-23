@@ -262,7 +262,7 @@ function DashboardPage() {
         {/* Charts — Supervisor only */}
         {teamView && (
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="text-sm font-semibold">Distribusi Segment RFM</div>
               <div className="h-64">
                 <ResponsiveContainer>
@@ -294,7 +294,7 @@ function DashboardPage() {
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="text-sm font-semibold">Tren Pengeluaran Bulanan</div>
               <div className="h-64">
                 <ResponsiveContainer>
@@ -312,7 +312,7 @@ function DashboardPage() {
 
         {/* Follow Up */}
         {teamView && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">Customer Prioritas Follow Up</div>
             </div>
@@ -485,7 +485,7 @@ function DashboardPage() {
 
         {teamView && (
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="text-sm font-semibold">Performa CS</div>
               <table className="mt-2 w-full text-sm">
                 <thead className="text-xs text-slate-500">
@@ -517,7 +517,7 @@ function DashboardPage() {
               </table>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold">CLV Overview</div>
                 <div className="text-xs text-slate-500">
@@ -622,7 +622,7 @@ function QuickLink({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group flex items-center gap-4 rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${bg}`}>{icon}</div>
       <div className="flex-1">
