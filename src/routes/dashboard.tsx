@@ -594,12 +594,12 @@ function Kpi({
   color?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="text-xs uppercase text-slate-500">{title}</div>
-      <div className="mt-1 text-3xl font-bold" style={{ color }}>
+    <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-all hover:border-slate-300">
+      <div className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">{title}</div>
+      <div className="mt-2 text-3xl font-semibold tabular-nums tracking-tight" style={{ color }}>
         {value}
       </div>
-      <div className="mt-1 text-xs text-slate-500">{sub}</div>
+      <div className="mt-1 text-sm text-[var(--text-secondary)]">{sub}</div>
     </div>
   );
 }
