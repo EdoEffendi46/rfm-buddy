@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { DemoShortcuts } from "@/components/auth/DemoShortcuts";
