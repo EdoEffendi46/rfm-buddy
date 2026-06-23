@@ -149,17 +149,15 @@ function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="text-xs text-slate-500">{formatDateLong(new Date().toISOString())}</div>
-            <h1 className="text-2xl font-bold tracking-tight">Halo, {agent?.name}</h1>
-            <p className="text-sm text-slate-500">{roleDisplay.dashboardSubtitle}</p>
+            <div className="text-xs text-[var(--text-tertiary)]">{formatDateLong(new Date().toISOString())}</div>
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Halo, {agent?.name} 👋</h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">{roleDisplay.dashboardSubtitle}</p>
           </div>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${roleDisplay.badgeClass}`}
-          >
-            {role === "owner" ? "Owner" : role === "supervisor" ? "Supervisor" : "CS"}
+          <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
+            {role === "owner" ? "Owner" : role === "supervisor" ? "Supervisor" : "Customer Service"}
           </span>
         </div>
 
