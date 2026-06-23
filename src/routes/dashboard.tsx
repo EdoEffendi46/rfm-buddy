@@ -162,7 +162,7 @@ function DashboardPage() {
         </div>
 
         {/* Alert Banners */}
-        <div className="space-y-2">
+        <div className="space-y-2 stagger-children">
           {teamView && atRiskCount > 0 && (
             <button
               onClick={() => navigate({ to: "/customers" })}
@@ -208,7 +208,7 @@ function DashboardPage() {
         </div>
 
         {/* KPI */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-4 stagger-children">
           {teamView ? (
             <>
               <Kpi
