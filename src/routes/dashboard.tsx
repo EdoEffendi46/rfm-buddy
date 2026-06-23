@@ -323,8 +323,8 @@ function DashboardPage() {
                 <TabsTrigger value="all">Semua</TabsTrigger>
               </TabsList>
               <TabsContent value={followTab} className="mt-2">
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-slate-500">
+                <table className="w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_td]:py-3 [&_th]:py-2">
+                  <thead className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium border-b-2 border-[var(--border-soft)]">
                     <tr>
                       <th className="text-left">Nama</th>
                       <th className="text-left">No HP</th>
@@ -336,7 +336,7 @@ function DashboardPage() {
                       <th></th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="stagger-children">
                     {followFiltered.map((e) => {
                       const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
                       return (
@@ -401,8 +401,8 @@ function DashboardPage() {
                 per customer
               </div>
             </div>
-            <table className="mt-3 w-full text-sm">
-              <thead className="text-xs text-slate-500">
+            <table className="mt-3 w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_td]:py-3 [&_th]:py-2">
+              <thead className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium border-b-2 border-[var(--border-soft)]">
                 <tr>
                   <th className="text-left">Nama</th>
                   <th className="text-left">Segment (RFM)</th>
@@ -414,7 +414,7 @@ function DashboardPage() {
                   <th></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="stagger-children">
                 {cadenceFollowUp.slice(0, 10).map((e) => {
                   const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
                   const lastP = e.customer.purchases.length
