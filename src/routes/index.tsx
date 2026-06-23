@@ -2,7 +2,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowRight, Eye, EyeOff, Loader2 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/auth/AuthLayout";
 import { DemoShortcuts } from "@/components/auth/DemoShortcuts";
@@ -136,7 +136,7 @@ function EmailLoginForm({
                   <FormLabel>Password</FormLabel>
                   <Link
                     to="/forgot-password"
-                    className="text-xs font-medium text-[#128C7E] hover:underline"
+                    className="text-xs font-medium text-[#15803D] hover:underline"
                   >
                     Lupa password?
                   </Link>
@@ -183,7 +183,7 @@ function EmailLoginForm({
           <Button
             type="submit"
             disabled={submitting}
-            className="h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+            className="h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
           >
             {submitting ? (
               <>
@@ -222,38 +222,39 @@ function DemoPickerLogin({ onLogin }: { onLogin: (agentId: string) => void }) {
 
   return (
     <AuthLayout title="Masuk ke ChatCRM" subtitle="Mode demo lokal — pilih role untuk masuk.">
-      <div className="space-y-2">
+      <div className="space-y-2 stagger-children">
         {AGENTS.map((a) => (
           <button
             key={a.id}
             type="button"
             onClick={() => setSelected(a.id)}
             className={cn(
-              "flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-all",
+              "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150",
               selected === a.id
-                ? "border-[#25D366] bg-[#25D366]/5 shadow-sm"
-                : "border-slate-200 hover:border-slate-300",
+                ? "border-[#16A34A]/40 bg-[#16A34A]/5"
+                : "border-[var(--border-soft)] hover:border-slate-300 hover:bg-slate-50",
             )}
           >
             <Avatar name={a.name} color={a.color} initials={a.initials} size={40} />
             <div className="flex-1">
-              <div className="font-semibold text-slate-900">{a.name}</div>
-              <div className="text-xs text-slate-500">{ROLE_DISPLAY[a.role as Role].subtitle}</div>
+              <div className="font-medium text-[var(--text-primary)]">{a.name}</div>
+              <div className="text-xs text-[var(--text-secondary)] mt-0.5">{ROLE_DISPLAY[a.role as Role].subtitle}</div>
             </div>
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
-                ROLE_DISPLAY[a.role as Role].badgeClass,
-              )}
-            >
-              {a.role}
-            </span>
+            {selected === a.id ? (
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#16A34A] text-white animate-fade-in-up">
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </span>
+            ) : (
+              <span className="text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
+                {a.role}
+              </span>
+            )}
           </button>
         ))}
       </div>
       <Button
         onClick={handleLogin}
-        className="mt-6 h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+        className="mt-6 h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
       >
         Masuk
         <ArrowRight className="ml-1 h-4 w-4" />

@@ -79,7 +79,7 @@ function AcceptInvitePage() {
   if (checking) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#F0F2F5]">
-        <Loader2 className="h-8 w-8 animate-spin text-[#25D366]" />
+        <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
       </div>
     );
   }
@@ -98,7 +98,7 @@ function AcceptInvitePage() {
         </div>
         <Link
           to="/"
-          className="mt-6 inline-block text-sm font-medium text-[#128C7E] hover:underline"
+          className="mt-6 inline-block text-sm font-medium text-[#15803D] hover:underline"
         >
           Kembali ke login
         </Link>
@@ -191,7 +191,7 @@ function AcceptInvitePage() {
           <Button
             type="submit"
             disabled={submitting}
-            className="h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+            className="h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
           >
             {submitting ? (
               <>

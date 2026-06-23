@@ -719,7 +719,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 <Button
                   onClick={handleSend}
                   disabled={!draft.trim()}
-                  className="h-9 gap-1 bg-[#25D366] text-white hover:bg-[#128C7E]"
+                  className="h-9 gap-1 bg-[#16A34A] text-white hover:bg-[#15803D]"
                 >
                   <Send className="h-4 w-4" /> Kirim
                 </Button>
@@ -901,7 +901,7 @@ function MessagesList({
                       className={cn(
                         "max-w-[70%] rounded-lg p-2.5 text-sm shadow-sm",
                         isAgent
-                          ? "rounded-tr-none bg-[#25D366] text-white"
+                          ? "rounded-tr-none bg-[#16A34A] text-white"
                           : "rounded-tl-none bg-white text-slate-900",
                       )}
                     >

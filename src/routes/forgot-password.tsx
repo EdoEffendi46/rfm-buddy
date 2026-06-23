@@ -54,14 +54,14 @@ function ForgotPasswordPage() {
         title="Cek email Anda"
         subtitle="Kami mengirim link reset password jika email terdaftar."
       >
-        <div className="rounded-2xl border border-[#25D366]/20 bg-[#25D366]/5 p-6 text-center">
-          <MailCheck className="mx-auto h-10 w-10 text-[#25D366]" />
+        <div className="rounded-2xl border border-[#16A34A]/20 bg-[#16A34A]/5 p-6 text-center">
+          <MailCheck className="mx-auto h-10 w-10 text-[#16A34A]" />
           <p className="mt-3 text-sm text-slate-600">
             Buka email <strong>{form.getValues("email")}</strong> dan ikuti instruksi reset
             password. Link berlaku 1 jam.
           </p>
         </div>
-        <Link to="/" className="mt-6 inline-flex items-center text-sm font-medium text-[#128C7E]">
+        <Link to="/" className="mt-6 inline-flex items-center text-sm font-medium text-[#15803D]">
           <ArrowLeft className="mr-1 h-4 w-4" />
           Kembali ke login
         </Link>
@@ -99,7 +99,7 @@ function ForgotPasswordPage() {
           <Button
             type="submit"
             disabled={submitting}
-            className="h-11 w-full bg-[#25D366] text-base font-semibold text-white hover:bg-[#128C7E]"
+            className="h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
           >
             {submitting ? (
               <>
