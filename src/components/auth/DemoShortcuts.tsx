@@ -30,7 +30,7 @@ export function DemoShortcuts({
             className={cn(
               "flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-all",
               activeEmail === account.email
-                ? "border-[#25D366] bg-[#25D366]/5 shadow-sm"
+                ? "border-[#16A34A] bg-[#16A34A]/5 shadow-sm"
                 : "border-slate-200 hover:border-slate-300 hover:bg-slate-50",
             )}
           >

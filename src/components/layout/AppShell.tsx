@@ -27,9 +27,14 @@ export function AppShell({
   if (!agent) return null;
 
   return (
-    <div className="flex h-screen w-full bg-[#F0F2F5]">
+    <div className="flex h-screen w-full bg-[var(--app-bg)]">
       <Sidebar />
-      <main className={noPadding ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto"}>
+      <main
+        key={router.state.location.pathname}
+        className={
+          (noPadding ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto") + " animate-page-in"
+        }
+      >
         {children}
       </main>
     </div>

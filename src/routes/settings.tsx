@@ -478,7 +478,7 @@ function AgentsSection() {
                 setName("");
                 toast.success("Agent ditambahkan");
               }}
-              className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+              className="bg-[#16A34A] text-white hover:bg-[#15803D]"
             >
               <Plus className="h-4 w-4" /> Tambah
             </Button>
@@ -562,7 +562,7 @@ function TemplatesSection() {
           placeholder="Tulis template..."
         />
         <Button
-          className="mt-2 bg-[#25D366] text-white hover:bg-[#128C7E]"
+          className="mt-2 bg-[#16A34A] text-white hover:bg-[#15803D]"
           disabled={!newText.trim() || templates.length >= 20}
           onClick={() => {
             addTemplate(newText);
@@ -656,7 +656,7 @@ function TagsSection() {
             setName("");
             toast.success("Tag ditambahkan");
           }}
-          className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+          className="bg-[#16A34A] text-white hover:bg-[#15803D]"
         >
           <Plus className="h-4 w-4" /> Tambah
         </Button>
@@ -916,7 +916,7 @@ function ServicesSection() {
               setStockQty("");
               toast.success("Layanan ditambahkan");
             }}
-            className="bg-[#25D366] text-white hover:bg-[#128C7E]"
+            className="bg-[#16A34A] text-white hover:bg-[#15803D]"
           >
             <Plus className="h-4 w-4" /> Tambah
           </Button>
@@ -977,7 +977,7 @@ function AboutSection() {
   return (
     <Card title="Tentang Aplikasi">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#25D366] text-white text-xl font-bold">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#16A34A] text-white text-xl font-bold">
           CC
         </div>
         <div>
@@ -1013,7 +1013,7 @@ function AboutSection() {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
       <h3 className="mb-4 text-base font-semibold">{title}</h3>
       {children}
     </div>
@@ -1124,7 +1124,7 @@ function FieldVisibilitySection() {
         </tbody>
       </table>
       <Button
-        className="mt-3 bg-[#25D366] text-white hover:bg-[#128C7E]"
+        className="mt-3 bg-[#16A34A] text-white hover:bg-[#15803D]"
         onClick={() => setOpen(true)}
       >
         <Plus className="h-4 w-4" /> Tambah Aturan
@@ -1638,7 +1638,7 @@ function ExportDataSection() {
           </div>
         </div>
         <Button
-          className="mt-3 bg-[#25D366] text-white hover:bg-[#128C7E]"
+          className="mt-3 bg-[#16A34A] text-white hover:bg-[#15803D]"
           disabled={!isOwner && !reason.trim()}
           onClick={() => {
             if (isOwner) {

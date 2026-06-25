@@ -71,11 +71,18 @@
   --app-bg: #f0f2f5;
   --surface: #ffffff;
   --border-soft: #e2e8f0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
   --text-muted: #64748b;
   --success: #22c55e;
   --warning: #f59e0b;
   --danger: #ef4444;
   --info: #3b82f6;
+  --accent-purple: #7c3aed;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
@@ -152,6 +159,14 @@
     background-color: var(--app-bg);
     color: var(--color-foreground);
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tabular numbers for data/money */
+  .tabular-nums, table td, table th {
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -180,3 +195,64 @@
     border-radius: 9999px;
   }
 }
+
+/* ========== Micro-animations ========== */
+@keyframes lov-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes lov-fade-in-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes lov-scale-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes lov-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.animate-page-in {
+  animation: lov-fade-in 220ms ease-out both;
+}
+.animate-fade-in-up {
+  animation: lov-fade-in-up 280ms ease-out both;
+}
+
+/* Stagger children: apply to parent, max 20 items */
+.stagger-children > * {
+  animation: lov-fade-in-up 280ms ease-out both;
+}
+.stagger-children > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2)  { animation-delay: 30ms; }
+.stagger-children > *:nth-child(3)  { animation-delay: 60ms; }
+.stagger-children > *:nth-child(4)  { animation-delay: 90ms; }
+.stagger-children > *:nth-child(5)  { animation-delay: 120ms; }
+.stagger-children > *:nth-child(6)  { animation-delay: 150ms; }
+.stagger-children > *:nth-child(7)  { animation-delay: 180ms; }
+.stagger-children > *:nth-child(8)  { animation-delay: 210ms; }
+.stagger-children > *:nth-child(9)  { animation-delay: 240ms; }
+.stagger-children > *:nth-child(10) { animation-delay: 270ms; }
+.stagger-children > *:nth-child(n+11) { animation-delay: 300ms; }
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #EFEFEF 0%, #F7F7F7 50%, #EFEFEF 100%);
+  background-size: 800px 100%;
+  animation: lov-shimmer 1.4s linear infinite;
+  border-radius: 6px;
+}
+
+/* Smooth default transitions on common interactive elements */
+button, a, [role="button"], .interactive {
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+/* Soft hover lift */
+.hover-lift:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+

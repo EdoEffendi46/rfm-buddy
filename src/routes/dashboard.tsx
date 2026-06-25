@@ -149,22 +149,20 @@ function DashboardPage() {
 
   return (
     <AppShell>
-      <div className="p-6 space-y-6">
+      <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="text-xs text-slate-500">{formatDateLong(new Date().toISOString())}</div>
-            <h1 className="text-2xl font-bold tracking-tight">Halo, {agent?.name}</h1>
-            <p className="text-sm text-slate-500">{roleDisplay.dashboardSubtitle}</p>
+            <div className="text-xs text-[var(--text-tertiary)]">{formatDateLong(new Date().toISOString())}</div>
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Halo, {agent?.name} 👋</h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">{roleDisplay.dashboardSubtitle}</p>
           </div>
-          <span
-            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${roleDisplay.badgeClass}`}
-          >
-            {role === "owner" ? "Owner" : role === "supervisor" ? "Supervisor" : "CS"}
+          <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
+            {role === "owner" ? "Owner" : role === "supervisor" ? "Supervisor" : "Customer Service"}
           </span>
         </div>
 
         {/* Alert Banners */}
-        <div className="space-y-2">
+        <div className="space-y-2 stagger-children">
           {teamView && atRiskCount > 0 && (
             <button
               onClick={() => navigate({ to: "/customers" })}
@@ -210,7 +208,7 @@ function DashboardPage() {
         </div>
 
         {/* KPI */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 md:grid-cols-4 stagger-children">
           {teamView ? (
             <>
               <Kpi
@@ -264,7 +262,7 @@ function DashboardPage() {
         {/* Charts — Supervisor only */}
         {teamView && (
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="text-sm font-semibold">Distribusi Segment RFM</div>
               <div className="h-64">
                 <ResponsiveContainer>
@@ -296,7 +294,7 @@ function DashboardPage() {
                 ))}
               </div>
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="text-sm font-semibold">Tren Pengeluaran Bulanan</div>
               <div className="h-64">
                 <ResponsiveContainer>
@@ -304,7 +302,7 @@ function DashboardPage() {
                     <XAxis dataKey="month" fontSize={11} />
                     <YAxis fontSize={11} tickFormatter={(v) => `${v / 1000}k`} />
                     <Tooltip formatter={(v: number) => formatRupiah(v)} />
-                    <Bar dataKey="total" fill="#25D366" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="total" fill="#16A34A" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -314,7 +312,7 @@ function DashboardPage() {
 
         {/* Follow Up */}
         {teamView && (
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">Customer Prioritas Follow Up</div>
             </div>
@@ -325,8 +323,8 @@ function DashboardPage() {
                 <TabsTrigger value="all">Semua</TabsTrigger>
               </TabsList>
               <TabsContent value={followTab} className="mt-2">
-                <table className="w-full text-sm">
-                  <thead className="text-xs text-slate-500">
+                <table className="w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_td]:py-3 [&_th]:py-2">
+                  <thead className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium border-b-2 border-[var(--border-soft)]">
                     <tr>
                       <th className="text-left">Nama</th>
                       <th className="text-left">No HP</th>
@@ -338,7 +336,7 @@ function DashboardPage() {
                       <th></th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="stagger-children">
                     {followFiltered.map((e) => {
                       const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
                       return (
@@ -359,7 +357,7 @@ function DashboardPage() {
                           <td className="text-right">
                             <Button
                               size="sm"
-                              className="h-7 bg-[#25D366] text-xs text-white hover:bg-[#128C7E]"
+                              className="h-7 bg-[#16A34A] text-xs text-white hover:bg-[#15803D]"
                               onClick={() =>
                                 navigate({
                                   to: "/chat/$customerId",
@@ -403,8 +401,8 @@ function DashboardPage() {
                 per customer
               </div>
             </div>
-            <table className="mt-3 w-full text-sm">
-              <thead className="text-xs text-slate-500">
+            <table className="mt-3 w-full text-sm [&_td]:px-3 [&_th]:px-3 [&_td]:py-3 [&_th]:py-2">
+              <thead className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium border-b-2 border-[var(--border-soft)]">
                 <tr>
                   <th className="text-left">Nama</th>
                   <th className="text-left">Segment (RFM)</th>
@@ -416,7 +414,7 @@ function DashboardPage() {
                   <th></th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="stagger-children">
                 {cadenceFollowUp.slice(0, 10).map((e) => {
                   const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
                   const lastP = e.customer.purchases.length
@@ -459,7 +457,7 @@ function DashboardPage() {
                       <td className="text-right">
                         <Button
                           size="sm"
-                          className="h-7 bg-[#25D366] text-xs text-white hover:bg-[#128C7E]"
+                          className="h-7 bg-[#16A34A] text-xs text-white hover:bg-[#15803D]"
                           onClick={() =>
                             navigate({
                               to: "/chat/$customerId",
@@ -487,7 +485,7 @@ function DashboardPage() {
 
         {teamView && (
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="text-sm font-semibold">Performa CS</div>
               <table className="mt-2 w-full text-sm">
                 <thead className="text-xs text-slate-500">
@@ -519,7 +517,7 @@ function DashboardPage() {
               </table>
             </div>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5">
               <div className="flex items-center justify-between">
                 <div className="text-sm font-semibold">CLV Overview</div>
                 <div className="text-xs text-slate-500">
@@ -596,12 +594,12 @@ function Kpi({
   color?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="text-xs uppercase text-slate-500">{title}</div>
-      <div className="mt-1 text-3xl font-bold" style={{ color }}>
+    <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-all hover:border-slate-300">
+      <div className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">{title}</div>
+      <div className="mt-2 text-3xl font-semibold tabular-nums tracking-tight" style={{ color }}>
         {value}
       </div>
-      <div className="mt-1 text-xs text-slate-500">{sub}</div>
+      <div className="mt-1 text-sm text-[var(--text-secondary)]">{sub}</div>
     </div>
   );
 }
@@ -624,7 +622,7 @@ function QuickLink({
   return (
     <Link
       to={to}
-      className="group flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+      className="group flex items-center gap-4 rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-all hover:-translate-y-0.5 hover:shadow-md"
     >
       <div className={`flex h-11 w-11 items-center justify-center rounded-xl ${bg}`}>{icon}</div>
       <div className="flex-1">

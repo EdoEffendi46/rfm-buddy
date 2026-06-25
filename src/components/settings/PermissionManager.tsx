@@ -293,7 +293,7 @@ export function PermissionManager({
               disabled={!hasChanges}
               onClick={handleSave}
               className={cn(
-                "bg-[#25D366] text-white hover:bg-[#128C7E]",
+                "bg-[#16A34A] text-white hover:bg-[#15803D]",
                 !hasChanges && "opacity-50",
               )}
             >
