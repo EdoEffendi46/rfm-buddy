@@ -1,4 +1,5 @@
 <!-- LOVABLE:BEGIN -->
+
 > [!IMPORTANT]
 > This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
 > published git history — force pushing, or rebasing/amending/squashing commits
@@ -7,16 +8,17 @@
 >
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
+
 <!-- LOVABLE:END -->
 
 # Agent instructions (Cursor + Lovable)
 
 This project is edited with **two AI tools**: **Cursor** and **Lovable**. Both MUST follow the same rules. There are no separate standards per tool.
 
-| Tool | How rules are loaded |
-|------|----------------------|
+| Tool        | How rules are loaded                                                               |
+| ----------- | ---------------------------------------------------------------------------------- |
 | **Lovable** | This file (`AGENTS.md`) is **always read** on every prompt. Obey everything below. |
-| **Cursor** | This file + all files in [`.cursor/rules/`](.cursor/rules/) (`.mdc` format). |
+| **Cursor**  | This file + all files in [`.cursor/rules/`](.cursor/rules/) (`.mdc` format).       |
 
 **Canonical detail:** `.cursor/rules/` holds expanded rules. **This file is the cross-platform summary** — if you update rules in one place, update **both** `AGENTS.md` and the matching `.cursor/rules/*.mdc` file.
 
@@ -71,15 +73,15 @@ Embody: **PM** (minimal scope), **BA** (RFM, cadence, audit terms), **Dev** (reu
 2. **Trace:** `src/types` → `src/data` → `src/lib/store.tsx` → `src/hooks` → `src/routes` → `src/components`
 3. **Check blast radius:**
 
-| Area | Files |
-|------|-------|
-| Login / roles | `src/routes/index.tsx` |
-| Dashboard | `src/routes/dashboard.tsx` |
-| Inbox | `src/components/chat/ChatPage.tsx`, `useConversations` |
-| CRM | `src/routes/customers.tsx`, `useCustomers` |
-| Settings / audit | `src/routes/settings.tsx` |
-| RBAC / masking | `lib/permissions.ts`, `lib/mask.ts`, `lib/fieldVisibility.ts` |
-| Analytics | `lib/rfm.ts`, `lib/clv.ts`, `lib/cadence.ts` |
+| Area             | Files                                                         |
+| ---------------- | ------------------------------------------------------------- |
+| Login / roles    | `src/routes/index.tsx`                                        |
+| Dashboard        | `src/routes/dashboard.tsx`                                    |
+| Inbox            | `src/components/chat/ChatPage.tsx`, `useConversations`        |
+| CRM              | `src/routes/customers.tsx`, `useCustomers`                    |
+| Settings / audit | `src/routes/settings.tsx`                                     |
+| RBAC / masking   | `lib/permissions.ts`, `lib/mask.ts`, `lib/fieldVisibility.ts` |
+| Analytics        | `lib/rfm.ts`, `lib/clv.ts`, `lib/cadence.ts`                  |
 
 **Bug fixes:** fix root cause; update all callers in the same task; do not refactor unrelated code unless asked.
 
@@ -140,12 +142,12 @@ const canViewTeam = role !== "cs";
 
 ## UI/UX system
 
-| Token | Value |
-|-------|-------|
-| Brand green | `#25D366` / hover `#128C7E` |
-| Sidebar | `#111B21` |
-| App background | `#F0F2F5` |
-| Cards | `rounded-2xl border border-slate-200 bg-white shadow-sm` |
+| Token          | Value                                                    |
+| -------------- | -------------------------------------------------------- |
+| Brand green    | `#25D366` / hover `#128C7E`                              |
+| Sidebar        | `#111B21`                                                |
+| App background | `#F0F2F5`                                                |
+| Cards          | `rounded-2xl border border-slate-200 bg-white shadow-sm` |
 
 - Authenticated pages: `AppShell` + `p-6` (chat uses `noPadding`).
 - Use `@/components/Avatar` (not shadcn avatar) in app code.
@@ -167,11 +169,11 @@ Text must feel like a **real Indonesian CS/shop admin tool** — not AI-generate
 
 **Never use:**
 
-- Marketing: *solusi terpadu*, *transformasi digital*, *seamless*, *powerful*
-- Robotic success: *Operasi berhasil dilakukan*, *Berhasil!*, *Data telah berhasil disimpan*
-- Generic empty: *Tidak ada data*, *No results found*
-- Tutorial voice: *Klik di sini untuk...*, *Silakan masukkan...*
-- English on ID screens: *Submit*, *Save changes*, *Learn more* (except chat Mine/Open tabs)
+- Marketing: _solusi terpadu_, _transformasi digital_, _seamless_, _powerful_
+- Robotic success: _Operasi berhasil dilakukan_, _Berhasil!_, _Data telah berhasil disimpan_
+- Generic empty: _Tidak ada data_, _No results found_
+- Tutorial voice: _Klik di sini untuk..._, _Silakan masukkan..._
+- English on ID screens: _Submit_, _Save changes_, _Learn more_ (except chat Mine/Open tabs)
 - Emoji on buttons/headings (segment badges OK)
 
 **Before new copy:** grep similar strings in repo; match length and tone of the nearest screen. Read aloud — if it sounds like a chatbot, rewrite shorter.
@@ -182,11 +184,11 @@ Full detail: `.cursor/rules/ui-copy-voice.mdc`
 
 ## RBAC & security
 
-| Role | Agents | Access |
-|------|--------|--------|
-| `cs` | rina, budi, sari | Assigned + unassigned + active manual shares |
-| `supervisor` | admin | Team-wide via `ROLE_PERMISSIONS` |
-| `owner` | hartono | All supervisor + billing, export approval, field rules |
+| Role         | Agents           | Access                                                 |
+| ------------ | ---------------- | ------------------------------------------------------ |
+| `cs`         | rina, budi, sari | Assigned + unassigned + active manual shares           |
+| `supervisor` | admin            | Team-wide via `ROLE_PERMISSIONS`                       |
+| `owner`      | hartono          | All supervisor + billing, export approval, field rules |
 
 **Helpers (always use, never duplicate logic):**
 
@@ -220,12 +222,12 @@ Settings sections: mirror `requires: Permission` + `<Gated>` pattern in `setting
 
 ## Known tech debt (do not copy)
 
-| Bug | File | Fix |
-|-----|------|-----|
-| Owner treated as CS on dashboard | `dashboard.tsx` | Use `role !== "cs"`, not `role === "supervisor"` |
-| Owner unread badge | `Sidebar.tsx` | Owner sees all team unread |
-| Owner login label | `index.tsx` | Show owner role correctly |
-| `canEditCustomer` / `getFieldDisplay` unused | various | Wire when touching those flows |
+| Bug                                          | File            | Fix                                              |
+| -------------------------------------------- | --------------- | ------------------------------------------------ |
+| Owner treated as CS on dashboard             | `dashboard.tsx` | Use `role !== "cs"`, not `role === "supervisor"` |
+| Owner unread badge                           | `Sidebar.tsx`   | Owner sees all team unread                       |
+| Owner login label                            | `index.tsx`     | Show owner role correctly                        |
+| `canEditCustomer` / `getFieldDisplay` unused | various         | Wire when touching those flows                   |
 
 Full list: `.cursor/rules/known-tech-debt.mdc` — fix debt when you edit those files.
 
@@ -316,29 +318,29 @@ Full detail: `.cursor/rules/e2e-verification.mdc`
 
 **Lovable:** `AGENTS.md` above is binding. **Cursor:** also load matching `.mdc` files:
 
-| File | Scope |
-|------|-------|
-| `00-rules-contract.mdc` | Always |
-| `team-mindset.mdc` | Always |
-| `project-context.mdc` | Always |
-| `change-impact.mdc` | Always |
-| `ui-copy-voice.mdc` | Always - UI labels, toasts |
-| `writing-punctuation.mdc` | Always - hyphen, not em dash |
-| `git-workflow.mdc` | Always — commits, push, Lovable sync |
-| `validation-done.mdc` | Always — definition of done |
-| `known-tech-debt.mdc` | Always — open bugs, anti-patterns |
-| `demo-honesty.mdc` | Always — demo boundaries |
-| `mvp1-product.mdc` | Always — MVP1 beli putus, invite-only auth |
-| `validation-schema.mdc` | Always — Zod + RHF |
-| `type-strictness.mdc` | Always — shared types, no any |
-| `e2e-verification.mdc` | Always — lint, build, E2E |
-| `code-standards.mdc` | `*.ts`, `*.tsx` |
-| `ui-ux-system.mdc` | `*.tsx`, styles |
-| `rbac-security.mdc` | permissions, store, routes, chat |
-| `business-domain.mdc` | RFM, cadence, data, types |
-| `lovable-vite.mdc` | vite.config, server, start, package.json |
-| `audit-instrumentation.mdc` | store, routes, chat |
-| `file-placement.mdc` | routes, components |
-| `a11y-minimal.mdc` | `*.tsx` |
+| File                        | Scope                                      |
+| --------------------------- | ------------------------------------------ |
+| `00-rules-contract.mdc`     | Always                                     |
+| `team-mindset.mdc`          | Always                                     |
+| `project-context.mdc`       | Always                                     |
+| `change-impact.mdc`         | Always                                     |
+| `ui-copy-voice.mdc`         | Always - UI labels, toasts                 |
+| `writing-punctuation.mdc`   | Always - hyphen, not em dash               |
+| `git-workflow.mdc`          | Always — commits, push, Lovable sync       |
+| `validation-done.mdc`       | Always — definition of done                |
+| `known-tech-debt.mdc`       | Always — open bugs, anti-patterns          |
+| `demo-honesty.mdc`          | Always — demo boundaries                   |
+| `mvp1-product.mdc`          | Always — MVP1 beli putus, invite-only auth |
+| `validation-schema.mdc`     | Always — Zod + RHF                         |
+| `type-strictness.mdc`       | Always — shared types, no any              |
+| `e2e-verification.mdc`      | Always — lint, build, E2E                  |
+| `code-standards.mdc`        | `*.ts`, `*.tsx`                            |
+| `ui-ux-system.mdc`          | `*.tsx`, styles                            |
+| `rbac-security.mdc`         | permissions, store, routes, chat           |
+| `business-domain.mdc`       | RFM, cadence, data, types                  |
+| `lovable-vite.mdc`          | vite.config, server, start, package.json   |
+| `audit-instrumentation.mdc` | store, routes, chat                        |
+| `file-placement.mdc`        | routes, components                         |
+| `a11y-minimal.mdc`          | `*.tsx`                                    |
 
 **Lovable agents:** everything above in this file is binding. Optionally read `.cursor/rules/` from the repo for extra detail before large changes.

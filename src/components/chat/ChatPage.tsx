@@ -64,6 +64,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { isSupabaseConfigured } from "@/lib/supabase/env";
 import type { Customer, ConversationStatus, OrderStatus, Priority, RFMSegment } from "@/types";
 import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
 
@@ -197,11 +199,25 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
     }
   }, [selectedId, selectedConv?.messages.length]);
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!selectedId || !draft.trim()) return;
-    store.sendMessage(selectedId, draft.trim(), inputMode);
+    const content = draft.trim();
+    const mode = inputMode;
     setDraft("");
-    toast.success(inputMode === "internal_note" ? "Catatan internal disimpan" : "Pesan terkirim");
+
+    let accessToken: string | undefined;
+    if (mode === "text" && isSupabaseConfigured()) {
+      const client = getSupabaseBrowserClient();
+      accessToken = (await client?.auth.getSession())?.data.session?.access_token;
+    }
+
+    try {
+      await store.sendMessage(selectedId, content, mode, accessToken);
+      toast.success(mode === "internal_note" ? "Catatan internal disimpan" : "Pesan terkirim");
+    } catch (err) {
+      setDraft(content);
+      toast.error(err instanceof Error ? err.message : "Gagal kirim pesan");
+    }
   };
 
   return (
@@ -801,7 +817,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                         details: "Transfer percakapan antar CS",
                       });
                       store.assignCustomer(selectedCustomer.id, a.id);
-                      store.sendMessage(
+                      void store.sendMessage(
                         selectedCustomer.id,
                         `Percakapan ditransfer ke ${a.name}`,
                         "internal_note",

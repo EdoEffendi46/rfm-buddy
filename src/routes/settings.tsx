@@ -50,6 +50,7 @@ import {
   Clock,
   CheckCircle,
   KeyRound,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -59,6 +60,7 @@ import { hasPermission, canViewAuditEntry, hasFlag, type Permission } from "@/li
 import { PermissionManager } from "@/components/settings/PermissionManager";
 import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
 import { PendingInviteActions } from "@/components/settings/PendingInviteActions";
+import { WhatsappSettingsSection } from "@/components/settings/WhatsappSettingsSection";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
 import { formatDate, formatRupiah } from "@/lib/format";
@@ -84,6 +86,7 @@ type Section =
   | "export_approval"
   | "role_history"
   | "billing"
+  | "whatsapp"
   | "export_data"
   | "about";
 
@@ -121,6 +124,12 @@ const SECTIONS: {
     requires: "view_permission_history",
   },
   { id: "billing", label: "Billing & Subscription", icon: CreditCard, requires: "manage_billing" },
+  {
+    id: "whatsapp",
+    label: "WhatsApp Business",
+    icon: MessageCircle,
+    requires: "manage_billing",
+  },
   { id: "export_data", label: "Export Data", icon: Download, requires: "export_data" },
   { id: "about", label: "Tentang Aplikasi", icon: Info },
 ];
@@ -203,6 +212,13 @@ function SettingsPage() {
           {section === "billing" && (
             <Gated perm="manage_billing">
               <BillingSection />
+            </Gated>
+          )}
+          {section === "whatsapp" && (
+            <Gated perm="manage_billing">
+              <Card title="WhatsApp Business">
+                <WhatsappSettingsSection />
+              </Card>
             </Gated>
           )}
           {section === "export_data" && (

@@ -4,6 +4,7 @@ export type ConversationStatus = "open" | "resolved" | "snoozed";
 export type OrderStatus = "dalam_proses" | "siap_diambil" | "selesai";
 export type Priority = "high" | "normal" | "low";
 export type MessageType = "text" | "internal_note";
+export type MessageChannel = "internal" | "whatsapp";
 export type ReadStatus = "sent" | "delivered" | "read";
 
 export interface Agent {
@@ -95,6 +96,8 @@ export interface Customer {
   id: string;
   name: string;
   phone: string;
+  /** Normalized WhatsApp id (E.164 digits without +). Set when synced from WA. */
+  waId?: string;
   joinDate: string;
   assignedAgentId: string;
   purchases: Purchase[];
@@ -121,6 +124,10 @@ export interface Message {
   timestamp: string;
   readStatus: ReadStatus;
   type: MessageType;
+  /** internal = demo/inbox-only; whatsapp = synced with Meta Cloud API */
+  channel?: MessageChannel;
+  /** Meta wamid — used for delivery/read status webhooks */
+  waMessageId?: string;
 }
 
 export interface Template {

@@ -21,11 +21,11 @@ Di editor Lovable:
 2. Buka **Secrets**
 3. Tambahkan (copy dari `.env` lokal Anda):
 
-| Secret | Wajib untuk | Contoh |
-|--------|-------------|--------|
-| `VITE_SUPABASE_URL` | Login, load data | `https://btdoqpowkfbssfdyygpm.supabase.co` |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | Login, load data | `sb_publishable_...` |
-| `SUPABASE_SECRET_KEY` | **Invite owner** (server fn) | `sb_secret_...` |
+| Secret                          | Wajib untuk                  | Contoh                                     |
+| ------------------------------- | ---------------------------- | ------------------------------------------ |
+| `VITE_SUPABASE_URL`             | Login, load data             | `https://btdoqpowkfbssfdyygpm.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | Login, load data             | `sb_publishable_...`                       |
+| `SUPABASE_SECRET_KEY`           | **Invite owner** (server fn) | `sb_secret_...`                            |
 
 **Tanpa `VITE_*`:** preview fallback ke **demo picker lama** (pilih agent tanpa password) — bukan form email login.
 
@@ -69,14 +69,14 @@ Migration sudah di-run lokal = DB sudah OK untuk preview juga.
 
 ## Gejala vs penyebab
 
-| Gejala di Lovable | Penyebab |
-|-------------------|----------|
+| Gejala di Lovable                                  | Penyebab                                           |
+| -------------------------------------------------- | -------------------------------------------------- |
 | Halaman login = pilih agent (tanpa email/password) | `VITE_SUPABASE_*` belum di Secrets / belum rebuild |
-| Form login ada, tapi "loading" terus | Keys salah atau project beda |
-| Login gagal / invalid key | Publishable key typo atau project mismatch |
-| Invite gagal / error server | `SUPABASE_SECRET_KEY` belum di Lovable Secrets |
-| Link email invite error redirect | URL Lovable belum di Supabase Redirect URLs |
-| Preview blank / build error | Build gagal — cek Build log di Lovable |
+| Form login ada, tapi "loading" terus               | Keys salah atau project beda                       |
+| Login gagal / invalid key                          | Publishable key typo atau project mismatch         |
+| Invite gagal / error server                        | `SUPABASE_SECRET_KEY` belum di Lovable Secrets     |
+| Link email invite error redirect                   | URL Lovable belum di Supabase Redirect URLs        |
+| Preview blank / build error                        | Build gagal — cek Build log di Lovable             |
 
 ---
 

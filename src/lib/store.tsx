@@ -66,7 +66,12 @@ interface StoreState {
   clearAgentSession: () => void;
   logAuthLogin: (agent: Agent) => void;
 
-  sendMessage: (customerId: string, content: string, type?: "text" | "internal_note") => void;
+  sendMessage: (
+    customerId: string,
+    content: string,
+    type?: "text" | "internal_note",
+    accessToken?: string,
+  ) => Promise<void>;
   markRead: (customerId: string) => void;
 
   updateCustomer: (id: string, patch: Partial<Customer>) => void;
@@ -297,10 +302,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [clearAgentSession]);
 
   const sendMessage = useCallback(
-    (customerId: string, content: string, type: "text" | "internal_note" = "text") => {
-      setMessages((prev) => {
-        const agentId = currentAgentId ?? "rina";
-        const agent = agents.find((a) => a.id === agentId);
+    async (
+      customerId: string,
+      content: string,
+      type: "text" | "internal_note" = "text",
+      accessToken?: string,
+    ) => {
+      const agentId = currentAgentId ?? "rina";
+      const agent = agents.find((a) => a.id === agentId);
+
+      if (type === "internal_note" || !USE_SUPABASE) {
         const msg: Message = {
           id: genId("m"),
           customerId,
@@ -310,10 +321,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           timestamp: new Date().toISOString(),
           readStatus: "sent",
           type,
+          channel: "internal",
         };
+        setMessages((prev) => [...prev, msg]);
         db.persistMessage(msg);
-        return [...prev, msg];
+        return;
+      }
+
+      const messageId = genId("m");
+      const { sendWhatsappMessageServerFn } = await import("@/lib/whatsapp/send.fn");
+      const saved = await sendWhatsappMessageServerFn({
+        data: {
+          customerId,
+          content,
+          messageId,
+          senderId: agentId,
+          senderName: agent?.name ?? "Agent",
+          ...(accessToken ? { accessToken } : {}),
+        },
       });
+      setMessages((prev) => [...prev, saved]);
     },
     [agents, currentAgentId],
   );

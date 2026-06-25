@@ -65,17 +65,17 @@
   --radius: 0.625rem;
   --background: oklch(0.974 0.003 247);
   --foreground: oklch(0.16 0.03 256);
-  --brand: #25D366;
-  --brand-dark: #128C7E;
-  --sidebar-bg: #111B21;
-  --app-bg: #F0F2F5;
-  --surface: #FFFFFF;
-  --border-soft: #E2E8F0;
-  --text-muted: #64748B;
-  --success: #22C55E;
-  --warning: #F59E0B;
-  --danger: #EF4444;
-  --info: #3B82F6;
+  --brand: #25d366;
+  --brand-dark: #128c7e;
+  --sidebar-bg: #111b21;
+  --app-bg: #f0f2f5;
+  --surface: #ffffff;
+  --border-soft: #e2e8f0;
+  --text-muted: #64748b;
+  --success: #22c55e;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
@@ -171,6 +171,12 @@
 }
 
 @utility scrollbar-thin {
-  &::-webkit-scrollbar { width: 6px; height: 6px; }
-  &::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+  &::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+  }
 }

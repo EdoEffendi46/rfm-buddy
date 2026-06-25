@@ -9,18 +9,21 @@ Built with **TanStack Start**, **React 19**, and **TypeScript**. Data is stored 
 ## Features
 
 ### Inbox & CRM
+
 - **Unified chat inbox** with conversation filters (mine, unassigned, open, resolved, snoozed)
 - **Customer directory** with table/card views, search, and RFM segment filters
 - **Customer detail** with purchase history, notes, tags, cadence override, and manual record sharing
 - **Quick-reply templates**, conversation tags, snooze, and transfer workflows
 
 ### Analytics
+
 - **RFM segmentation** — Champions, Loyal, Promising, At Risk, New, Dormant
 - **CLV estimation** — 12-month projected customer lifetime value
 - **Order cadence engine** — predicts next order date from purchase patterns (with manual override)
 - **Supervisor dashboard** — segment distribution charts, monthly spending trends, follow-up queues, team performance
 
 ### Security & Governance
+
 - **Role-based access control** — CS, Supervisor, and Owner roles with 30 granular permissions
 - **Record-level sharing** — manual share with view/edit permission and optional expiry
 - **Field visibility rules** — phone number masking for CS agents
@@ -33,24 +36,24 @@ Built with **TanStack Start**, **React 19**, and **TypeScript**. Data is stored 
 
 Sign in from the home page by selecting a demo agent. Each role exposes different UI and permissions.
 
-| Agent | Role | Access |
-|-------|------|--------|
-| Rina, Budi, Sari | CS | Assigned customers, masked phone numbers, own conversations |
-| Admin | Supervisor | Full team view, customer management, export requests, audit log |
-| Pak Hartono | Owner | All supervisor capabilities + billing, export approval, field rules, permission history |
+| Agent            | Role       | Access                                                                                  |
+| ---------------- | ---------- | --------------------------------------------------------------------------------------- |
+| Rina, Budi, Sari | CS         | Assigned customers, masked phone numbers, own conversations                             |
+| Admin            | Supervisor | Full team view, customer management, export requests, audit log                         |
+| Pak Hartono      | Owner      | All supervisor capabilities + billing, export approval, field rules, permission history |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
+| Layer     | Technology                                                                                    |
+| --------- | --------------------------------------------------------------------------------------------- |
 | Framework | [TanStack Start](https://tanstack.com/start) + [TanStack Router](https://tanstack.com/router) |
-| UI | React 19, Tailwind CSS 4, [shadcn/ui](https://ui.shadcn.com) (Radix UI) |
-| Charts | Recharts |
-| State | React Context (`src/lib/store.tsx`) with seeded in-memory data |
-| Build | Vite 8, Nitro |
-| Language | TypeScript 5 |
+| UI        | React 19, Tailwind CSS 4, [shadcn/ui](https://ui.shadcn.com) (Radix UI)                       |
+| Charts    | Recharts                                                                                      |
+| State     | React Context (`src/lib/store.tsx`) with seeded in-memory data                                |
+| Build     | Vite 8, Nitro                                                                                 |
+| Language  | TypeScript 5                                                                                  |
 
 ---
 
@@ -124,14 +127,14 @@ src/
 
 ## Routes
 
-| Path | Description |
-|------|-------------|
-| `/` | Demo login — pick an agent to explore role-based access |
-| `/dashboard` | Overview KPIs, RFM charts, cadence follow-up (supervisor/owner) |
-| `/chat` | Omnichannel inbox |
-| `/chat/:customerId` | Inbox with a conversation pre-selected |
-| `/customers` | Customer CRM with filters, detail modal, and sharing |
-| `/settings` | Profile, team, templates, audit log, export, and billing |
+| Path                | Description                                                     |
+| ------------------- | --------------------------------------------------------------- |
+| `/`                 | Demo login — pick an agent to explore role-based access         |
+| `/dashboard`        | Overview KPIs, RFM charts, cadence follow-up (supervisor/owner) |
+| `/chat`             | Omnichannel inbox                                               |
+| `/chat/:customerId` | Inbox with a conversation pre-selected                          |
+| `/customers`        | Customer CRM with filters, detail modal, and sharing            |
+| `/settings`         | Profile, team, templates, audit log, export, and billing        |
 
 ---
 
@@ -180,18 +183,18 @@ This is a **frontend demo** with seeded data:
 
 ### Local: test both modes
 
-| Mode | Command | Browser |
-|------|---------|---------|
-| **Pending migrations** | `bun db:migrate` | — |
-| **Fresh empty** | `bun db:migrate:fresh` | Incognito → `/setup` |
-| **Fresh + defaults** | `bun db:migrate:fresh --seed` | `/setup` (catalogs pre-filled) |
-| **Fresh + demo** | `bun db:demo` | `hartono@chatcrm.demo` / `Demo1234!` |
+| Mode                   | Command                       | Browser                              |
+| ---------------------- | ----------------------------- | ------------------------------------ |
+| **Pending migrations** | `bun db:migrate`              | —                                    |
+| **Fresh empty**        | `bun db:migrate:fresh`        | Incognito → `/setup`                 |
+| **Fresh + defaults**   | `bun db:migrate:fresh --seed` | `/setup` (catalogs pre-filled)       |
+| **Fresh + demo**       | `bun db:demo`                 | `hartono@chatcrm.demo` / `Demo1234!` |
 
 **Non-destructive upsert:**
 
-| Command | Effect |
-|---------|--------|
-| `bun db:seed` | Upsert catalogs |
+| Command              | Effect                  |
+| -------------------- | ----------------------- |
+| `bun db:seed`        | Upsert catalogs         |
 | `bun db:seed --demo` | Upsert demo data + auth |
 
 Flags langsung setelah command — **tanpa** `--` pemisah: `bun db:migrate:fresh --seed --demo`
@@ -200,18 +203,18 @@ Flags langsung setelah command — **tanpa** `--` pemisah: `bun db:migrate:fresh
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Start development server |
-| `bun run build` | Production build |
-| `bun run build:dev` | Development-mode build |
-| `bun run preview` | Preview production build locally |
-| `bun run lint` | Run ESLint |
-| `bun db:migrate` | Apply pending SQL migrations |
-| `bun db:migrate:fresh` | Drop schema + re-run all migrations + clear auth |
-| `bun db:migrate:fresh --seed` | Fresh + base catalogs → `/setup` |
-| `bun db:migrate:fresh --seed --demo` | Fresh + full demo (local dev only) |
-| `bun db:seed --demo` | Upsert demo data + auth (non-destructive) |
+| Command                              | Description                                      |
+| ------------------------------------ | ------------------------------------------------ |
+| `bun run dev`                        | Start development server                         |
+| `bun run build`                      | Production build                                 |
+| `bun run build:dev`                  | Development-mode build                           |
+| `bun run preview`                    | Preview production build locally                 |
+| `bun run lint`                       | Run ESLint                                       |
+| `bun db:migrate`                     | Apply pending SQL migrations                     |
+| `bun db:migrate:fresh`               | Drop schema + re-run all migrations + clear auth |
+| `bun db:migrate:fresh --seed`        | Fresh + base catalogs → `/setup`                 |
+| `bun db:migrate:fresh --seed --demo` | Fresh + full demo (local dev only)               |
+| `bun db:seed --demo`                 | Upsert demo data + auth (non-destructive)        |
 
 **Production guard:** set `APP_ENV=production` on client deploys. `db:migrate:fresh` is blocked unless `--force` is passed; `--demo` is never allowed in production.
 

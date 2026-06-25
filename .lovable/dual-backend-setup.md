@@ -2,13 +2,13 @@
 
 Satu codebase, **dua Supabase project**, dipilih lewat **environment variables** — bukan dua client terpisah.
 
-| | **Local (Cursor)** | **Lovable Preview** |
-|---|-------------------|---------------------|
-| Backend | Supabase **pribadi** (`btdoqpowkfbssfdyygpm`) | **Lovable Cloud** (project terpisah) |
-| Env file | `.env.local` (gitignored) | **Cloud → Secrets** (auto dari connector) |
-| Migration | `bun db:migrate` / SQL Editor pribadi | Lovable Cloud tools / port SQL dari repo |
-| Auth URLs | `localhost:8080` di dashboard **pribadi** | `*.lovable.app` di **Cloud** (Lovable atur) |
-| Secret key | `SUPABASE_SECRET_KEY` di `.env.local` | `SUPABASE_SECRET_KEY` di Cloud Secrets |
+|            | **Local (Cursor)**                            | **Lovable Preview**                         |
+| ---------- | --------------------------------------------- | ------------------------------------------- |
+| Backend    | Supabase **pribadi** (`btdoqpowkfbssfdyygpm`) | **Lovable Cloud** (project terpisah)        |
+| Env file   | `.env.local` (gitignored)                     | **Cloud → Secrets** (auto dari connector)   |
+| Migration  | `bun db:migrate` / SQL Editor pribadi         | Lovable Cloud tools / port SQL dari repo    |
+| Auth URLs  | `localhost:8080` di dashboard **pribadi**     | `*.lovable.app` di **Cloud** (Lovable atur) |
+| Secret key | `SUPABASE_SECRET_KEY` di `.env.local`         | `SUPABASE_SECRET_KEY` di Cloud Secrets      |
 
 Kode app (`src/lib/supabase/*`) **sama** — hanya baca `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`.
 
@@ -86,12 +86,12 @@ Yang Anda mau: **build berbeda per environment** (local vs Lovable host) dengan 
 
 ## Troubleshooting
 
-| Gejala | Perbaikan |
-|--------|-----------|
-| Local OK, Lovable demo picker | Cloud belum inject `VITE_*` → Secrets + rebuild |
-| Lovable OK, local demo picker | Buat/isi `.env.local`, restart `bun dev` |
-| Login OK, invite gagal | `SUPABASE_SECRET_KEY` belum di env target tersebut |
-| Email invite redirect error | Redirect URL salah project (local vs Cloud beda dashboard) |
+| Gejala                             | Perbaikan                                                                                                                       |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Local OK, Lovable demo picker      | Cloud belum inject `VITE_*` → Secrets + rebuild                                                                                 |
+| Lovable OK, local demo picker      | Buat/isi `.env.local`, restart `bun dev`                                                                                        |
+| Login OK, invite gagal             | `SUPABASE_SECRET_KEY` belum di env target tersebut                                                                              |
+| Email invite redirect error        | Redirect URL salah project (local vs Cloud beda dashboard)                                                                      |
 | Email invite masih default English | Template belum di Dashboard → Authentication → Email Templates → **Invite user** (project yang sama dengan `VITE_SUPABASE_URL`) |
 
 Detail preview: [lovable-preview-setup.md](./lovable-preview-setup.md)

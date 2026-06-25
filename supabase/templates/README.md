@@ -15,6 +15,7 @@ Template HTML bertema ChatCRM (`#25D366`, `#111B21`) dengan copy Bahasa Indonesi
 **Dual backend:** kalau local pakai project pribadi dan Lovable pakai Cloud — template harus dipasang **di masing-masing project**, bukan cuma satu.
 
 Pastikan **URL Configuration** sudah benar:
+
 - Site URL: `http://localhost:8080` (dev) / domain production
 - Redirect: `/accept-invite`, `/reset-password`
 
@@ -22,24 +23,24 @@ Pastikan **URL Configuration** sudah benar:
 
 ## Subject lines (Bahasa Indonesia)
 
-| Template di Dashboard | Subject |
-|----------------------|---------|
-| **Invite user** | `Undangan bergabung ke ChatCRM` |
-| **Reset password** | `Reset password ChatCRM` |
-| **Confirm signup** | `Konfirmasi email ChatCRM` |
-| **Change email** | `Konfirmasi perubahan email ChatCRM` |
-| **Magic link** | `Link masuk ChatCRM` |
+| Template di Dashboard           | Subject                                                                                                        |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Invite user**                 | `Undangan bergabung ke ChatCRM`                                                                                |
+| **Reset password**              | `Reset password ChatCRM`                                                                                       |
+| **Confirm signup**              | `Konfirmasi email ChatCRM`                                                                                     |
+| **Change email**                | `Konfirmasi perubahan email ChatCRM`                                                                           |
+| **Magic link**                  | `Link masuk ChatCRM`                                                                                           |
 | **Password changed** (Security) | `Password ChatCRM Anda diperbarui` — hanya setelah **reset password** (`/reset-password`), bukan accept invite |
 
 ---
 
 ## Body HTML — copy dari file
 
-| Template | File |
-|----------|------|
-| Invite user | [`invite.html`](./invite.html) |
-| Reset password | [`recovery.html`](./recovery.html) |
-| Confirm signup | [`confirmation.html`](./confirmation.html) |
+| Template         | File                                               |
+| ---------------- | -------------------------------------------------- |
+| Invite user      | [`invite.html`](./invite.html)                     |
+| Reset password   | [`recovery.html`](./recovery.html)                 |
+| Confirm signup   | [`confirmation.html`](./confirmation.html)         |
 | Password changed | [`password_changed.html`](./password_changed.html) |
 
 Buka file → **Select All → Copy** → paste ke field **Message body** di Dashboard.
@@ -62,18 +63,18 @@ Desain: header gelap + logo **CC**, tombol hijau **full width**, tanpa emoji ata
 
 Ini ditangani **Supabase Auth**, bukan di app:
 
-| Peristiwa | Efek link |
-|-----------|-----------|
-| **Invite baru** | `ConfirmationURL` berisi token **baru & unik** (signed) |
-| **Kirim ulang** | Auth user lama dihapus → link lama **mati**, email baru dengan link baru |
-| **Batal undangan** | Auth user dihapus → link **mati** |
-| **Sudah di-accept** | Akun aktif → link invite **tidak bisa dipakai lagi** |
-| **Lewat waktu** | Default **24 jam** (`otp_expiry`), lalu "Link undangan tidak valid" |
+| Peristiwa           | Efek link                                                                |
+| ------------------- | ------------------------------------------------------------------------ |
+| **Invite baru**     | `ConfirmationURL` berisi token **baru & unik** (signed)                  |
+| **Kirim ulang**     | Auth user lama dihapus → link lama **mati**, email baru dengan link baru |
+| **Batal undangan**  | Auth user dihapus → link **mati**                                        |
+| **Sudah di-accept** | Akun aktif → link invite **tidak bisa dipakai lagi**                     |
+| **Lewat waktu**     | Default **24 jam** (`otp_expiry`), lalu "Link undangan tidak valid"      |
 
 Lokal: `supabase/config.toml` → `[auth.email] otp_expiry = 86400`.  
 Hosted: cek **Authentication → Providers → Email** (OTP expiry jika tersedia di project kamu).
 
-Copy di `invite.html`: *"Link berlaku 24 jam"* — sesuaikan jika mengubah `otp_expiry`.
+Copy di `invite.html`: _"Link berlaku 24 jam"_ — sesuaikan jika mengubah `otp_expiry`.
 
 ---
 

@@ -101,6 +101,7 @@ export function customerToRow(c: Customer) {
     id: c.id,
     name: c.name,
     phone: c.phone,
+    wa_id: c.waId ?? null,
     join_date: c.joinDate,
     assigned_agent_id: c.assignedAgentId || null,
     tags: c.tags,
@@ -190,6 +191,8 @@ export function messageToRow(m: Message) {
     sent_at: m.timestamp,
     read_status: m.readStatus,
     type: m.type,
+    channel: m.channel ?? "internal",
+    ...(m.waMessageId != null ? { wa_message_id: m.waMessageId } : {}),
   };
 }
 
@@ -202,6 +205,8 @@ export function rowToMessage(r: {
   sent_at: string;
   read_status: Message["readStatus"];
   type: Message["type"];
+  channel?: Message["channel"];
+  wa_message_id?: string | null;
 }): Message {
   return {
     id: r.id,
@@ -212,6 +217,8 @@ export function rowToMessage(r: {
     timestamp: r.sent_at,
     readStatus: r.read_status,
     type: r.type,
+    channel: r.channel ?? "internal",
+    waMessageId: r.wa_message_id ?? undefined,
   };
 }
 
@@ -343,6 +350,7 @@ export function assembleCustomers(
     id: row.id,
     name: row.name,
     phone: row.phone,
+    waId: row.wa_id ?? undefined,
     joinDate: row.join_date,
     assignedAgentId: row.assigned_agent_id ?? "",
     tags: row.tags ?? [],

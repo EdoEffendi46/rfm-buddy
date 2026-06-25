@@ -4,11 +4,11 @@
 
 ## ⚠️ Push git ≠ tabel otomatis di Supabase
 
-| Aksi | Yang terjadi |
-|------|----------------|
-| `git push` dari Cursor | Kode + file migration **sync ke GitHub → Lovable** |
-| Supabase tables | **Tidak otomatis** kecuali SQL dijalankan (lihat bawah) |
-| Lovable Preview | Baru pakai DB setelah **schema ada** + **kode app** panggil Supabase |
+| Aksi                   | Yang terjadi                                                         |
+| ---------------------- | -------------------------------------------------------------------- |
+| `git push` dari Cursor | Kode + file migration **sync ke GitHub → Lovable**                   |
+| Supabase tables        | **Tidak otomatis** kecuali SQL dijalankan (lihat bawah)              |
+| Lovable Preview        | Baru pakai DB setelah **schema ada** + **kode app** panggil Supabase |
 
 **Setelah push**, pilih salah satu untuk buat tabel:
 
@@ -33,11 +33,11 @@ Workflow sudah ada di `.github/workflows/supabase-migrate.yml`. Setelah secrets 
 
 4. **GitHub** → repo → **Settings → Secrets and variables → Actions → New repository secret**:
 
-| Secret | Isi |
-|--------|-----|
-| `SUPABASE_ACCESS_TOKEN` | Personal access token |
-| `SUPABASE_PROJECT_ID` | Project ref (contoh: `btdoqpowkfbssfdyygpm`) |
-| `SUPABASE_DB_PASSWORD` | Password database Postgres |
+| Secret                  | Isi                                          |
+| ----------------------- | -------------------------------------------- |
+| `SUPABASE_ACCESS_TOKEN` | Personal access token                        |
+| `SUPABASE_PROJECT_ID`   | Project ref (contoh: `btdoqpowkfbssfdyygpm`) |
+| `SUPABASE_DB_PASSWORD`  | Password database Postgres                   |
 
 5. Push ke `main` — cek tab **Actions** di GitHub; job **Supabase Migrations** harus hijau.
 
@@ -109,21 +109,25 @@ Commit perubahan dan sync ke GitHub.
 Kalau full migrate terlalu besar, minta Lovable fase demi fase:
 
 **Fase A — schema + seed saja**
+
 ```
 Run supabase/migrations/001_initial_schema.sql on connected Supabase. Seed agents and customers from src/data/*.ts. No app code changes yet.
 ```
 
 **Fase B — customers CRUD**
+
 ```
 Wire addCustomer and updateCustomer in store.tsx to Supabase via createServerFn. Keep rest in-memory for now.
 ```
 
 **Fase C — messages + chat**
+
 ```
 Wire sendMessage, markRead, conversations list to Supabase.
 ```
 
 **Fase D — audit, export, settings**
+
 ```
 Migrate audit_log, export_requests, field_rules, templates, services, tags.
 ```
@@ -135,6 +139,7 @@ Migrate audit_log, export_requests, field_rules, templates, services, tags.
 Copy `.env.example` → `.env` (jangan commit `.env`).
 
 Ambil dari **Supabase Dashboard → Settings → API**:
+
 - `VITE_SUPABASE_URL` — Project URL
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — `sb_publishable_...` (client)
 - `SUPABASE_SECRET_KEY` — `sb_secret_...` (server only, Settings → API Keys → Secret keys)
