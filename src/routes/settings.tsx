@@ -1166,7 +1166,10 @@ function FieldVisibilitySection() {
             </div>
             <div>
               <label className="text-xs font-medium">Pola Masking</label>
-              <Select value={pattern} onValueChange={(v) => setPattern(v as any)}>
+              <Select
+                value={pattern}
+                onValueChange={(v) => setPattern(v as "phone" | "currency_range" | "full_hide")}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -1615,7 +1618,12 @@ function ExportDataSection() {
         <div className="grid gap-3 md:grid-cols-2">
           <div>
             <label className="text-xs font-medium">Tipe Data</label>
-            <Select value={type} onValueChange={(v) => setType(v as any)}>
+            <Select
+              value={type}
+              onValueChange={(v) =>
+                setType(v as "customers" | "conversations" | "financial_report")
+              }
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

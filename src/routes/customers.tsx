@@ -786,7 +786,7 @@ function CustomerDetailModal({
                   </Select>
                   <Select
                     value={sharePermission}
-                    onValueChange={(v) => setSharePermission(v as any)}
+                    onValueChange={(v) => setSharePermission(v as "view" | "edit")}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -796,7 +796,10 @@ function CustomerDetailModal({
                       <SelectItem value="edit">Bisa edit</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={shareDuration} onValueChange={(v) => setShareDuration(v as any)}>
+                  <Select
+                    value={shareDuration}
+                    onValueChange={(v) => setShareDuration(v as "permanent" | "24h" | "7d")}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

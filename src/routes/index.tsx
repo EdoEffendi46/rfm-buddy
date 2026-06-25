@@ -48,6 +48,7 @@ function LoginPage() {
   const { agent, login: demoLogin } = useAuth();
   const auth = useAuthContext();
   const usesAuth = isSupabaseConfigured();
+  const { invite } = Route.useSearch();
 
   useEffect(() => {
     if (agent) router.navigate({ to: "/dashboard" });
@@ -57,7 +58,7 @@ function LoginPage() {
     return <DemoPickerLogin onLogin={demoLogin} />;
   }
 
-  return <EmailLoginForm signIn={auth.signIn} inviteDone={Route.useSearch().invite === "done"} />;
+  return <EmailLoginForm signIn={auth.signIn} inviteDone={invite === "done"} />;
 }
 
 function EmailLoginForm({
@@ -238,7 +239,9 @@ function DemoPickerLogin({ onLogin }: { onLogin: (agentId: string) => void }) {
             <Avatar name={a.name} color={a.color} initials={a.initials} size={40} />
             <div className="flex-1">
               <div className="font-medium text-[var(--text-primary)]">{a.name}</div>
-              <div className="text-xs text-[var(--text-secondary)] mt-0.5">{ROLE_DISPLAY[a.role as Role].subtitle}</div>
+              <div className="text-xs text-[var(--text-secondary)] mt-0.5">
+                {ROLE_DISPLAY[a.role as Role].subtitle}
+              </div>
             </div>
             {selected === a.id ? (
               <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#16A34A] text-white animate-fade-in-up">

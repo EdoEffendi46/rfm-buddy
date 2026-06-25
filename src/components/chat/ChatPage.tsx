@@ -66,7 +66,14 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
-import type { Customer, ConversationStatus, OrderStatus, Priority, RFMSegment } from "@/types";
+import type {
+  Customer,
+  ConversationStatus,
+  Message,
+  OrderStatus,
+  Priority,
+  RFMSegment,
+} from "@/types";
 import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
 
 const STATUS_TABS: { id: string; label: string }[] = [
@@ -856,12 +863,12 @@ function MessagesList({
   agentId,
   customerId,
 }: {
-  conv: { customer: Customer; messages: any[] };
+  conv: { customer: Customer; messages: Message[] };
   typing: boolean;
   agentId: string;
   customerId: string;
 }) {
-  const groups: { day: string; items: any[] }[] = [];
+  const groups: { day: string; items: Message[] }[] = [];
   conv.messages.forEach((m) => {
     const day = relativeDay(m.timestamp);
     const last = groups[groups.length - 1];

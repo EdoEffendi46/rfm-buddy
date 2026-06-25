@@ -40,8 +40,6 @@ export function labelForDays(days: number, variance: number): CadenceLabel {
 export function calculateCadence(purchases: Purchase[], now: Date = new Date()): CadenceResult {
   const sorted = [...purchases].sort((a, b) => a.date.localeCompare(b.date));
   const lastOrderDate = sorted.length ? sorted[sorted.length - 1].date : null;
-  const manualOverrideDays =
-    typeof (purchases as any)._override === "number" ? (purchases as any)._override : null;
 
   if (sorted.length < 2) {
     return {

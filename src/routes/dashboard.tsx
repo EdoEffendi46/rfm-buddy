@@ -152,9 +152,15 @@ function DashboardPage() {
       <div className="p-6 space-y-8 max-w-[1400px] mx-auto">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
-            <div className="text-xs text-[var(--text-tertiary)]">{formatDateLong(new Date().toISOString())}</div>
-            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Halo, {agent?.name} 👋</h1>
-            <p className="text-sm text-[var(--text-secondary)] mt-0.5">{roleDisplay.dashboardSubtitle}</p>
+            <div className="text-xs text-[var(--text-tertiary)]">
+              {formatDateLong(new Date().toISOString())}
+            </div>
+            <h1 className="text-2xl font-semibold tracking-tight text-[var(--text-primary)]">
+              Halo, {agent?.name} 👋
+            </h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-0.5">
+              {roleDisplay.dashboardSubtitle}
+            </p>
           </div>
           <span className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
             {role === "owner" ? "Owner" : role === "supervisor" ? "Supervisor" : "Customer Service"}
@@ -316,7 +322,11 @@ function DashboardPage() {
             <div className="flex items-center justify-between">
               <div className="text-sm font-semibold">Customer Prioritas Follow Up</div>
             </div>
-            <Tabs value={followTab} onValueChange={(v) => setFollowTab(v as any)} className="mt-2">
+            <Tabs
+              value={followTab}
+              onValueChange={(v) => setFollowTab(v as "at_risk" | "dormant" | "all")}
+              className="mt-2"
+            >
               <TabsList>
                 <TabsTrigger value="at_risk">At Risk</TabsTrigger>
                 <TabsTrigger value="dormant">Dormant</TabsTrigger>
@@ -595,7 +605,9 @@ function Kpi({
 }) {
   return (
     <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-all hover:border-slate-300">
-      <div className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">{title}</div>
+      <div className="text-[11px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
+        {title}
+      </div>
       <div className="mt-2 text-3xl font-semibold tabular-nums tracking-tight" style={{ color }}>
         {value}
       </div>
