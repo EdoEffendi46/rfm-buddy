@@ -19,6 +19,10 @@ dist-ssr
 .env.*
 !.env.example
 
+# Deploy outputs / secrets
+.vercel
+.output
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

@@ -172,6 +172,10 @@ This is a **frontend demo** with seeded data:
 
 ## Production deploy (beli putus)
 
+**Strategi hosting lengkap:** [.lovable/beli-putus-hosting.md](.lovable/beli-putus-hosting.md) (Free tier pilot, upgrade path, ownership akun client).
+
+**Boilerplate deploy (staging + client):** [deploy/README.md](deploy/README.md)
+
 1. Create Supabase project for the client.
 2. Set env vars (`VITE_SUPABASE_*`, `SUPABASE_SECRET_KEY`, `APP_ENV=production`; optional `SETUP_TOKEN`).
 3. Run migrations: `bun db:migrate`

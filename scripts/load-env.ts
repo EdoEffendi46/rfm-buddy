@@ -14,29 +14,35 @@ function parseEnvFile(path: string): Record<string, string> {
   return out;
 }
 
-/** Load .env + .env.local for Bun scripts (.env.local wins). */
+/** Load env files for Bun scripts. Precedence (last wins): .env → .env.{DEPLOY_PROFILE} → .env.local → shell. */
 export function loadEnvFile(): Record<string, string> {
   const root = process.cwd();
   const out: Record<string, string> = {};
 
-  const envPath = resolve(root, ".env");
-  if (existsSync(envPath)) Object.assign(out, parseEnvFile(envPath));
+  const profile = process.env.DEPLOY_PROFILE?.trim();
+  const candidates = [".env"];
+  if (profile) candidates.push(`.env.${profile}`);
+  candidates.push(".env.local");
 
-  const localPath = resolve(root, ".env.local");
-  if (existsSync(localPath)) Object.assign(out, parseEnvFile(localPath));
+  for (const name of candidates) {
+    const path = resolve(root, name);
+    if (existsSync(path)) Object.assign(out, parseEnvFile(path));
+  }
 
-  // Shell / CI overrides file (e.g. APP_ENV=production)
   for (const key of Object.keys(out)) {
     const fromShell = process.env[key];
     if (fromShell !== undefined && fromShell !== "") out[key] = fromShell;
   }
-  for (const key of ["APP_ENV", "NODE_ENV"] as const) {
+  for (const key of ["APP_ENV", "NODE_ENV", "DEPLOY_PROFILE"] as const) {
     const fromShell = process.env[key];
     if (fromShell) out[key] = fromShell;
   }
 
   if (!Object.keys(out).length) {
-    console.error("❌ No .env or .env.local found");
+    const hint = profile
+      ? `Copy deploy/env/${profile}.example.env → .env.${profile}`
+      : "Copy .env.example → .env.local";
+    console.error(`❌ No env file found. ${hint}`);
     process.exit(1);
   }
 

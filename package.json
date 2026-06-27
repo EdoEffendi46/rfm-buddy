@@ -18,7 +18,11 @@
     "db:seed-auth": "bun run scripts/seed-auth-users.ts",
     "db:demo": "bun scripts/db-cli.ts migrate:fresh --seed --demo",
     "db:reset-fresh": "bun scripts/db-cli.ts migrate:fresh --seed",
-    "db:push": "supabase db push"
+    "db:push": "supabase db push",
+    "build:vercel": "NITRO_PRESET=vercel bun run build",
+    "deploy:check": "bun scripts/deploy-check.ts",
+    "deploy:check:staging": "DEPLOY_PROFILE=staging bun scripts/deploy-check.ts --staging",
+    "deploy:check:client": "DEPLOY_PROFILE=client bun scripts/deploy-check.ts --client"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
