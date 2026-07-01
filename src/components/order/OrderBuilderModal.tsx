@@ -931,6 +931,39 @@ function Row({ label, value, className }: { label: string; value: string; classN
   );
 }
 
+function ReceiptRow({
+  label,
+  value,
+  strong,
+  muted,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+  muted?: boolean;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span
+        className={cn(
+          "text-sm",
+          muted ? "text-[var(--text-tertiary)]" : "text-[var(--text-secondary)]",
+        )}
+      >
+        {label}
+      </span>
+      <span
+        className={cn(
+          "tabular-nums text-[var(--text-primary)]",
+          strong ? "text-base font-semibold" : "text-sm",
+        )}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
 function ReceiptPreview({
   customer,
   orderNumber,
@@ -979,71 +1012,105 @@ function ReceiptPreview({
         ? "Reservasi/Booking"
         : "Pesanan (Proses Dulu)";
   return (
-    <div className="flex-1 overflow-y-auto px-6 pb-2">
-      <div className="mx-auto max-w-md rounded-xl border border-dashed border-slate-300 bg-white p-5 font-mono text-xs text-slate-800 shadow-sm">
-        <div className="text-center">
-          <div className="text-sm font-bold">ChatCRM</div>
-          <div className="text-[10px] text-slate-500">Preview Struk Pesanan</div>
-        </div>
-        <div className="my-2 border-t border-dashed border-slate-300" />
-        <div>No: {orderNumber}</div>
-        <div>Customer: {customer.name}</div>
-        <div>Tanggal: {formatDate(new Date(orderDate).toISOString())}</div>
-        <div>CS: {agentName}</div>
-        <div>Jenis: {trxLabel}</div>
-        <div className="my-2 border-t border-dashed border-slate-300" />
-        {items.map((i, idx) => (
-          <div key={idx} className="flex justify-between">
-            <div className="flex-1">
-              {i.name}
-              {Object.keys(i.variantSelections).length > 0 && (
-                <span className="text-[10px] text-slate-500">
-                  {" "}
-                  ({Object.values(i.variantSelections).join(", ")})
-                </span>
-              )}
-              <span className="ml-1 text-slate-500">
-                {i.qty}
-                {i.unit ?? ""}
-              </span>
-            </div>
-            <div>{formatRupiah(i.net)}</div>
+    <div className="flex-1 overflow-y-auto bg-slate-50/40 px-6 py-6">
+      <div
+        className="receipt-perforation mx-auto max-w-sm bg-white px-6 pt-6 shadow-[0_4px_16px_rgba(0,0,0,0.06)] rounded-t-md animate-fade-in-up"
+      >
+        {/* Header */}
+        <div className="text-center pb-4">
+          <div className="text-base font-semibold tracking-tight text-[var(--text-primary)]">
+            ChatCRM
           </div>
-        ))}
-        <div className="my-2 border-t border-dashed border-slate-300" />
-        <Row label="Subtotal" value={formatRupiah(calc.subtotal)} />
-        {calc.totalDiscount > 0 && (
-          <Row label="Diskon" value={`-${formatRupiah(calc.totalDiscount)}`} />
-        )}
-        {fees.length > 0 &&
-          fees
+          <div className="mt-0.5 text-xs text-[var(--text-tertiary)]">Preview Struk Pesanan</div>
+        </div>
+
+        {/* Info */}
+        <div className="border-t border-[var(--border-soft)] pt-3 pb-3 space-y-1">
+          <ReceiptRow label="No. Pesanan" value={orderNumber} />
+          <ReceiptRow label="Customer" value={customer.name} />
+          <ReceiptRow label="Tanggal" value={formatDate(new Date(orderDate).toISOString())} />
+          <ReceiptRow label="CS" value={agentName} />
+          <ReceiptRow label="Jenis" value={trxLabel} />
+        </div>
+
+        {/* Items */}
+        <div className="border-t border-[var(--border-soft)] pt-3 pb-3 space-y-1.5">
+          {items.map((i, idx) => {
+            const variantText =
+              Object.keys(i.variantSelections).length > 0
+                ? ` (${Object.values(i.variantSelections).join(", ")})`
+                : "";
+            return (
+              <div key={idx} className="flex items-baseline justify-between gap-3">
+                <span className="text-sm text-[var(--text-primary)]">
+                  {i.name}
+                  {variantText}
+                  <span className="ml-1.5 text-[var(--text-tertiary)]">
+                    ×{i.qty}
+                    {i.unit ? ` ${i.unit}` : ""}
+                  </span>
+                </span>
+                <span className="tabular-nums text-sm text-[var(--text-primary)]">
+                  {formatRupiah(i.net)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Subtotal group */}
+        <div className="border-t border-[var(--border-soft)] pt-3 pb-3 space-y-1">
+          <ReceiptRow label="Subtotal" value={formatRupiah(calc.subtotal)} />
+          {calc.totalDiscount > 0 && (
+            <ReceiptRow label="Diskon" value={`-${formatRupiah(calc.totalDiscount)}`} />
+          )}
+          {fees
             .filter((f) => f.amount > 0)
             .map((f) => (
-              <Row key={f.id} label={f.name || "Biaya"} value={formatRupiah(f.amount)} />
+              <ReceiptRow key={f.id} label={f.name || "Biaya"} value={formatRupiah(f.amount)} />
             ))}
-        {taxEnabled && calc.tax > 0 && (
-          <Row label={`PPN (${taxRate}%)`} value={formatRupiah(calc.tax)} />
-        )}
-        <Row label="Total" value={formatRupiah(calc.total)} className="font-bold" />
-        <div>Metode Bayar: {paymentMethod}</div>
-        {depositEnabled && calc.depAmt > 0 && (
-          <>
-            <Row label="DP" value={`-${formatRupiah(calc.depAmt)}`} />
-            <Row label="Sisa" value={formatRupiah(calc.remaining)} className="font-bold" />
-          </>
-        )}
-        {deliveryEnabled && deliveryAddress && (
-          <>
-            <div className="my-2 border-t border-dashed border-slate-300" />
-            <div>Antar ke: {deliveryAddress}</div>
-          </>
-        )}
-        {customerNote && (
-          <>
-            <div className="my-2 border-t border-dashed border-slate-300" />
-            <div>Catatan: {customerNote}</div>
-          </>
-        )}
+          {taxEnabled && calc.tax > 0 && (
+            <ReceiptRow label={`PPN (${taxRate}%)`} value={formatRupiah(calc.tax)} />
+          )}
+        </div>
+
+        {/* Total (bold border-top) */}
+        <div className="border-t-2 border-[var(--text-primary)] pt-3 pb-3">
+          <ReceiptRow label="TOTAL" value={formatRupiah(calc.total)} strong />
+          {depositEnabled && calc.depAmt > 0 && (
+            <div className="mt-1.5 space-y-1">
+              <ReceiptRow label="DP Dibayar" value={`-${formatRupiah(calc.depAmt)}`} />
+              <ReceiptRow label="Sisa" value={formatRupiah(calc.remaining)} strong />
+            </div>
+          )}
+        </div>
+
+        {/* Payment + notes */}
+        <div className="border-t border-[var(--border-soft)] pt-3 pb-4 space-y-2 text-sm text-[var(--text-secondary)]">
+          <div className="flex justify-between">
+            <span>Metode Bayar</span>
+            <span className="text-[var(--text-primary)]">{paymentMethod}</span>
+          </div>
+          {deliveryEnabled && deliveryAddress && (
+            <div>
+              <div className="text-[var(--text-tertiary)] text-xs uppercase tracking-wider">
+                Antar ke
+              </div>
+              <div className="text-[var(--text-primary)]">{deliveryAddress}</div>
+            </div>
+          )}
+          {customerNote && (
+            <div>
+              <div className="text-[var(--text-tertiary)] text-xs uppercase tracking-wider">
+                Catatan
+              </div>
+              <div className="text-[var(--text-primary)]">{customerNote}</div>
+            </div>
+          )}
+          <div className="pt-2 text-center text-xs text-[var(--text-tertiary)]">
+            — Terima kasih —
+          </div>
+        </div>
       </div>
     </div>
   );
