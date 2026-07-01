@@ -256,3 +256,31 @@ button, a, [role="button"], .interactive {
   box-shadow: var(--shadow-md);
 }
 
+/* ========== Receipt perforation (thermal paper tear edge) ========== */
+.receipt-perforation {
+  position: relative;
+  padding-bottom: 14px;
+  -webkit-mask-image: radial-gradient(circle at 6px 100%, transparent 5px, black 5.5px);
+  mask-image: radial-gradient(circle at 6px 100%, transparent 5px, black 5.5px);
+  -webkit-mask-size: 12px 14px;
+  mask-size: 12px 14px;
+  -webkit-mask-repeat: repeat-x;
+  mask-repeat: repeat-x;
+  -webkit-mask-position: bottom;
+  mask-position: bottom;
+}
+
+/* ========== Kanban drag micro-interactions (infrastructure) ========== */
+.kanban-card-dragging {
+  transform: rotate(2deg) scale(1.02);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+  cursor: grabbing;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+.kanban-column-drop-target {
+  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  outline: 2px dashed var(--brand);
+  outline-offset: -2px;
+  transition: background 150ms ease, outline-color 150ms ease;
+}
+
