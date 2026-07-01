@@ -108,6 +108,7 @@ export async function fetchAppSnapshot(client: SupabaseClient): Promise<AppSnaps
       id: r.id,
       name: r.name,
       phone: r.phone,
+      wa_id: (r as { wa_id?: string | null }).wa_id ?? null,
       join_date: r.join_date,
       assigned_agent_id: r.assigned_agent_id,
       tags: r.tags,

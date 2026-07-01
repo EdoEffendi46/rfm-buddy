@@ -39,6 +39,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { AnimatedCounter } from "@/components/common/AnimatedCounter";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — ChatCRM" }] }),
@@ -176,7 +177,10 @@ function DashboardPage() {
             >
               <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-red-500" />
               <div className="text-sm">
-                <span className="font-semibold">{atRiskCount} customer At Risk</span> - terakhir
+                <span className="font-semibold">
+                  <AnimatedCounter value={atRiskCount} /> customer At Risk
+                </span>{" "}
+                - terakhir
                 order &gt;60 hari. Segera follow up.
               </div>
             </button>
@@ -185,7 +189,10 @@ function DashboardPage() {
             <div className="flex items-start gap-3 rounded-xl border border-violet-200 bg-violet-50 p-4 text-violet-800">
               <Crown className="mt-0.5 h-5 w-5 shrink-0 text-violet-600" />
               <div className="text-sm">
-                <span className="font-semibold">{championsCount} customer Champions</span> -
+                <span className="font-semibold">
+                  <AnimatedCounter value={championsCount} /> customer Champions
+                </span>{" "}
+                -
                 pastikan tetap dijaga relasinya.
               </div>
             </div>
@@ -194,7 +201,10 @@ function DashboardPage() {
             <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
               <Clock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="text-sm">
-                <span className="font-semibold">{slaBreach} percakapan</span> menunggu balasan &gt;2
+                <span className="font-semibold">
+                  <AnimatedCounter value={slaBreach} /> percakapan
+                </span>{" "}
+                menunggu balasan &gt;2
                 jam (SLA breach).
               </div>
             </div>
@@ -206,7 +216,10 @@ function DashboardPage() {
             >
               <CalendarClock className="mt-0.5 h-5 w-5 shrink-0 text-amber-600" />
               <div className="text-sm">
-                <span className="font-semibold">{overdueCount} customer</span> melewati siklus order
+                <span className="font-semibold">
+                  <AnimatedCounter value={overdueCount} /> customer
+                </span>{" "}
+                melewati siklus order
                 biasanya - peluang follow up proaktif.
               </div>
             </a>
@@ -219,23 +232,23 @@ function DashboardPage() {
             <>
               <Kpi
                 title="Total Customer"
-                value={enriched.length.toString()}
+                value={enriched.length}
                 sub={`${enriched.filter((e) => e.rfm.segment === "new").length} baru bulan ini`}
               />
               <Kpi
                 title="Open Conversations"
-                value={openConvs.toString()}
+                value={openConvs}
                 sub={`${awaitingReply} belum dibalas`}
               />
               <Kpi
                 title="Champions"
-                value={championsCount.toString()}
+                value={championsCount}
                 sub={`${Math.round((championsCount / Math.max(enriched.length, 1)) * 100)}% dari total`}
                 color="#7C3AED"
               />
               <Kpi
                 title="At Risk"
-                value={atRiskCount.toString()}
+                value={atRiskCount}
                 sub="Perlu follow up segera"
                 color="#EF4444"
               />
@@ -244,23 +257,23 @@ function DashboardPage() {
             <>
               <Kpi
                 title="Customer Saya"
-                value={myEnriched.length.toString()}
+                value={myEnriched.length}
                 sub="Ditugaskan untukmu"
               />
               <Kpi
                 title="Chat Terbuka"
-                value={openConvs.toString()}
+                value={openConvs}
                 sub={`${awaitingReply} belum dibalas`}
               />
               <Kpi
                 title="Resolved Hari Ini"
                 value={myConvs
                   .filter((c) => c.customer.conversationStatus === "resolved")
-                  .length.toString()}
+                  .length}
                 sub="Percakapan selesai"
                 color="#22C55E"
               />
-              <Kpi title="Avg Response" value="~4 mnt" sub="Target SLA: 30 mnt" color="#3B82F6" />
+              <Kpi title="Avg Response" value={4} suffix=" mnt" sub="Target SLA: 30 mnt" color="#3B82F6" />
             </>
           )}
         </div>
@@ -597,11 +610,13 @@ function Kpi({
   value,
   sub,
   color = "#0F172A",
+  suffix,
 }: {
   title: string;
-  value: string;
+  value: number;
   sub: string;
   color?: string;
+  suffix?: string;
 }) {
   return (
     <div className="rounded-xl border border-[var(--border-soft)] bg-white p-5 transition-all hover:border-slate-300">
@@ -609,7 +624,8 @@ function Kpi({
         {title}
       </div>
       <div className="mt-2 text-3xl font-semibold tabular-nums tracking-tight" style={{ color }}>
-        {value}
+        <AnimatedCounter value={value} />
+        {suffix}
       </div>
       <div className="mt-1 text-sm text-[var(--text-secondary)]">{sub}</div>
     </div>
