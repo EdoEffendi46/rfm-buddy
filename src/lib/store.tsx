@@ -999,6 +999,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     markRead,
     updateCustomer,
     addCustomer,
+    bulkAddCustomers,
     setConversationStatus,
     setOrderStatus,
     setPriority,
