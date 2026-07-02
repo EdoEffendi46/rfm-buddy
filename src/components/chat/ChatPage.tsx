@@ -999,12 +999,14 @@ function CustomerSidePanel({
   clv,
   role,
   agent,
+  messages,
 }: {
   customer: Customer;
   rfm: ReturnType<typeof calculateRFM>;
   clv: ReturnType<typeof calculateCLV>;
   role: import("@/types").Role;
   agent: import("@/types").Agent | null;
+  messages: Message[];
 }) {
   const store = useConversations();
   const { fieldRules } = useStore();
@@ -1019,6 +1021,8 @@ function CustomerSidePanel({
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
   const cadence = cadenceFor(customer.purchases, customer.cadenceOverrideDays);
+  const insight = generateInsight(customer, messages, cadence);
+  const sMeta = SENTIMENT_META[insight.sentiment.sentiment];
   const [orderOpen, setOrderOpen] = useState(false);
 
   return (
