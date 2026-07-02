@@ -1062,6 +1062,48 @@ function CustomerSidePanel({
         <div className="text-[10px] text-slate-400">Berdasarkan pola pembelian historis</div>
       </div>
 
+      {/* AI Insight */}
+      <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-3">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-800">
+          <Sparkles className="h-3.5 w-3.5" /> AI Insight
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", sMeta.bg, sMeta.color)}>
+            {sMeta.icon} {sMeta.label}
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+            {insight.intent}
+          </span>
+        </div>
+        {insight.suggestions.length > 0 && (
+          <ul className="mt-2 space-y-1 text-[11px] text-slate-700">
+            {insight.suggestions.map((s, i) => (
+              <li key={i} className="flex gap-1">
+                <span className="text-violet-500">•</span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {insight.autoTags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {insight.autoTags.map((t) => (
+              <button
+                key={t}
+                onClick={() => store.addConversationTag(customer.id, t)}
+                className="rounded-full border border-violet-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-violet-700 hover:bg-violet-50"
+                title="Klik untuk tambahkan sebagai tag"
+              >
+                + {t}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mt-2 text-[9px] uppercase tracking-wider text-slate-400">
+          Analisis lokal berdasarkan kata kunci
+        </div>
+      </div>
+
       {/* Cadence card */}
       <div className="mt-3">
         <CadenceCard customer={customer} cadence={cadence} canEdit={canEdit} />
