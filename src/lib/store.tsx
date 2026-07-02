@@ -78,6 +78,10 @@ interface StoreState {
   addCustomer: (
     c: Omit<Customer, "id" | "purchases" | "segmentHistory" | "conversationTags">,
   ) => Customer;
+  bulkAddCustomers: (
+    rows: Omit<Customer, "id" | "purchases" | "segmentHistory" | "conversationTags">[],
+    batchTag: string,
+  ) => { created: number; skipped: number };
 
   setConversationStatus: (id: string, status: ConversationStatus, snoozeUntil?: string) => void;
   setOrderStatus: (id: string, status: OrderStatus) => void;
