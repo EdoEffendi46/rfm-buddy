@@ -485,6 +485,8 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="order_masuk">Order Masuk</SelectItem>
+                    <SelectItem value="konfirmasi">Konfirmasi</SelectItem>
                     <SelectItem value="dalam_proses">Dalam Proses</SelectItem>
                     <SelectItem value="siap_diambil">Siap Diambil</SelectItem>
                     <SelectItem value="selesai">Selesai</SelectItem>
@@ -772,6 +774,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           clv={selectedClv}
           role={role}
           agent={agent}
+          messages={selectedConv?.messages ?? []}
         />
       )}
 
