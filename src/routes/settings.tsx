@@ -1229,6 +1229,8 @@ const ACTION_LABELS: Record<AuditAction, string> = {
   settings_changed: "Pengaturan Diubah",
   permission_override_changed: "Izin Agent Diubah",
   permission_overrides_reset: "Izin Direset ke Default",
+  order_status_changed: "Status Order Diubah",
+  customer_bulk_imported: "Import Customer Massal",
 };
 
 function AuditLogSection() {
