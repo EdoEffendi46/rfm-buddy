@@ -75,6 +75,9 @@ import type {
   RFMSegment,
 } from "@/types";
 import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
+import { generateInsight } from "@/lib/aiInsight";
+import { SENTIMENT_META } from "@/lib/aiSentiment";
+import { Sparkles } from "lucide-react";
 
 const STATUS_TABS: { id: string; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -93,7 +96,15 @@ const SEGMENT_TABS: { id: "all" | RFMSegment; label: string }[] = [
 ];
 
 function orderStatusLabel(s: OrderStatus) {
-  return s === "dalam_proses" ? "Dalam Proses" : s === "siap_diambil" ? "Siap Diambil" : "Selesai";
+  return s === "dalam_proses"
+    ? "Dalam Proses"
+    : s === "siap_diambil"
+      ? "Siap Diambil"
+      : s === "selesai"
+        ? "Selesai"
+        : s === "konfirmasi"
+          ? "Konfirmasi"
+          : "Order Masuk";
 }
 
 export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) {
@@ -474,6 +485,8 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="order_masuk">Order Masuk</SelectItem>
+                    <SelectItem value="konfirmasi">Konfirmasi</SelectItem>
                     <SelectItem value="dalam_proses">Dalam Proses</SelectItem>
                     <SelectItem value="siap_diambil">Siap Diambil</SelectItem>
                     <SelectItem value="selesai">Selesai</SelectItem>
@@ -761,6 +774,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           clv={selectedClv}
           role={role}
           agent={agent}
+          messages={selectedConv?.messages ?? []}
         />
       )}
 
@@ -985,12 +999,14 @@ function CustomerSidePanel({
   clv,
   role,
   agent,
+  messages,
 }: {
   customer: Customer;
   rfm: ReturnType<typeof calculateRFM>;
   clv: ReturnType<typeof calculateCLV>;
   role: import("@/types").Role;
   agent: import("@/types").Agent | null;
+  messages: Message[];
 }) {
   const store = useConversations();
   const { fieldRules } = useStore();
@@ -1005,6 +1021,8 @@ function CustomerSidePanel({
     ? customer.purchases.reduce((a, b) => (a.date > b.date ? a : b))
     : null;
   const cadence = cadenceFor(customer.purchases, customer.cadenceOverrideDays);
+  const insight = generateInsight(customer, messages, cadence);
+  const sMeta = SENTIMENT_META[insight.sentiment.sentiment];
   const [orderOpen, setOrderOpen] = useState(false);
 
   return (
@@ -1042,6 +1060,48 @@ function CustomerSidePanel({
           Estimasi CLV 12 bln: {formatRupiah(clv.clv12months)}
         </div>
         <div className="text-[10px] text-slate-400">Berdasarkan pola pembelian historis</div>
+      </div>
+
+      {/* AI Insight */}
+      <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-3">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-violet-800">
+          <Sparkles className="h-3.5 w-3.5" /> AI Insight
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", sMeta.bg, sMeta.color)}>
+            {sMeta.icon} {sMeta.label}
+          </span>
+          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-700">
+            {insight.intent}
+          </span>
+        </div>
+        {insight.suggestions.length > 0 && (
+          <ul className="mt-2 space-y-1 text-[11px] text-slate-700">
+            {insight.suggestions.map((s, i) => (
+              <li key={i} className="flex gap-1">
+                <span className="text-violet-500">•</span>
+                <span>{s}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        {insight.autoTags.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {insight.autoTags.map((t) => (
+              <button
+                key={t}
+                onClick={() => store.addConversationTag(customer.id, t)}
+                className="rounded-full border border-violet-200 bg-white px-1.5 py-0.5 text-[10px] font-medium text-violet-700 hover:bg-violet-50"
+                title="Klik untuk tambahkan sebagai tag"
+              >
+                + {t}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="mt-2 text-[9px] uppercase tracking-wider text-slate-400">
+          Analisis lokal berdasarkan kata kunci
+        </div>
       </div>
 
       {/* Cadence card */}

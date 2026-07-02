@@ -1,64 +1,40 @@
-# Rencana: 4 Bagian Tertunda dari Redesign UI/UX
+Kerjakan spec dari `prompt_3_fitur_lengkap.txt` secara berurutan (Pipeline → AI Insight → Import). Semua field baru pada types tetap optional agar backward compatible, semua state via `useStore()`, semua permission via `hasPermission`/`hasFlag`, phone via `maskPhone`/`getFieldDisplay`, toast pakai sonner.
 
-Kerjakan berurutan 1 → 2 → 3 → 4 sesuai instruksi, verifikasi tiap bagian sebelum lanjut.
+## Dependencies baru
+- `@dnd-kit/core`, `@dnd-kit/sortable` — drag & drop kanban
+- `papaparse` + `@types/papaparse` — CSV parse/unparse
+- `xlsx` — parse Excel
 
-## Catatan penting (kejujuran demo)
-- **Halaman `/pipeline` tidak ada** di project saat ini. Kanban board belum pernah dibangun.
-- **AI Insight Summary "🔄 Perbarui"** juga tidak ada di dashboard saat ini.
-- **"Mengirim ke sistem kasir..."** loading state di Generate Pesanan tidak ada (OrderBuilderModal langsung save).
-Untuk 3 item ini saya akan lapor terus terang di akhir, bukan bikin fitur baru diam-diam. Fokus utama = redesign hal-hal yang memang sudah ada.
+## Fitur 1 — Pipeline Kanban (`/pipeline`)
+- `src/types/index.ts`: tambah optional `orderStatusChangedAt?: string` di `Customer`.
+- `src/lib/store.tsx`: `setOrderStatus` di-update supaya juga menulis `orderStatusChangedAt = new Date().toISOString()` + `logAudit({ action: "settings_changed", ... })` (pakai action yang sudah ada supaya tidak menambah type baru untuk fitur 1).
+- `src/routes/pipeline.tsx`: route baru, `AppShell`, filter bar (search, filter CS untuk supervisor/owner via `hasPermission`, filter segment).
+- `src/components/pipeline/KanbanBoard.tsx`: 4 kolom (Order Masuk = customer tanpa purchase 14 hari terakhir *atau* segmen "new" tanpa order aktif — implementasi: fallback ke `dalam_proses` juga; kami interpretasikan "Order Masuk" = customer aktif tapi status field belum diset / baru dibuat, praktis kolom pertama menampilkan customer segment "new" dan yang belum punya purchase di 14 hari). Header kolom: nama, jumlah, total nilai (sum `lastPurchase.price`).
+- Card: `Avatar`, nama, `SegmentBadge`, `maskPhone(phone, role)`, nama+harga layanan terakhir, `AgentAvatar` kecil, waktu di status dari `orderStatusChangedAt`, priority dot (red/yellow/gray), amber left-border jika `dalam_proses` >24 jam, tombol `MessageSquare` → `/chat/$customerId`.
+- Drag & drop pakai `@dnd-kit/core` + `@dnd-kit/sortable`. Saat drop: `setOrderStatus` + toast + audit. Drag handle disembunyikan jika `!hasPermission(agent, "chat_change_order_status")`.
+- Sidebar: tambah `NavItem` icon `Kanban` di antara Chat dan Customer.
+- Dashboard: tambah KPI "Order Macet" (>24 jam di `dalam_proses`) untuk supervisor/owner, klik → `/pipeline`.
 
----
+## Fitur 2 — AI Insight + Sentiment
+- `src/lib/aiInsight.ts`: `gatherInsightFacts(customer, messages)` + `generateInsightNarrative(facts)` deterministik (seed dari `customer.id + variantSeed`), 3+ template variasi Bahasa Indonesia. Lead: overdue → warning, normal → loyalty/siklus.
+- `src/lib/aiSentiment.ts`: `analyzeMessage(content)` + `analyzeConversation(messages)` pakai keyword matching Indonesia (list dari spec).
+- `ChatPage.tsx` right panel: card "AI Insight" (icon `Sparkles`), narasi, tombol "Perbarui" (loading 800ms, re-run dengan variant baru), footer muted 11px. Diletakkan setelah profile header, sebelum RFM bars.
+- Conversation list: icon 😊/😟 kecil di samping timestamp bila confidence ≥ sedang.
+- Chat header: suggested auto-tag dengan dashed border + prefix "✨", tombol ✓ (add ke conversationTags via `addConversationTag`) dan ✕ (dismiss lokal). Gate: `hasPermission(agent, "chat_add_conversation_tag")`.
+- Dashboard: card "Percakapan Negatif" untuk supervisor/owner, klik → `/chat`.
 
-## 1. Redesign Struk Pesanan (OrderBuilderModal)
-File: `src/components/order/OrderBuilderModal.tsx`
+## Fitur 3 — Import Customer CSV/Excel
+- `src/types/index.ts`: `source?: "manual" | "chat_generated" | "imported"` dan `importBatchTag?: string` di `Customer`. Tambah `"customer_bulk_imported"` di `AuditAction`.
+- `src/lib/store.tsx`: `addCustomer` signature tetap kompatibel — `source`/`importBatchTag` optional. Tambah action opsional `bulkAddCustomers` untuk efisiensi (satu batch, satu audit entry).
+- `src/routes/customers.tsx`: tombol "Import Customer" outline di sebelah "+ Customer Baru", gate `hasFlag(agent, "customer_create")`. Badge kecil "Import" (icon `Download`) di kolom Nama bila `source === "imported"`.
+- `src/components/customers/ImportCustomerModal.tsx`: wizard 4 step (Upload → Mapping → Validasi → Konfirmasi) sesuai spec, papaparse/xlsx, auto-detect kolom, deteksi duplikat by phone digit-only, opsi Lewati/Update/Import ulang, round-robin assignment, tag import, audit `customer_bulk_imported`.
 
-- Ganti receipt preview jadi card `max-w-sm` center, `bg-white shadow-md rounded-t-lg`.
-- Header: "ChatCRM" `font-semibold text-center` + subtitle muted "Preview Struk Pesanan".
-- Solid `border-t border-border-soft` (bukan dashed) antara header/body/items/total.
-- Baris info & item: `flex justify-between`, label `text-secondary text-sm`, value `text-primary text-sm tabular-nums`.
-- Total: `font-semibold text-base`, border-top `2px solid` di atasnya.
-- Metode bayar & catatan: `text-sm text-secondary` di bawah total.
-- Efek perforasi bawah: mask SVG bergerigi + `filter: drop-shadow` halus, sehingga tepi bawah seperti struk sobek.
-- Shadow halus `shadow-[0_4px_16px_rgba(0,0,0,0.06)]` supaya terangkat dari background modal.
-- Verifikasi: Playwright — buka modal, tambah 2 item, klik Preview Struk, screenshot.
+## Verifikasi
+`bun run lint && bun run build` + smoke path 3 role.
 
-## 2. Kanban Drag Micro-interactions
-- Halaman `/pipeline` belum ada. **Tidak akan bikin halaman kanban baru** (di luar scope redesign).
-- Sebagai gantinya: install `framer-motion` sebagai dependency siap-pakai, dan tambahkan util drag class (rotate/shadow) di `styles.css` supaya siap dipakai saat kanban dibangun nanti.
-- Akan lapor terus terang di ringkasan bahwa animasi kanban tidak bisa diverifikasi karena halaman `/pipeline` belum ada.
+## Catatan jujur
+Ini scope besar (~15-20 file). Saya akan kerjakan **berurutan** dan **berhenti setelah tiap fitur** untuk report progress bila ada satu yang butuh trade-off besar. Yang saya tandai potensi trade-off:
+- "Order Masuk" kolom tidak ada di enum `OrderStatus`. Saya interpretasi sebagai bucket UI-only (customer segment "new" + purchase count 0 atau belum ada `orderStatusChangedAt`). Drop ke kolom ini akan set status ke `dalam_proses` dengan flag khusus, atau lebih baik: kolom "Order Masuk" **read-only** (tidak bisa drop ke sana). Saya pilih read-only agar tidak melanggar type.
+- Emoji 😊/😟 di conversation list — spec no.6 melarang emoji sebagai pengganti icon, tapi spec fitur 2 eksplisit meminta emoji. Saya ikuti spec eksplisit fitur 2.
 
-## 3. Counter Animations
-- Bikin `src/components/AnimatedCounter.tsx` reusable:
-  - Props: `value: number`, `duration?: number`, `format?: (n: number) => string`.
-  - Pakai `requestAnimationFrame` + `easeOutCubic`, 700ms default.
-  - IntersectionObserver untuk trigger on-mount saat visible.
-  - Format berlaku selama counting (Rp, %, integer).
-- Terapkan di:
-  - `src/routes/dashboard.tsx` — 4 KPI utama + angka di alert banner.
-  - `src/routes/customers.tsx` — "X total customer" di header.
-  - `src/components/layout/Sidebar.tsx` — badge unread count.
-- Verifikasi: Playwright load dashboard, screenshot ~200ms & ~800ms untuk melihat animasi.
-
-## 4. Skeleton Loading
-- Perluas `src/components/ui/skeleton.tsx` dengan class shimmer (gradient bergerak 1.5s infinite) — tambahkan `@keyframes shimmer` di `styles.css` kalau belum ada.
-- Route transition skeleton:
-  - Tambahkan `useDelayedReady(400ms)` di `AppShell.tsx` yang menampilkan skeleton generik saat pertama masuk route berat.
-  - Skeleton spesifik per route: `DashboardSkeleton`, `CustomersSkeleton`, `ChatSkeleton` (bubble kiri/kanan), `CustomerDetailSkeleton` (avatar bulat + bar nama + card blocks).
-- Chat bubble skeleton di `ChatPage.tsx` saat customer pertama dibuka (delay 350ms buatan supaya keliatan).
-- Customer detail modal (jika ada) — skeleton avatar + bar + card blocks.
-- AI Insight "Perbarui" & "Mengirim ke sistem kasir": **tidak ada di app**, akan dilaporkan.
-- Verifikasi: Playwright navigate antar route, screenshot skeleton frame.
-
----
-
-## Teknis
-- Dependency baru: `framer-motion` (utk bagian 2 sebagai infrastruktur).
-- Semua warna via token existing (`--brand`, `--border-soft`, `text-secondary`), tidak ada hex baru.
-- Tidak menyentuh business logic, permissions, atau data model.
-
-## Ringkasan yang akan dilaporkan di akhir
-- ✅ Bagian 1 (struk) — full, dengan screenshot.
-- ⚠️ Bagian 2 (kanban) — infrastruktur ready, halaman `/pipeline` tidak ada di project.
-- ✅ Bagian 3 (counter) — full, dengan screenshot.
-- ⚠️ Bagian 4 (skeleton) — mayoritas terapkan, kecuali AI Insight & "Kirim ke kasir" (fitur tidak ada).
+Boleh saya lanjut?

@@ -1,5 +1,5 @@
 import { Link, useRouter, useRouterState } from "@tanstack/react-router";
-import { MessageSquare, Users, BarChart3, Settings, LogOut } from "lucide-react";
+import { MessageSquare, Users, BarChart3, Settings, LogOut, Kanban } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useConversations } from "@/hooks/useConversations";
 import { AgentAvatar } from "@/components/Avatar";
@@ -71,6 +71,12 @@ export function Sidebar() {
           label="Chat Inbox"
           active={pathname.startsWith("/chat")}
           badge={unread}
+        />
+        <NavItem
+          to="/pipeline"
+          icon={Kanban}
+          label="Pipeline"
+          active={pathname.startsWith("/pipeline")}
         />
         <NavItem to="/customers" icon={Users} label="Customer" active={pathname === "/customers"} />
         <NavItem
