@@ -417,12 +417,75 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   );
   const setOrderStatus = useCallback((id: string, status: OrderStatus) => {
     setCustomers((p) => {
-      const next = p.map((c) => (c.id === id ? { ...c, orderStatus: status } : c));
+      const prev = p.find((c) => c.id === id);
+      const next = p.map((c) =>
+        c.id === id
+          ? { ...c, orderStatus: status, orderStatusChangedAt: new Date().toISOString() }
+          : c,
+      );
       const updated = next.find((c) => c.id === id);
       if (updated) db.persistCustomer(updated);
+      if (prev && prev.orderStatus !== status) {
+        logAuditRaw(currentAgent, {
+          action: "order_status_changed",
+          targetType: "customer",
+          targetId: id,
+          targetLabel: prev.name,
+          oldValue: prev.orderStatus,
+          newValue: status,
+          details: `Status order: ${prev.orderStatus} → ${status}`,
+        });
+      }
       return next;
     });
-  }, []);
+  }, [currentAgent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const bulkAddCustomers = useCallback(
+    (
+      rows: Omit<Customer, "id" | "purchases" | "segmentHistory" | "conversationTags">[],
+      batchTag: string,
+    ) => {
+      let created = 0;
+      let skipped = 0;
+      const nowIso = new Date().toISOString();
+      setCustomers((prev) => {
+        const existingPhones = new Set(prev.map((c) => c.phone.replace(/\D/g, "")));
+        const additions: Customer[] = [];
+        for (const row of rows) {
+          const norm = row.phone.replace(/\D/g, "");
+          if (!norm || existingPhones.has(norm)) {
+            skipped++;
+            continue;
+          }
+          existingPhones.add(norm);
+          const newC: Customer = {
+            ...row,
+            id: genId("c"),
+            purchases: [],
+            segmentHistory: [
+              { date: nowIso, fromSegment: null, toSegment: "new", reason: "Import CSV/Excel" },
+            ],
+            conversationTags: [],
+            source: "imported",
+            importBatchTag: batchTag,
+          };
+          db.persistCustomer(newC);
+          additions.push(newC);
+          created++;
+        }
+        return [...additions, ...prev];
+      });
+      logAuditRaw(currentAgent, {
+        action: "customer_bulk_imported",
+        targetType: "system",
+        targetId: batchTag,
+        targetLabel: `Import batch ${batchTag}`,
+        details: `${created} customer di-import (skipped: ${skipped}) — batch ${batchTag}`,
+      });
+      return { created, skipped };
+    },
+    [currentAgent], // eslint-disable-line react-hooks/exhaustive-deps
+  );
   const setPriority = useCallback((id: string, pr: Priority) => {
     setCustomers((p) => {
       const next = p.map((c) => (c.id === id ? { ...c, priority: pr } : c));
