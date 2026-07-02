@@ -1,7 +1,12 @@
 export type Role = "cs" | "supervisor" | "owner";
 export type RFMSegment = "champions" | "loyal" | "at_risk" | "dormant" | "new" | "promising";
 export type ConversationStatus = "open" | "resolved" | "snoozed";
-export type OrderStatus = "dalam_proses" | "siap_diambil" | "selesai";
+export type OrderStatus =
+  | "order_masuk"
+  | "konfirmasi"
+  | "dalam_proses"
+  | "siap_diambil"
+  | "selesai";
 export type Priority = "high" | "normal" | "low";
 export type MessageType = "text" | "internal_note";
 export type MessageChannel = "internal" | "whatsapp";
@@ -113,6 +118,12 @@ export interface Customer {
   cadenceOverrideDays?: number;
   /** Manual record shares (Salesforce-style record sharing). */
   manualShares?: ManualShare[];
+  /** Timestamp of the last orderStatus transition (for Pipeline "stale" detection). */
+  orderStatusChangedAt?: string;
+  /** Provenance of the record. */
+  source?: "manual" | "chat_generated" | "imported";
+  /** Import batch tag when created via CSV/Excel wizard. */
+  importBatchTag?: string;
 }
 
 export interface Message {
@@ -174,7 +185,9 @@ export type AuditAction =
   | "login"
   | "settings_changed"
   | "permission_override_changed"
-  | "permission_overrides_reset";
+  | "permission_overrides_reset"
+  | "order_status_changed"
+  | "customer_bulk_imported";
 
 export interface AuditLogEntry {
   id: string;
