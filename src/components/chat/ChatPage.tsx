@@ -75,6 +75,9 @@ import type {
   RFMSegment,
 } from "@/types";
 import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
+import { generateInsight } from "@/lib/aiInsight";
+import { SENTIMENT_META } from "@/lib/aiSentiment";
+import { Sparkles } from "lucide-react";
 
 const STATUS_TABS: { id: string; label: string }[] = [
   { id: "all", label: "Semua" },
@@ -93,7 +96,15 @@ const SEGMENT_TABS: { id: "all" | RFMSegment; label: string }[] = [
 ];
 
 function orderStatusLabel(s: OrderStatus) {
-  return s === "dalam_proses" ? "Dalam Proses" : s === "siap_diambil" ? "Siap Diambil" : "Selesai";
+  return s === "dalam_proses"
+    ? "Dalam Proses"
+    : s === "siap_diambil"
+      ? "Siap Diambil"
+      : s === "selesai"
+        ? "Selesai"
+        : s === "konfirmasi"
+          ? "Konfirmasi"
+          : "Order Masuk";
 }
 
 export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) {
