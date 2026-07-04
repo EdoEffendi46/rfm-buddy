@@ -267,6 +267,12 @@ function CustomersPage() {
                               size={28}
                             />
                             <span className="font-medium">{e.customer.name}</span>
+                            {e.customer.googleContactSynced && (
+                              <Smartphone
+                                className="h-3 w-3 text-emerald-600"
+                                aria-label="Tersinkron ke Google Contacts"
+                              />
+                            )}
                             {share && (
                               <span
                                 className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700"
