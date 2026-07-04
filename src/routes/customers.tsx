@@ -42,6 +42,7 @@ import {
   X,
   CalendarClock,
   Users,
+  Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -77,7 +78,7 @@ type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdu
 function CustomersPage() {
   const { role, agent } = useAuth();
   const { enriched, agents, addCustomer } = useCustomers();
-  const { createManualShare, revokeManualShare, logAudit, fieldRules } = useStore();
+  const { createManualShare, revokeManualShare, logAudit, fieldRules, googleContacts, markCustomerGoogleSynced } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<"all" | RFMSegment>("all");
@@ -266,6 +267,12 @@ function CustomersPage() {
                               size={28}
                             />
                             <span className="font-medium">{e.customer.name}</span>
+                            {e.customer.googleContactSynced && (
+                              <Smartphone
+                                className="h-3 w-3 text-emerald-600"
+                                aria-label="Tersinkron ke Google Contacts"
+                              />
+                            )}
                             {share && (
                               <span
                                 className="rounded-full bg-violet-100 px-1.5 py-0.5 text-[10px] font-semibold text-violet-700"
@@ -496,7 +503,7 @@ function CustomersPage() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         agents={agents}
-        onAdd={(d) => {
+        onAdd={async (d) => {
           const c = addCustomer({
             name: d.name,
             phone: d.phone,
@@ -510,6 +517,16 @@ function CustomersPage() {
           });
           toast.success(`Customer ${c.name} berhasil ditambahkan`);
           setAddOpen(false);
+          if (googleContacts.autoSync) {
+            try {
+              const { syncContactToGoogle } = await import("@/lib/googleContactsSync");
+              await syncContactToGoogle({ customerId: c.id, name: c.name, phone: c.phone });
+              markCustomerGoogleSynced(c.id, c.name);
+              toast.success("📱 Kontak disinkronkan ke Google (Simulasi)");
+            } catch {
+              toast.error("Gagal sinkron ke Google (simulasi)");
+            }
+          }
         }}
       />
     </AppShell>

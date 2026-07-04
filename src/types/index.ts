@@ -26,6 +26,8 @@ export interface Agent {
   permissionOverrides?: Partial<PermissionFlags>;
   /** Free-form internal note shown on the agent profile (training status, etc.). */
   internalNote?: string;
+  /** Cabang utama agent — undefined artinya lintas cabang (biasanya supervisor/owner). */
+  branchId?: string;
 }
 
 export interface Service {
@@ -124,6 +126,12 @@ export interface Customer {
   source?: "manual" | "chat_generated" | "imported";
   /** Import batch tag when created via CSV/Excel wizard. */
   importBatchTag?: string;
+  /** Cabang tempat customer ini masuk (via nomor WA cabang mana). */
+  branchId?: string;
+  /** True bila kontak sudah pernah disinkronkan ke Google Contacts (simulasi). */
+  googleContactSynced?: boolean;
+  /** Timestamp sinkronisasi Google Contacts terakhir. */
+  googleContactSyncedAt?: string;
 }
 
 export interface Message {
@@ -233,6 +241,12 @@ export interface FieldVisibilityRule {
  * individual overrides live on the Agent record.
  */
 export interface PermissionFlags {
+  // === BRANCH / CABANG ===
+  branch_view_own: boolean;
+  branch_view_all: boolean;
+  branch_manage: boolean;
+  branch_view_cross_open_assigned: boolean;
+
   // === CHAT & CONVERSATION ===
   chat_view_assigned: boolean;
   chat_view_unassigned: boolean;
@@ -355,3 +369,27 @@ export interface PermissionFlags {
 }
 
 export type PermissionFlag = keyof PermissionFlags;
+
+export interface Branch {
+  id: string;
+  name: string;
+  city: string;
+  waNumber: string;
+  waNumberFormatted: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface GoogleContactsSyncHistory {
+  id: string;
+  customerId: string;
+  customerName: string;
+  syncedAt: string;
+  status: "success" | "failed";
+}
+
+export interface GoogleContactsSettings {
+  connected: boolean;
+  autoSync: boolean;
+  history: GoogleContactsSyncHistory[];
+}

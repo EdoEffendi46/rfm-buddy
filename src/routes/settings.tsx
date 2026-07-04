@@ -61,6 +61,9 @@ import { PermissionManager } from "@/components/settings/PermissionManager";
 import { InviteAgentForm } from "@/components/settings/InviteAgentForm";
 import { PendingInviteActions } from "@/components/settings/PendingInviteActions";
 import { WhatsappSettingsSection } from "@/components/settings/WhatsappSettingsSection";
+import { BranchManagementSection } from "@/components/settings/BranchManagement";
+import { GoogleContactsSection } from "@/components/settings/GoogleContactsSection";
+import { Building2, Smartphone } from "lucide-react";
 import { isSupabaseConfigured } from "@/lib/supabase/env";
 import { AVAILABLE_FIELDS } from "@/lib/fieldVisibility";
 import { formatDate, formatRupiah } from "@/lib/format";
@@ -75,6 +78,7 @@ export const Route = createFileRoute("/settings")({
 type Section =
   | "profile"
   | "agents"
+  | "branches"
   | "templates"
   | "tags"
   | "services"
@@ -87,6 +91,7 @@ type Section =
   | "role_history"
   | "billing"
   | "whatsapp"
+  | "google_contacts"
   | "export_data"
   | "about";
 
@@ -98,6 +103,7 @@ const SECTIONS: {
 }[] = [
   { id: "profile", label: "Profil Saya", icon: User },
   { id: "agents", label: "Manajemen Agent", icon: Users, requires: "manage_agents" },
+  { id: "branches", label: "Manajemen Cabang", icon: Building2, requires: "branch_manage" },
   { id: "templates", label: "Template Balasan", icon: Zap },
   { id: "tags", label: "Tags", icon: Tag },
   { id: "services", label: "Layanan & Produk", icon: Wrench },
@@ -128,6 +134,12 @@ const SECTIONS: {
     id: "whatsapp",
     label: "WhatsApp Business",
     icon: MessageCircle,
+    requires: "manage_billing",
+  },
+  {
+    id: "google_contacts",
+    label: "Integrasi Google Contacts",
+    icon: Smartphone,
     requires: "manage_billing",
   },
   { id: "export_data", label: "Export Data", icon: Download, requires: "export_data" },
@@ -175,6 +187,11 @@ function SettingsPage() {
               <AgentsSection />
             </Gated>
           )}
+          {section === "branches" && (
+            <Gated perm="branch_manage">
+              <BranchManagementSection />
+            </Gated>
+          )}
           {section === "templates" && <TemplatesSection />}
           {section === "tags" && <TagsSection />}
           {section === "services" && <ServicesSection />}
@@ -219,6 +236,11 @@ function SettingsPage() {
               <Card title="WhatsApp Business">
                 <WhatsappSettingsSection />
               </Card>
+            </Gated>
+          )}
+          {section === "google_contacts" && (
+            <Gated perm="manage_billing">
+              <GoogleContactsSection />
             </Gated>
           )}
           {section === "export_data" && (
