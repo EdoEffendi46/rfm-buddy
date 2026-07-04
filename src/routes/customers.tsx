@@ -42,6 +42,7 @@ import {
   X,
   CalendarClock,
   Users,
+  Smartphone,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -77,7 +78,7 @@ type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdu
 function CustomersPage() {
   const { role, agent } = useAuth();
   const { enriched, agents, addCustomer } = useCustomers();
-  const { createManualShare, revokeManualShare, logAudit, fieldRules } = useStore();
+  const { createManualShare, revokeManualShare, logAudit, fieldRules, googleContacts, markCustomerGoogleSynced } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<"all" | RFMSegment>("all");
