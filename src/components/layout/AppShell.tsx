@@ -3,6 +3,7 @@ import { useRouter } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "./Sidebar";
 import { isTeamView } from "@/lib/permissions";
+import { BranchSwitcher } from "./BranchSwitcher";
 
 export function AppShell({
   children,
@@ -29,14 +30,19 @@ export function AppShell({
   return (
     <div className="flex h-screen w-full bg-[var(--app-bg)]">
       <Sidebar />
-      <main
-        key={router.state.location.pathname}
-        className={
-          (noPadding ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto") + " animate-page-in"
-        }
-      >
-        {children}
-      </main>
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <div className="flex h-11 shrink-0 items-center justify-end gap-2 border-b border-slate-200 bg-white px-4">
+          <BranchSwitcher />
+        </div>
+        <main
+          key={router.state.location.pathname}
+          className={
+            (noPadding ? "flex-1 overflow-hidden" : "flex-1 overflow-y-auto") + " animate-page-in"
+          }
+        >
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
