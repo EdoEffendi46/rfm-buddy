@@ -1102,6 +1102,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     businessProfile,
     setBusinessProfile,
     addPurchase,
+    branches,
+    selectedBranchId,
+    setSelectedBranchId,
+    addBranch,
+    updateBranch,
+    toggleBranchActive,
+    setAgentBranch,
+    googleContacts,
+    setGoogleContactsAutoSync,
+    markCustomerGoogleSynced,
   };
 
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
