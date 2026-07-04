@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useStore } from "@/lib/store";
-import { canAccessCustomer } from "@/lib/permissions";
+import { canViewConversation, hasPermission } from "@/lib/permissions";
 import type { Customer, Message } from "@/types";
 
 export interface ConversationView {
@@ -13,9 +13,14 @@ export interface ConversationView {
 export function useConversations() {
   const store = useStore();
   const agent = store.currentAgent;
+  const branchFilter = store.selectedBranchId;
+  const canFilterBranch = hasPermission(agent, "branch_view_all");
   const conversations = useMemo<ConversationView[]>(() => {
     return store.customers
-      .filter((c) => canAccessCustomer(agent, c))
+      .filter((c) => canViewConversation(agent, c))
+      .filter((c) =>
+        canFilterBranch && branchFilter !== "all" ? c.branchId === branchFilter : true,
+      )
       .map((c) => {
         const msgs = store.messages
           .filter((m) => m.customerId === c.id)
@@ -26,7 +31,7 @@ export function useConversations() {
         ).length;
         return { customer: c, messages: msgs, lastMessage: last, unreadCount };
       });
-  }, [store.customers, store.messages, agent]);
+  }, [store.customers, store.messages, agent, branchFilter, canFilterBranch]);
 
   return { conversations, ...store };
 }
