@@ -2,6 +2,10 @@ import type { PermissionFlags, PermissionFlag, Role } from "@/types";
 
 /** Every flag known to the system, exhaustive list. */
 export const ALL_FLAGS: PermissionFlag[] = [
+  "branch_view_own",
+  "branch_view_all",
+  "branch_manage",
+  "branch_view_cross_open_assigned",
   "chat_view_assigned",
   "chat_view_unassigned",
   "chat_view_all_agents",
@@ -123,6 +127,8 @@ function withFlags(
 }
 
 const CS_TRUE: PermissionFlag[] = [
+  "branch_view_own",
+  "branch_view_cross_open_assigned",
   "chat_view_assigned",
   "chat_reply",
   "chat_write_internal_note",
@@ -162,6 +168,8 @@ const CS_TRUE: PermissionFlag[] = [
 const CS_DEFAULTS = withFlags(allFalse(), CS_TRUE, true);
 
 const SUPERVISOR_EXTRA: PermissionFlag[] = [
+  "branch_view_all",
+  "branch_manage",
   "chat_view_unassigned",
   "chat_view_all_agents",
   "chat_delete_any_message",
@@ -218,6 +226,10 @@ export const ROLE_DEFAULTS: Record<Role, PermissionFlags> = {
 
 // Human-readable Indonesian labels.
 export const FLAG_LABELS: Record<PermissionFlag, string> = {
+  branch_view_own: "Lihat cabang sendiri",
+  branch_view_all: "Lihat semua cabang",
+  branch_manage: "Kelola cabang",
+  branch_view_cross_open_assigned: "Lihat chat lintas cabang yang di-assign",
   chat_view_assigned: "Lihat chat yang ditugaskan",
   chat_view_unassigned: "Lihat chat unassigned",
   chat_view_all_agents: "Lihat chat semua agent",
