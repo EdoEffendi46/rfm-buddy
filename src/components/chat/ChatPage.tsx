@@ -77,7 +77,7 @@ import type {
 import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
 import { generateInsight } from "@/lib/aiInsight";
 import { SENTIMENT_META } from "@/lib/aiSentiment";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowLeftRight } from "lucide-react";
 
 const STATUS_TABS: { id: string; label: string }[] = [
   { id: "all", label: "Semua" },
