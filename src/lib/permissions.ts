@@ -31,7 +31,11 @@ export type Permission =
   | "approve_export_requests"
   | "manage_field_visibility_rules"
   | "create_manual_share"
-  | "view_permission_history";
+  | "view_permission_history"
+  | "branch_view_own"
+  | "branch_view_all"
+  | "branch_manage"
+  | "branch_view_cross_open_assigned";
 
 /** Map legacy Permission strings → granular PermissionFlag. */
 const LEGACY_TO_FLAG: Record<Permission, PermissionFlag> = {
@@ -65,6 +69,10 @@ const LEGACY_TO_FLAG: Record<Permission, PermissionFlag> = {
   manage_field_visibility_rules: "settings_view_field_rules",
   create_manual_share: "customer_create_manual_share",
   view_permission_history: "settings_view_permission_change_history",
+  branch_view_own: "branch_view_own",
+  branch_view_all: "branch_view_all",
+  branch_manage: "branch_manage",
+  branch_view_cross_open_assigned: "branch_view_cross_open_assigned",
 };
 
 /** Effective permissions = role defaults merged with the agent's overrides. */
@@ -172,6 +180,34 @@ export function canAccessCustomer(agent: Agent | null, c: Customer): boolean {
   if (c.assignedAgentId === agent.id) return true;
   if (!c.assignedAgentId) return true;
   if (shareActiveFor(c, agent.id)) return true;
+  return false;
+}
+
+/**
+ * Cek apakah agent boleh melihat customer/percakapan ini dengan
+ * mempertimbangkan pembatasan cabang. Menjadi single-source untuk
+ * `useCustomers` & `useConversations`.
+ */
+export function canViewConversation(agent: Agent | null, c: Customer): boolean {
+  if (!agent) return false;
+  if (!canAccessCustomer(agent, c)) return false;
+  // Kalau customer belum punya branchId (data lama / global), izinkan.
+  if (!c.branchId) return true;
+  // Sama cabang → boleh.
+  if (agent.branchId && c.branchId === agent.branchId) return true;
+  // Lintas cabang: butuh permission khusus.
+  if (hasPermission(agent, "branch_view_all")) return true;
+  if (
+    hasPermission(agent, "branch_view_cross_open_assigned") &&
+    c.conversationStatus === "open" &&
+    c.assignedAgentId === agent.id
+  ) {
+    return true;
+  }
+  // Agent tanpa branchId (mis. owner tanpa cabang) dianggap punya akses global
+  // hanya jika hasPermission branch_view_all sudah dicek di atas. Kalau tidak
+  // ada branchId sama sekali, blok.
+  if (!agent.branchId) return false;
   return false;
 }
 
