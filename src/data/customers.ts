@@ -5,6 +5,7 @@ export const CUSTOMERS: Customer[] = [
   // ===== CHAMPIONS =====
   {
     id: "c-dewi",
+    branchId: "br-smg",
     name: "Dewi Lestari",
     phone: "081234567890",
     joinDate: isoDaysAgo(220),
@@ -104,6 +105,7 @@ export const CUSTOMERS: Customer[] = [
   },
   {
     id: "c-andi",
+    branchId: "br-smg",
     name: "Andi Wijaya",
     phone: "081298765432",
     joinDate: isoDaysAgo(180),
@@ -186,6 +188,7 @@ export const CUSTOMERS: Customer[] = [
   // ===== LOYAL =====
   {
     id: "c-siti",
+    branchId: "br-jpr",
     name: "Siti Nurhaliza",
     phone: "082145678901",
     joinDate: isoDaysAgo(200),
@@ -252,6 +255,7 @@ export const CUSTOMERS: Customer[] = [
   },
   {
     id: "c-rahmat",
+    branchId: "br-jpr",
     name: "Rahmat Hidayat",
     phone: "081356789012",
     joinDate: isoDaysAgo(180),
@@ -309,6 +313,7 @@ export const CUSTOMERS: Customer[] = [
   // ===== PROMISING =====
   {
     id: "c-maya",
+    branchId: "br-smg",
     name: "Maya Putri",
     phone: "087812345678",
     joinDate: isoDaysAgo(30),
@@ -349,6 +354,7 @@ export const CUSTOMERS: Customer[] = [
   },
   {
     id: "c-kevin",
+    branchId: "br-smg",
     name: "Kevin Pratama",
     phone: "082298765432",
     joinDate: isoDaysAgo(40),
@@ -383,6 +389,7 @@ export const CUSTOMERS: Customer[] = [
   // ===== AT RISK =====
   {
     id: "c-bambang",
+    branchId: "br-smg",
     name: "Bambang Sutejo",
     phone: "081387654321",
     joinDate: isoDaysAgo(220),
@@ -441,6 +448,7 @@ export const CUSTOMERS: Customer[] = [
   },
   {
     id: "c-lina",
+    branchId: "br-smg",
     name: "Lina Marlina",
     phone: "082376543210",
     joinDate: isoDaysAgo(180),
@@ -488,6 +496,7 @@ export const CUSTOMERS: Customer[] = [
   // ===== DORMANT =====
   {
     id: "c-iwan",
+    branchId: "br-jpr",
     name: "Iwan Setiawan",
     phone: "081765432109",
     joinDate: isoDaysAgo(150),
@@ -526,6 +535,7 @@ export const CUSTOMERS: Customer[] = [
   },
   {
     id: "c-nina",
+    branchId: "br-smg",
     name: "Nina Anggraini",
     phone: "082654321098",
     joinDate: isoDaysAgo(100),
@@ -558,6 +568,7 @@ export const CUSTOMERS: Customer[] = [
   // ===== NEW =====
   {
     id: "c-farhan",
+    branchId: "br-jpr",
     name: "Farhan Maulana",
     phone: "081512345678",
     joinDate: isoDaysAgo(3),
@@ -584,6 +595,7 @@ export const CUSTOMERS: Customer[] = [
   },
   {
     id: "c-putri",
+    branchId: "br-jpr",
     name: "Putri Ramadhani",
     phone: "082187654321",
     joinDate: isoDaysAgo(7),
