@@ -23,6 +23,9 @@ import type {
   FieldVisibilityRule,
   ManualShare,
   Role,
+  Branch,
+  GoogleContactsSettings,
+  GoogleContactsSyncHistory,
 } from "@/types";
 import { AGENTS } from "@/data/agents";
 import { CUSTOMERS } from "@/data/customers";
@@ -30,6 +33,7 @@ import { INITIAL_MESSAGES } from "@/data/conversations";
 import { DEFAULT_TAGS, DEFAULT_TEMPLATES, SERVICES } from "@/data/services";
 import { INITIAL_AUDIT_LOG } from "@/data/auditLog";
 import { INITIAL_EXPORT_REQUESTS } from "@/data/exportRequests";
+import { BRANCHES } from "@/data/branches";
 import { DEFAULT_FIELD_RULES } from "@/lib/fieldVisibility";
 import * as db from "@/lib/supabase/persist";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -59,6 +63,20 @@ interface StoreState {
   fieldRules: FieldVisibilityRule[];
   businessProfile: BusinessProfile;
   setBusinessProfile: (p: BusinessProfile) => void;
+
+  // Branches
+  branches: Branch[];
+  selectedBranchId: string | "all";
+  setSelectedBranchId: (id: string | "all") => void;
+  addBranch: (b: Omit<Branch, "id" | "createdAt">) => Branch;
+  updateBranch: (id: string, patch: Partial<Branch>) => void;
+  toggleBranchActive: (id: string) => void;
+  setAgentBranch: (agentId: string, branchId: string | undefined) => void;
+
+  // Google Contacts (placeholder integration)
+  googleContacts: GoogleContactsSettings;
+  setGoogleContactsAutoSync: (v: boolean) => void;
+  markCustomerGoogleSynced: (customerId: string, customerName: string) => void;
 
   login: (agentId: string) => void;
   logout: () => void;
