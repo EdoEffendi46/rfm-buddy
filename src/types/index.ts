@@ -369,3 +369,27 @@ export interface PermissionFlags {
 }
 
 export type PermissionFlag = keyof PermissionFlags;
+
+export interface Branch {
+  id: string;
+  name: string;
+  city: string;
+  waNumber: string;
+  waNumberFormatted: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface GoogleContactsSyncHistory {
+  id: string;
+  customerId: string;
+  customerName: string;
+  syncedAt: string;
+  status: "success" | "failed";
+}
+
+export interface GoogleContactsSettings {
+  connected: boolean;
+  autoSync: boolean;
+  history: GoogleContactsSyncHistory[];
+}
