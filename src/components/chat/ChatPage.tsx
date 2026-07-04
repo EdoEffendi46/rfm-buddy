@@ -411,6 +411,15 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                       <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
                         {orderStatusLabel(c.customer.orderStatus)}
                       </span>
+                      {agent?.branchId && c.customer.branchId && c.customer.branchId !== agent.branchId && (
+                        <span
+                          className="inline-flex items-center gap-0.5 rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-600"
+                          title="Percakapan dari cabang lain"
+                        >
+                          <ArrowLeftRight className="h-2.5 w-2.5" />
+                          Lintas Cabang
+                        </span>
+                      )}
                       {c.customer.priority === "high" && (
                         <span
                           className="h-2 w-2 rounded-full bg-red-500"
