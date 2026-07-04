@@ -187,6 +187,11 @@ function SettingsPage() {
               <AgentsSection />
             </Gated>
           )}
+          {section === "branches" && (
+            <Gated perm="branch_manage">
+              <BranchManagementSection />
+            </Gated>
+          )}
           {section === "templates" && <TemplatesSection />}
           {section === "tags" && <TagsSection />}
           {section === "services" && <ServicesSection />}
@@ -231,6 +236,11 @@ function SettingsPage() {
               <Card title="WhatsApp Business">
                 <WhatsappSettingsSection />
               </Card>
+            </Gated>
+          )}
+          {section === "google_contacts" && (
+            <Gated perm="manage_billing">
+              <GoogleContactsSection />
             </Gated>
           )}
           {section === "export_data" && (
