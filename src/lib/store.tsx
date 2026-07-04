@@ -194,6 +194,52 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [businessProfile, setBusinessProfileState] = useState<BusinessProfile>(() =>
     typeof window !== "undefined" ? loadBusinessProfile() : DEFAULT_BUSINESS_PROFILE,
   );
+  const [branches, setBranches] = useState<Branch[]>(BRANCHES);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | "all">("all");
+  const [googleContacts, setGoogleContacts] = useState<GoogleContactsSettings>({
+    connected: false,
+    autoSync: false,
+    history: [],
+  });
+
+  const addBranch = useCallback((b: Omit<Branch, "id" | "createdAt">) => {
+    const branch: Branch = { ...b, id: genId("br"), createdAt: new Date().toISOString() };
+    setBranches((p) => [...p, branch]);
+    return branch;
+  }, []);
+  const updateBranch = useCallback((id: string, patch: Partial<Branch>) => {
+    setBranches((p) => p.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  }, []);
+  const toggleBranchActive = useCallback((id: string) => {
+    setBranches((p) => p.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b)));
+  }, []);
+  const setAgentBranch = useCallback((agentId: string, branchId: string | undefined) => {
+    setAgents((p) => p.map((a) => (a.id === agentId ? { ...a, branchId } : a)));
+  }, []);
+  const setGoogleContactsAutoSync = useCallback((v: boolean) => {
+    setGoogleContacts((s) => ({ ...s, autoSync: v }));
+  }, []);
+  const markCustomerGoogleSynced = useCallback(
+    (customerId: string, customerName: string) => {
+      const nowIso = new Date().toISOString();
+      setCustomers((p) =>
+        p.map((c) =>
+          c.id === customerId
+            ? { ...c, googleContactSynced: true, googleContactSyncedAt: nowIso }
+            : c,
+        ),
+      );
+      const entry: GoogleContactsSyncHistory = {
+        id: genId("gsh"),
+        customerId,
+        customerName,
+        syncedAt: nowIso,
+        status: "success",
+      };
+      setGoogleContacts((s) => ({ ...s, history: [entry, ...s.history].slice(0, 50) }));
+    },
+    [],
+  );
 
   const setBusinessProfile = useCallback((p: BusinessProfile) => {
     setBusinessProfileState(p);
