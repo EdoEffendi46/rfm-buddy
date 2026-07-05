@@ -568,11 +568,11 @@ export const CUSTOMERS: Customer[] = [
   // ===== NEW =====
   {
     id: "c-farhan",
-    branchId: "br-jpr",
+    branchId: "br-smg",
     name: "Farhan Maulana",
     phone: "081512345678",
     joinDate: isoDaysAgo(3),
-    assignedAgentId: "rina",
+    assignedAgentId: "",
     orderStatus: "dalam_proses",
     conversationStatus: "open",
     priority: "normal",
