@@ -321,7 +321,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
             conversations.map((c) => {
               const rfm = calculateRFM(c.customer);
               const isSelected = c.customer.id === selectedId;
-              const ag = agents.find((a) => a.id === c.customer.assignedAgentId);
+              const primaryId = getPrimaryAgentId(c.customer);
+              const ag = agents.find((a) => a.id === primaryId);
+              const collabCount = (c.customer.collaboratorAgentIds ?? []).length;
               const lm = c.lastMessage;
               const customerIsLastSender = !!lm && lm.senderId === c.customer.id;
               const isUnread = c.unreadCount > 0;
@@ -412,14 +414,22 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       {ag && (
-                        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
                           {ag.name}
+                          {collabCount > 0 && (
+                            <span
+                              className="rounded bg-emerald-100 px-1 text-[9px] font-semibold text-emerald-700"
+                              title={`+${collabCount} CS bantuan`}
+                            >
+                              +{collabCount}
+                            </span>
+                          )}
                         </span>
                       )}
                       <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
                         {orderStatusLabel(c.customer.orderStatus)}
                       </span>
-                      {agent?.branchId && c.customer.branchId && c.customer.branchId !== agent.branchId && (
+                      {agent && c.customer.branchId && !getAgentBranchIds(agent).includes(c.customer.branchId) && (
                         <span
                           className="inline-flex items-center gap-0.5 rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-600"
                           title="Percakapan dari cabang lain"
