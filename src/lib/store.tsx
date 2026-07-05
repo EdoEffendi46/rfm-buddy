@@ -480,6 +480,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const newC: Customer = {
         ...c,
         id: genId("c"),
+        primaryAgentId: c.primaryAgentId ?? (c.assignedAgentId || undefined),
+        assignedAgentId: c.assignedAgentId || c.primaryAgentId || "",
         purchases: [],
         segmentHistory: [
           {
