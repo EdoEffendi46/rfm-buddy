@@ -26,8 +26,12 @@ export interface Agent {
   permissionOverrides?: Partial<PermissionFlags>;
   /** Free-form internal note shown on the agent profile (training status, etc.). */
   internalNote?: string;
-  /** Cabang utama agent — undefined artinya lintas cabang (biasanya supervisor/owner). */
+  /** Cabang utama agent — undefined artinya lintas cabang (biasanya supervisor/owner).
+   *  DEPRECATED: pakai branchIds. Field ini dipertahankan untuk kompatibilitas lama. */
   branchId?: string;
+  /** Daftar cabang tempat agent bertugas (multi-cabang). Jika kosong/undefined,
+   *  fallback ke [branchId] bila ada. */
+  branchIds?: string[];
 }
 
 export interface Service {
@@ -116,6 +120,10 @@ export interface Customer {
   snoozeUntil?: string;
   conversationTags: string[];
   segmentHistory: SegmentHistoryEntry[];
+  /** CS utama / penanggung jawab (menggantikan assignedAgentId). */
+  primaryAgentId?: string;
+  /** CS pembantu yang ikut bisa membalas percakapan ini. */
+  collaboratorAgentIds?: string[];
   /** Manual cadence override (days between orders) set by CS/Admin. */
   cadenceOverrideDays?: number;
   /** Manual record shares (Salesforce-style record sharing). */
