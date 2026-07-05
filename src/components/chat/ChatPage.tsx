@@ -6,7 +6,13 @@ import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
 import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
-import { canEditCustomer, hasFlag } from "@/lib/permissions";
+import {
+  canEditCustomer,
+  hasFlag,
+  canReplyToConversation,
+  getPrimaryAgentId,
+  getAgentBranchIds,
+} from "@/lib/permissions";
 import { useStore } from "@/lib/store";
 import {
   formatTime,
@@ -123,6 +129,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
   const [typing, setTyping] = useState(false);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [collabOpen, setCollabOpen] = useState(false);
 
   useEffect(() => {
     if (initialCustomerId) setSelectedId(initialCustomerId);
@@ -150,8 +157,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
     let list = store.conversations;
     // role visibility is handled in useConversations via canAccessCustomer (includes manual shares)
     // status tab
-    if (statusTab === "mine") list = list.filter((c) => c.customer.assignedAgentId === agent?.id);
-    if (statusTab === "unassigned") list = list.filter((c) => !c.customer.assignedAgentId);
+    if (statusTab === "mine")
+      list = list.filter((c) => getPrimaryAgentId(c.customer) === agent?.id);
+    if (statusTab === "unassigned") list = list.filter((c) => !getPrimaryAgentId(c.customer));
     if (statusTab === "open") list = list.filter((c) => c.customer.conversationStatus === "open");
     if (statusTab === "resolved")
       list = list.filter((c) => c.customer.conversationStatus === "resolved");
@@ -191,8 +199,8 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
     const base = store.conversations;
     return {
       all: base.length,
-      mine: base.filter((c) => c.customer.assignedAgentId === agent?.id).length,
-      unassigned: base.filter((c) => !c.customer.assignedAgentId).length,
+      mine: base.filter((c) => getPrimaryAgentId(c.customer) === agent?.id).length,
+      unassigned: base.filter((c) => !getPrimaryAgentId(c.customer)).length,
       open: base.filter((c) => c.customer.conversationStatus === "open").length,
       resolved: base.filter((c) => c.customer.conversationStatus === "resolved").length,
       snoozed: base.filter((c) => c.customer.conversationStatus === "snoozed").length,
