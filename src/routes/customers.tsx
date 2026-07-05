@@ -1084,6 +1084,26 @@ function AddCustomerModal({
                 </FormItem>
               )}
             />
+            <FormItem>
+              <FormLabel className="text-xs font-medium">Cabang *</FormLabel>
+              <Select value={branchId} onValueChange={setBranchId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih cabang" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableBranches.map((b) => (
+                    <SelectItem key={b.id} value={b.id}>
+                      {b.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!branchId && (
+                <p className="text-[11px] text-slate-500">
+                  Cabang menentukan CS mana yang otomatis bisa membalas customer ini.
+                </p>
+              )}
+            </FormItem>
             <FormField
               control={form.control}
               name="tagsInput"
