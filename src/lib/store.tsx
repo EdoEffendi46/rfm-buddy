@@ -600,7 +600,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (id: string, agentId: string) => {
       setCustomers((p) => {
         const cust = p.find((c) => c.id === id);
-        const oldAg = agents.find((a) => a.id === cust?.assignedAgentId);
+        const oldPrimaryId = cust?.primaryAgentId ?? cust?.assignedAgentId;
+        const oldAg = agents.find((a) => a.id === oldPrimaryId);
         const newAg = agents.find((a) => a.id === agentId);
         if (cust) {
           logAuditRaw(currentAgent, {
@@ -613,7 +614,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             details: `Reassign dari ${oldAg?.name ?? "—"} ke ${newAg?.name ?? "—"}`,
           });
         }
-        const next = p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
+        const next = p.map((c) =>
+          c.id === id ? { ...c, assignedAgentId: agentId, primaryAgentId: agentId } : c,
+        );
         const updated = next.find((c) => c.id === id);
         if (updated) db.persistCustomer(updated);
         return next;
