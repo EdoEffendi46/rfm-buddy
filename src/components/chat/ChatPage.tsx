@@ -936,16 +936,22 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           </DialogHeader>
           <div className="space-y-2">
             {agents
-              .filter((a) => a.role === "cs" && a.id !== selectedCustomer?.assignedAgentId)
+              .filter(
+                (a) =>
+                  a.role === "cs" &&
+                  a.id !== getPrimaryAgentId(selectedCustomer ?? ({} as Customer)) &&
+                  (!selectedCustomer?.branchId ||
+                    getAgentBranchIds(a).includes(selectedCustomer.branchId)),
+              )
               .map((a) => {
-                const load = customers.filter((c) => c.assignedAgentId === a.id).length;
+                const load = customers.filter((c) => getPrimaryAgentId(c) === a.id).length;
                 return (
                   <button
                     key={a.id}
                     onClick={() => {
                       if (!selectedCustomer) return;
                       const oldAgent = agents.find(
-                        (a) => a.id === selectedCustomer.assignedAgentId,
+                        (x) => x.id === getPrimaryAgentId(selectedCustomer),
                       );
                       store.logAudit({
                         action: "conversation_transferred",
