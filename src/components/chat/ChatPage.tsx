@@ -478,6 +478,75 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-900">{selectedCustomer.name}</span>
                     <SegmentBadge segment={selectedRfm!.segment} />
+                    {(() => {
+                      const primaryId = getPrimaryAgentId(selectedCustomer);
+                      const primary = agents.find((a) => a.id === primaryId);
+                      const collabIds = selectedCustomer.collaboratorAgentIds ?? [];
+                      return (
+                        <>
+                          {primary && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
+                              title={`CS Utama: ${primary.name}`}
+                            >
+                              <span
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ backgroundColor: primary.color }}
+                              />
+                              CS Utama · {primary.name}
+                            </span>
+                          )}
+                          {collabIds.length > 0 && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 hover:bg-sky-100"
+                                  title="Lihat daftar CS Bantuan"
+                                >
+                                  + {collabIds.length} CS Bantuan
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-56 p-2">
+                                <div className="mb-1 text-[11px] font-semibold text-slate-700">
+                                  CS Bantuan
+                                </div>
+                                <ul className="space-y-1">
+                                  {collabIds.map((cid) => {
+                                    const a = agents.find((x) => x.id === cid);
+                                    if (!a) return null;
+                                    return (
+                                      <li
+                                        key={cid}
+                                        className="flex items-center justify-between rounded px-1.5 py-1 text-xs hover:bg-slate-50"
+                                      >
+                                        <span className="flex items-center gap-1.5">
+                                          <span
+                                            className="h-2 w-2 rounded-full"
+                                            style={{ backgroundColor: a.color }}
+                                          />
+                                          {a.name}
+                                        </span>
+                                        {canEditCustomer(agent, selectedCustomer) && (
+                                          <button
+                                            className="text-[10px] font-medium text-red-500 hover:text-red-700"
+                                            onClick={() => {
+                                              store.removeCollaborator(selectedCustomer.id, cid);
+                                              toast.success(`${a.name} dihapus dari CS Bantuan`);
+                                            }}
+                                          >
+                                            Hapus
+                                          </button>
+                                        )}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   <div className="font-mono text-xs text-slate-500">
                     {getFieldDisplay("phone", selectedCustomer.phone, role, fieldRules)}
@@ -541,6 +610,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setTransferOpen(true)}>
                       Transfer ke CS lain
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCollabOpen(true)}>
+                      Tambah CS Bantuan
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSnoozeOpen(true)}>
                       Snooze percakapan
