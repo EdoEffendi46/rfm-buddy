@@ -715,50 +715,70 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
 
             {/* Input */}
             <div className="border-t border-slate-200 bg-white p-3">
-              {!hasFlag(agent, "chat_reply") && inputMode === "text" ? (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  <Lock className="h-4 w-4 shrink-0" />
-                  <span>
-                    Anda memiliki akses lihat saja untuk percakapan ini. Hubungi Admin jika butuh
-                    akses balas.
-                  </span>
-                </div>
-              ) : null}
+              {(() => {
+                const reply = canReplyToConversation(agent, selectedCustomer);
+                if (reply.allowed || inputMode !== "text") return null;
+                let msg = "Anda tidak dapat membalas percakapan ini.";
+                if (reply.reason === "observation_mode") {
+                  msg =
+                    "Anda memiliki akses lihat saja untuk semua percakapan (mode observasi).";
+                } else if (reply.reason === "handled_by_other") {
+                  const handler = agents.find((a) => a.id === reply.handlerAgentId);
+                  msg = `Percakapan ini sedang ditangani oleh ${handler?.name ?? "CS lain"}. Anda hanya dapat melihat.`;
+                } else if (reply.reason === "cross_branch") {
+                  msg = "Percakapan ini berasal dari cabang lain — Anda hanya dapat melihat.";
+                }
+                return (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    <Lock className="h-4 w-4 shrink-0" />
+                    <span>{msg}</span>
+                  </div>
+                );
+              })()}
               <div className="mb-2 mt-2 flex gap-1">
+                {(() => {
+                  const canReply = canReplyToConversation(agent, selectedCustomer).allowed;
+                  const canNote = hasFlag(agent, "chat_write_internal_note");
+                  return (
+                    <>
                 <button
                   onClick={() => setInputMode("text")}
-                  disabled={!hasFlag(agent, "chat_reply")}
+                  disabled={!canReply}
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium",
                     inputMode === "text"
                       ? "bg-emerald-100 text-emerald-700"
                       : "text-slate-500 hover:bg-slate-100",
-                    !hasFlag(agent, "chat_reply") && "cursor-not-allowed opacity-50",
+                    !canReply && "cursor-not-allowed opacity-50",
                   )}
                 >
                   Balas
                 </button>
                 <button
                   onClick={() => setInputMode("internal_note")}
-                  disabled={!hasFlag(agent, "chat_write_internal_note")}
+                  disabled={!canNote}
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium",
                     inputMode === "internal_note"
                       ? "bg-amber-100 text-amber-700"
                       : "text-slate-500 hover:bg-slate-100",
-                    !hasFlag(agent, "chat_write_internal_note") && "cursor-not-allowed opacity-50",
+                    !canNote && "cursor-not-allowed opacity-50",
                   )}
                 >
                   Catatan Internal
                 </button>
+                    </>
+                  );
+                })()}
               </div>
-              <Textarea
+              {(() => {
+                const canReply = canReplyToConversation(agent, selectedCustomer).allowed;
+                const canNote = hasFlag(agent, "chat_write_internal_note");
+                const disabled = inputMode === "text" ? !canReply : !canNote;
+                return (
+                  <Textarea
                 value={draft}
-                disabled={
-                  inputMode === "text"
-                    ? !hasFlag(agent, "chat_reply")
-                    : !hasFlag(agent, "chat_write_internal_note")
-                }
+                    disabled={disabled}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -768,7 +788,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 }}
                 placeholder={
                   inputMode === "text"
-                    ? hasFlag(agent, "chat_reply")
+                        ? canReply
                       ? "Ketik balasan..."
                       : "Akses balas dinonaktifkan"
                     : "Tulis catatan internal (tidak terlihat customer)..."
@@ -777,11 +797,11 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 className={cn(
                   "min-h-[60px] resize-none",
                   inputMode === "internal_note" && "bg-amber-50 border-amber-200",
-                  inputMode === "text" &&
-                    !hasFlag(agent, "chat_reply") &&
-                    "bg-slate-50 text-slate-400",
+                      inputMode === "text" && !canReply && "bg-slate-50 text-slate-400",
                 )}
-              />
+                  />
+                );
+              })()}
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <Popover>
