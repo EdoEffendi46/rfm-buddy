@@ -1,7 +1,7 @@
 import type { Agent } from "@/types";
 
 export const AGENTS: Agent[] = [
-  { id: "rina", name: "Rina", role: "cs", initials: "RI", color: "#0EA5E9", isOnline: true, branchId: "br-smg" },
+  { id: "rina", name: "Rina", role: "cs", initials: "RI", color: "#0EA5E9", isOnline: true, branchId: "br-smg", branchIds: ["br-smg"] },
   {
     id: "budi",
     name: "Budi",
@@ -12,8 +12,9 @@ export const AGENTS: Agent[] = [
     permissionOverrides: { chat_reply: false, customer_edit_basic_info: false },
     internalNote: "Status: Training - akses dibatasi sementara oleh Admin pada 15 Jun 2026",
     branchId: "br-smg",
+    branchIds: ["br-smg", "br-jpr"],
   },
-  { id: "sari", name: "Sari", role: "cs", initials: "SA", color: "#EC4899", isOnline: true, branchId: "br-jpr" },
+  { id: "sari", name: "Sari", role: "cs", initials: "SA", color: "#EC4899", isOnline: true, branchId: "br-jpr", branchIds: ["br-jpr"] },
   {
     id: "admin",
     name: "Admin",
