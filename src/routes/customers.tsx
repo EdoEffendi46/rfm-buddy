@@ -6,7 +6,14 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCustomers } from "@/hooks/useCustomers";
 import { useStore } from "@/lib/store";
-import { hasPermission, shareBadgeFor, canEditCustomer, hasFlag } from "@/lib/permissions";
+import {
+  hasPermission,
+  shareBadgeFor,
+  canEditCustomer,
+  hasFlag,
+  getPrimaryAgentId,
+  getAgentBranchIds,
+} from "@/lib/permissions";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
 import { SEGMENT_META } from "@/lib/rfm";
 import { CADENCE_LABEL_TEXT } from "@/lib/cadence";
@@ -78,7 +85,15 @@ type SortKey = "recency" | "monetary" | "rfm" | "clv" | "name" | "cadence_overdu
 function CustomersPage() {
   const { role, agent } = useAuth();
   const { enriched, agents, addCustomer } = useCustomers();
-  const { createManualShare, revokeManualShare, logAudit, fieldRules, googleContacts, markCustomerGoogleSynced } = useStore();
+  const {
+    createManualShare,
+    revokeManualShare,
+    logAudit,
+    fieldRules,
+    googleContacts,
+    markCustomerGoogleSynced,
+    branches,
+  } = useStore();
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
   const [segment, setSegment] = useState<"all" | RFMSegment>("all");
@@ -235,7 +250,9 @@ function CustomersPage() {
                 </thead>
                 <tbody>
                   {filtered.map((e, i) => {
-                    const ag = agents.find((a) => a.id === e.customer.assignedAgentId);
+                    const primaryId = getPrimaryAgentId(e.customer);
+                    const ag = agents.find((a) => a.id === primaryId);
+                    const collabCount = (e.customer.collaboratorAgentIds ?? []).length;
                     const share = shareBadgeFor(agent, e.customer);
                     const sharedBy = share
                       ? agents.find((a) => a.id === share.sharedByAgentId)
@@ -342,9 +359,17 @@ function CustomersPage() {
                                 style={{ backgroundColor: ag.color }}
                               />
                               {ag.name}
+                              {collabCount > 0 && (
+                                <span
+                                  className="ml-0.5 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
+                                  title={`Plus ${collabCount} CS bantuan: ${(e.customer.collaboratorAgentIds ?? []).map((id) => agents.find((a) => a.id === id)?.name).filter(Boolean).join(", ")}`}
+                                >
+                                  +{collabCount}
+                                </span>
+                              )}
                             </span>
                           ) : (
-                            "-"
+                            <span className="text-xs italic text-slate-400">Belum di-assign</span>
                           )}
                         </td>
                         <td className="px-3 py-2 text-right">
