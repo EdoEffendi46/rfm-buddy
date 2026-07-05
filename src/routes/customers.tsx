@@ -528,12 +528,16 @@ function CustomersPage() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         agents={agents}
+        branches={branches}
+        currentAgent={agent}
         onAdd={async (d) => {
           const c = addCustomer({
             name: d.name,
             phone: d.phone,
             joinDate: new Date().toISOString(),
             assignedAgentId: d.agentId,
+            primaryAgentId: d.agentId,
+            branchId: d.branchId,
             tags: d.tags,
             notes: d.notes,
             orderStatus: "dalam_proses",
