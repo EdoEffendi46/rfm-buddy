@@ -955,20 +955,33 @@ function AddCustomerModal({
   open,
   onClose,
   agents,
+  branches,
+  currentAgent,
   onAdd,
 }: {
   open: boolean;
   onClose: () => void;
   agents: ReturnType<typeof useCustomers>["agents"];
+  branches: import("@/types").Branch[];
+  currentAgent: Agent | null;
   onAdd: (d: {
     name: string;
     phone: string;
     agentId: string;
+    branchId: string;
     tags: string[];
     notes: string;
   }) => void;
 }) {
-  const defaultAgentId = agents.find((a) => a.role === "cs")?.id ?? agents[0]?.id ?? "";
+  const canViewAll = hasPermission(currentAgent, "branch_view_all");
+  const agentBranchIds = getAgentBranchIds(currentAgent);
+  const availableBranches = canViewAll
+    ? branches
+    : branches.filter((b) => agentBranchIds.includes(b.id));
+  const defaultAgentId = currentAgent?.id ?? agents.find((a) => a.role === "cs")?.id ?? "";
+  const defaultBranchId =
+    agentBranchIds.length === 1 && !canViewAll ? agentBranchIds[0] : "";
+  const [branchId, setBranchId] = useState(defaultBranchId);
 
   const form = useForm<CustomerCreateInput>({
     resolver: zodResolver(customerCreateSchema),
@@ -987,18 +1000,24 @@ function AddCustomerModal({
       form.reset({
         name: "",
         phone: "",
-        agentId: agents.find((a) => a.role === "cs")?.id ?? agents[0]?.id ?? "",
+        agentId: defaultAgentId,
         tagsInput: "",
         notes: "",
       });
+      setBranchId(defaultBranchId);
     }
-  }, [open, agents, form]);
+  }, [open, agents, form, defaultAgentId, defaultBranchId]);
 
   const onSubmit = (values: CustomerCreateInput) => {
+    if (!branchId) {
+      toast.error("Cabang wajib dipilih");
+      return;
+    }
     onAdd({
       name: values.name.trim(),
       phone: values.phone.trim(),
       agentId: values.agentId,
+      branchId,
       tags: parseCustomerCreateTags(values.tagsInput),
       notes: values.notes?.trim() ?? "",
     });
