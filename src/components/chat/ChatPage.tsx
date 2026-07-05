@@ -992,6 +992,72 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Tambah CS Bantuan dialog */}
+      <Dialog open={collabOpen} onOpenChange={setCollabOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tambah CS Bantuan</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-slate-500">
+            CS bantuan bisa ikut membalas percakapan ini tanpa mengubah CS utama.
+          </p>
+          <div className="mt-2 space-y-2">
+            {(() => {
+              if (!selectedCustomer) return null;
+              const primary = getPrimaryAgentId(selectedCustomer);
+              const existing = new Set(selectedCustomer.collaboratorAgentIds ?? []);
+              const eligible = agents.filter(
+                (a) =>
+                  a.role === "cs" &&
+                  a.id !== primary &&
+                  !existing.has(a.id) &&
+                  (!selectedCustomer.branchId ||
+                    getAgentBranchIds(a).includes(selectedCustomer.branchId)),
+              );
+              if (eligible.length === 0) {
+                return (
+                  <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-500">
+                    Tidak ada CS di cabang customer ini yang bisa ditambahkan.
+                  </div>
+                );
+              }
+              return eligible.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => {
+                    store.addCollaborator(selectedCustomer.id, a.id);
+                    toast.success(
+                      `${a.name} ditambahkan sebagai CS Bantuan untuk ${selectedCustomer.name}`,
+                    );
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-slate-50"
+                >
+                  <Avatar
+                    name={a.name}
+                    color={a.color}
+                    initials={a.initials}
+                    size={32}
+                    online={a.isOnline}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{a.name}</div>
+                    <div className="text-[11px] text-slate-500">
+                      {a.isOnline ? "Online" : "Offline"}
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-emerald-600">+ Tambah</span>
+                </button>
+              ));
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCollabOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
