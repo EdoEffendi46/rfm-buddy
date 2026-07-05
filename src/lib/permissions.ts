@@ -177,10 +177,32 @@ function shareActiveFor(
 export function canAccessCustomer(agent: Agent | null, c: Customer): boolean {
   if (!agent) return false;
   if (agent.role !== "cs") return true;
-  if (c.assignedAgentId === agent.id) return true;
-  if (!c.assignedAgentId) return true;
+  const primary = getPrimaryAgentId(c);
+  if (primary === agent.id) return true;
+  if (!primary) return true;
+  if ((c.collaboratorAgentIds ?? []).includes(agent.id)) return true;
   if (shareActiveFor(c, agent.id)) return true;
   return false;
+}
+
+/** Cabang efektif agent (fallback ke [branchId] bila branchIds kosong). */
+export function getAgentBranchIds(agent: Agent | null | undefined): string[] {
+  if (!agent) return [];
+  if (agent.branchIds && agent.branchIds.length) return agent.branchIds;
+  return agent.branchId ? [agent.branchId] : [];
+}
+
+/** CS utama customer (fallback ke assignedAgentId lama bila primaryAgentId belum di-set). */
+export function getPrimaryAgentId(c: Customer): string | undefined {
+  if (c.primaryAgentId) return c.primaryAgentId;
+  return c.assignedAgentId ? c.assignedAgentId : undefined;
+}
+
+/** True bila agent adalah primary atau collaborator di percakapan ini. */
+export function isAgentInvolved(agent: Agent | null, c: Customer): boolean {
+  if (!agent) return false;
+  if (getPrimaryAgentId(c) === agent.id) return true;
+  return (c.collaboratorAgentIds ?? []).includes(agent.id);
 }
 
 /**
@@ -193,28 +215,62 @@ export function canViewConversation(agent: Agent | null, c: Customer): boolean {
   if (!canAccessCustomer(agent, c)) return false;
   // Kalau customer belum punya branchId (data lama / global), izinkan.
   if (!c.branchId) return true;
-  // Sama cabang → boleh.
-  if (agent.branchId && c.branchId === agent.branchId) return true;
+  const agentBranches = getAgentBranchIds(agent);
+  // Sama cabang (salah satu cabang agent) → boleh lihat, terlepas siapa primary/collab.
+  if (agentBranches.includes(c.branchId)) return true;
   // Lintas cabang: butuh permission khusus.
   if (hasPermission(agent, "branch_view_all")) return true;
   if (
     hasPermission(agent, "branch_view_cross_open_assigned") &&
     c.conversationStatus === "open" &&
-    c.assignedAgentId === agent.id
+    getPrimaryAgentId(c) === agent.id
   ) {
     return true;
   }
-  // Agent tanpa branchId (mis. owner tanpa cabang) dianggap punya akses global
-  // hanya jika hasPermission branch_view_all sudah dicek di atas. Kalau tidak
-  // ada branchId sama sekali, blok.
-  if (!agent.branchId) return false;
+  // Agent tanpa cabang sama sekali (mis. supervisor/owner) hanya lolos via
+  // permission di atas. Kalau tidak ada, blok.
+  if (agentBranches.length === 0) return false;
   return false;
+}
+
+/**
+ * Aturan "boleh balas" per-percakapan. Mengganti pengecekan flag global
+ * chat_reply yang tumpang-tindih dengan assignment.
+ *
+ * Urutan:
+ *  1. Jika hasPermission(agent, "chat_reply") === false secara eksplisit
+ *     (override dari Kelola Izin, mis. mode observasi/training) → tidak boleh.
+ *  2. Harus bisa lihat percakapan dulu.
+ *  3. Primary/collaborator → boleh.
+ *  4. Belum di-assign & satu cabang dengan customer → boleh (siapa cepat dia dapat).
+ *  5. Selain itu, hanya boleh bila punya `reply_any_conversation` (supervisor/owner).
+ */
+export function canReplyToConversation(agent: Agent | null, c: Customer): {
+  allowed: boolean;
+  reason?: "observation_mode" | "handled_by_other" | "cross_branch" | "no_access";
+  handlerAgentId?: string;
+} {
+  if (!agent) return { allowed: false, reason: "no_access" };
+  // 1. Override eksplisit dari Kelola Izin
+  if (!hasPermission(agent, "chat_reply")) {
+    return { allowed: false, reason: "observation_mode" };
+  }
+  if (!canViewConversation(agent, c)) return { allowed: false, reason: "no_access" };
+  const primary = getPrimaryAgentId(c);
+  if (primary === agent.id) return { allowed: true };
+  if ((c.collaboratorAgentIds ?? []).includes(agent.id)) return { allowed: true };
+  const agentBranches = getAgentBranchIds(agent);
+  const sameBranch = c.branchId ? agentBranches.includes(c.branchId) : true;
+  if (!primary && sameBranch) return { allowed: true };
+  if (hasPermission(agent, "reply_any_conversation")) return { allowed: true };
+  if (primary) return { allowed: false, reason: "handled_by_other", handlerAgentId: primary };
+  return { allowed: false, reason: "cross_branch" };
 }
 
 export function canEditCustomer(agent: Agent | null, c: Customer): boolean {
   if (!agent) return false;
   if (agent.role !== "cs") return true;
-  if (c.assignedAgentId === agent.id) return true;
+  if (getPrimaryAgentId(c) === agent.id) return true;
   const s = shareActiveFor(c, agent.id);
   return s?.permission === "edit";
 }
