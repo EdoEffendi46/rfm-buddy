@@ -72,6 +72,9 @@ interface StoreState {
   updateBranch: (id: string, patch: Partial<Branch>) => void;
   toggleBranchActive: (id: string) => void;
   setAgentBranch: (agentId: string, branchId: string | undefined) => void;
+  setAgentBranches: (agentId: string, branchIds: string[]) => void;
+  addCollaborator: (customerId: string, agentId: string) => void;
+  removeCollaborator: (customerId: string, agentId: string) => void;
 
   // Google Contacts (placeholder integration)
   googleContacts: GoogleContactsSettings;
@@ -214,7 +217,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setBranches((p) => p.map((b) => (b.id === id ? { ...b, isActive: !b.isActive } : b)));
   }, []);
   const setAgentBranch = useCallback((agentId: string, branchId: string | undefined) => {
-    setAgents((p) => p.map((a) => (a.id === agentId ? { ...a, branchId } : a)));
+    setAgents((p) =>
+      p.map((a) =>
+        a.id === agentId
+          ? { ...a, branchId, branchIds: branchId ? [branchId] : [] }
+          : a,
+      ),
+    );
+  }, []);
+  const setAgentBranches = useCallback((agentId: string, branchIds: string[]) => {
+    setAgents((p) =>
+      p.map((a) =>
+        a.id === agentId ? { ...a, branchIds, branchId: branchIds[0] ?? undefined } : a,
+      ),
+    );
+  }, []);
+  const addCollaborator = useCallback((customerId: string, agentId: string) => {
+    setCustomers((p) =>
+      p.map((c) => {
+        if (c.id !== customerId) return c;
+        const list = c.collaboratorAgentIds ?? [];
+        if (list.includes(agentId)) return c;
+        return { ...c, collaboratorAgentIds: [...list, agentId] };
+      }),
+    );
+  }, []);
+  const removeCollaborator = useCallback((customerId: string, agentId: string) => {
+    setCustomers((p) =>
+      p.map((c) =>
+        c.id === customerId
+          ? {
+              ...c,
+              collaboratorAgentIds: (c.collaboratorAgentIds ?? []).filter((id) => id !== agentId),
+            }
+          : c,
+      ),
+    );
   }, []);
   const setGoogleContactsAutoSync = useCallback((v: boolean) => {
     setGoogleContacts((s) => ({ ...s, autoSync: v }));
@@ -442,6 +480,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const newC: Customer = {
         ...c,
         id: genId("c"),
+        primaryAgentId: c.primaryAgentId ?? (c.assignedAgentId || undefined),
+        assignedAgentId: c.assignedAgentId || c.primaryAgentId || "",
         purchases: [],
         segmentHistory: [
           {
@@ -562,7 +602,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     (id: string, agentId: string) => {
       setCustomers((p) => {
         const cust = p.find((c) => c.id === id);
-        const oldAg = agents.find((a) => a.id === cust?.assignedAgentId);
+        const oldPrimaryId = cust?.primaryAgentId ?? cust?.assignedAgentId;
+        const oldAg = agents.find((a) => a.id === oldPrimaryId);
         const newAg = agents.find((a) => a.id === agentId);
         if (cust) {
           logAuditRaw(currentAgent, {
@@ -575,7 +616,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             details: `Reassign dari ${oldAg?.name ?? "—"} ke ${newAg?.name ?? "—"}`,
           });
         }
-        const next = p.map((c) => (c.id === id ? { ...c, assignedAgentId: agentId } : c));
+        const next = p.map((c) =>
+          c.id === id ? { ...c, assignedAgentId: agentId, primaryAgentId: agentId } : c,
+        );
         const updated = next.find((c) => c.id === id);
         if (updated) db.persistCustomer(updated);
         return next;
@@ -1109,6 +1152,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     updateBranch,
     toggleBranchActive,
     setAgentBranch,
+    setAgentBranches,
+    addCollaborator,
+    removeCollaborator,
     googleContacts,
     setGoogleContactsAutoSync,
     markCustomerGoogleSynced,

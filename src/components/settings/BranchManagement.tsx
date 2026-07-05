@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Building2, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { getAgentBranchIds } from "@/lib/permissions";
 
 export function BranchManagementSection() {
   const { branches, addBranch, toggleBranchActive, agents, customers } = useStore();
@@ -68,7 +69,9 @@ export function BranchManagementSection() {
         </thead>
         <tbody>
           {branches.map((b) => {
-            const csCount = agents.filter((a) => a.branchId === b.id && a.role === "cs").length;
+            const csCount = agents.filter(
+              (a) => a.role === "cs" && getAgentBranchIds(a).includes(b.id),
+            ).length;
             const custCount = customers.filter((c) => c.branchId === b.id).length;
             return (
               <tr key={b.id} className="border-t border-slate-100">

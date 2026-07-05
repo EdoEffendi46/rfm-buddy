@@ -6,7 +6,13 @@ import { calculateRFM, SEGMENT_META } from "@/lib/rfm";
 import { calculateCLV } from "@/lib/clv";
 import { cadenceFor, CADENCE_LABEL_TEXT, type CadenceResult } from "@/lib/cadence";
 import { getFieldDisplay } from "@/lib/fieldVisibility";
-import { canEditCustomer, hasFlag } from "@/lib/permissions";
+import {
+  canEditCustomer,
+  hasFlag,
+  canReplyToConversation,
+  getPrimaryAgentId,
+  getAgentBranchIds,
+} from "@/lib/permissions";
 import { useStore } from "@/lib/store";
 import {
   formatTime,
@@ -123,6 +129,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
   const [typing, setTyping] = useState(false);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const [transferOpen, setTransferOpen] = useState(false);
+  const [collabOpen, setCollabOpen] = useState(false);
 
   useEffect(() => {
     if (initialCustomerId) setSelectedId(initialCustomerId);
@@ -150,8 +157,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
     let list = store.conversations;
     // role visibility is handled in useConversations via canAccessCustomer (includes manual shares)
     // status tab
-    if (statusTab === "mine") list = list.filter((c) => c.customer.assignedAgentId === agent?.id);
-    if (statusTab === "unassigned") list = list.filter((c) => !c.customer.assignedAgentId);
+    if (statusTab === "mine")
+      list = list.filter((c) => getPrimaryAgentId(c.customer) === agent?.id);
+    if (statusTab === "unassigned") list = list.filter((c) => !getPrimaryAgentId(c.customer));
     if (statusTab === "open") list = list.filter((c) => c.customer.conversationStatus === "open");
     if (statusTab === "resolved")
       list = list.filter((c) => c.customer.conversationStatus === "resolved");
@@ -191,8 +199,8 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
     const base = store.conversations;
     return {
       all: base.length,
-      mine: base.filter((c) => c.customer.assignedAgentId === agent?.id).length,
-      unassigned: base.filter((c) => !c.customer.assignedAgentId).length,
+      mine: base.filter((c) => getPrimaryAgentId(c.customer) === agent?.id).length,
+      unassigned: base.filter((c) => !getPrimaryAgentId(c.customer)).length,
       open: base.filter((c) => c.customer.conversationStatus === "open").length,
       resolved: base.filter((c) => c.customer.conversationStatus === "resolved").length,
       snoozed: base.filter((c) => c.customer.conversationStatus === "snoozed").length,
@@ -313,7 +321,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
             conversations.map((c) => {
               const rfm = calculateRFM(c.customer);
               const isSelected = c.customer.id === selectedId;
-              const ag = agents.find((a) => a.id === c.customer.assignedAgentId);
+              const primaryId = getPrimaryAgentId(c.customer);
+              const ag = agents.find((a) => a.id === primaryId);
+              const collabCount = (c.customer.collaboratorAgentIds ?? []).length;
               const lm = c.lastMessage;
               const customerIsLastSender = !!lm && lm.senderId === c.customer.id;
               const isUnread = c.unreadCount > 0;
@@ -404,14 +414,22 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     </div>
                     <div className="mt-1 flex items-center gap-1.5">
                       {ag && (
-                        <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
                           {ag.name}
+                          {collabCount > 0 && (
+                            <span
+                              className="rounded bg-emerald-100 px-1 text-[9px] font-semibold text-emerald-700"
+                              title={`+${collabCount} CS bantuan`}
+                            >
+                              +{collabCount}
+                            </span>
+                          )}
                         </span>
                       )}
                       <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-[10px] text-slate-600">
                         {orderStatusLabel(c.customer.orderStatus)}
                       </span>
-                      {agent?.branchId && c.customer.branchId && c.customer.branchId !== agent.branchId && (
+                      {agent && c.customer.branchId && !getAgentBranchIds(agent).includes(c.customer.branchId) && (
                         <span
                           className="inline-flex items-center gap-0.5 rounded-md bg-purple-50 px-1.5 py-0.5 text-[10px] font-medium text-purple-600"
                           title="Percakapan dari cabang lain"
@@ -460,6 +478,75 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-slate-900">{selectedCustomer.name}</span>
                     <SegmentBadge segment={selectedRfm!.segment} />
+                    {(() => {
+                      const primaryId = getPrimaryAgentId(selectedCustomer);
+                      const primary = agents.find((a) => a.id === primaryId);
+                      const collabIds = selectedCustomer.collaboratorAgentIds ?? [];
+                      return (
+                        <>
+                          {primary && (
+                            <span
+                              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700"
+                              title={`CS Utama: ${primary.name}`}
+                            >
+                              <span
+                                className="h-1.5 w-1.5 rounded-full"
+                                style={{ backgroundColor: primary.color }}
+                              />
+                              CS Utama · {primary.name}
+                            </span>
+                          )}
+                          {collabIds.length > 0 && (
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 hover:bg-sky-100"
+                                  title="Lihat daftar CS Bantuan"
+                                >
+                                  + {collabIds.length} CS Bantuan
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent align="start" className="w-56 p-2">
+                                <div className="mb-1 text-[11px] font-semibold text-slate-700">
+                                  CS Bantuan
+                                </div>
+                                <ul className="space-y-1">
+                                  {collabIds.map((cid) => {
+                                    const a = agents.find((x) => x.id === cid);
+                                    if (!a) return null;
+                                    return (
+                                      <li
+                                        key={cid}
+                                        className="flex items-center justify-between rounded px-1.5 py-1 text-xs hover:bg-slate-50"
+                                      >
+                                        <span className="flex items-center gap-1.5">
+                                          <span
+                                            className="h-2 w-2 rounded-full"
+                                            style={{ backgroundColor: a.color }}
+                                          />
+                                          {a.name}
+                                        </span>
+                                        {canEditCustomer(agent, selectedCustomer) && (
+                                          <button
+                                            className="text-[10px] font-medium text-red-500 hover:text-red-700"
+                                            onClick={() => {
+                                              store.removeCollaborator(selectedCustomer.id, cid);
+                                              toast.success(`${a.name} dihapus dari CS Bantuan`);
+                                            }}
+                                          >
+                                            Hapus
+                                          </button>
+                                        )}
+                                      </li>
+                                    );
+                                  })}
+                                </ul>
+                              </PopoverContent>
+                            </Popover>
+                          )}
+                        </>
+                      );
+                    })()}
                   </div>
                   <div className="font-mono text-xs text-slate-500">
                     {getFieldDisplay("phone", selectedCustomer.phone, role, fieldRules)}
@@ -523,6 +610,9 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setTransferOpen(true)}>
                       Transfer ke CS lain
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setCollabOpen(true)}>
+                      Tambah CS Bantuan
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSnoozeOpen(true)}>
                       Snooze percakapan
@@ -625,50 +715,70 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
 
             {/* Input */}
             <div className="border-t border-slate-200 bg-white p-3">
-              {!hasFlag(agent, "chat_reply") && inputMode === "text" ? (
-                <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
-                  <Lock className="h-4 w-4 shrink-0" />
-                  <span>
-                    Anda memiliki akses lihat saja untuk percakapan ini. Hubungi Admin jika butuh
-                    akses balas.
-                  </span>
-                </div>
-              ) : null}
+              {(() => {
+                const reply = canReplyToConversation(agent, selectedCustomer);
+                if (reply.allowed || inputMode !== "text") return null;
+                let msg = "Anda tidak dapat membalas percakapan ini.";
+                if (reply.reason === "observation_mode") {
+                  msg =
+                    "Anda memiliki akses lihat saja untuk semua percakapan (mode observasi).";
+                } else if (reply.reason === "handled_by_other") {
+                  const handler = agents.find((a) => a.id === reply.handlerAgentId);
+                  msg = `Percakapan ini sedang ditangani oleh ${handler?.name ?? "CS lain"}. Anda hanya dapat melihat.`;
+                } else if (reply.reason === "cross_branch") {
+                  msg = "Percakapan ini berasal dari cabang lain — Anda hanya dapat melihat.";
+                }
+                return (
+                  <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800">
+                    <Lock className="h-4 w-4 shrink-0" />
+                    <span>{msg}</span>
+                  </div>
+                );
+              })()}
               <div className="mb-2 mt-2 flex gap-1">
+                {(() => {
+                  const canReply = canReplyToConversation(agent, selectedCustomer).allowed;
+                  const canNote = hasFlag(agent, "chat_write_internal_note");
+                  return (
+                    <>
                 <button
                   onClick={() => setInputMode("text")}
-                  disabled={!hasFlag(agent, "chat_reply")}
+                  disabled={!canReply}
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium",
                     inputMode === "text"
                       ? "bg-emerald-100 text-emerald-700"
                       : "text-slate-500 hover:bg-slate-100",
-                    !hasFlag(agent, "chat_reply") && "cursor-not-allowed opacity-50",
+                    !canReply && "cursor-not-allowed opacity-50",
                   )}
                 >
                   Balas
                 </button>
                 <button
                   onClick={() => setInputMode("internal_note")}
-                  disabled={!hasFlag(agent, "chat_write_internal_note")}
+                  disabled={!canNote}
                   className={cn(
                     "rounded-md px-3 py-1 text-xs font-medium",
                     inputMode === "internal_note"
                       ? "bg-amber-100 text-amber-700"
                       : "text-slate-500 hover:bg-slate-100",
-                    !hasFlag(agent, "chat_write_internal_note") && "cursor-not-allowed opacity-50",
+                    !canNote && "cursor-not-allowed opacity-50",
                   )}
                 >
                   Catatan Internal
                 </button>
+                    </>
+                  );
+                })()}
               </div>
-              <Textarea
+              {(() => {
+                const canReply = canReplyToConversation(agent, selectedCustomer).allowed;
+                const canNote = hasFlag(agent, "chat_write_internal_note");
+                const disabled = inputMode === "text" ? !canReply : !canNote;
+                return (
+                  <Textarea
                 value={draft}
-                disabled={
-                  inputMode === "text"
-                    ? !hasFlag(agent, "chat_reply")
-                    : !hasFlag(agent, "chat_write_internal_note")
-                }
+                    disabled={disabled}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
@@ -678,7 +788,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 }}
                 placeholder={
                   inputMode === "text"
-                    ? hasFlag(agent, "chat_reply")
+                        ? canReply
                       ? "Ketik balasan..."
                       : "Akses balas dinonaktifkan"
                     : "Tulis catatan internal (tidak terlihat customer)..."
@@ -687,11 +797,11 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 className={cn(
                   "min-h-[60px] resize-none",
                   inputMode === "internal_note" && "bg-amber-50 border-amber-200",
-                  inputMode === "text" &&
-                    !hasFlag(agent, "chat_reply") &&
-                    "bg-slate-50 text-slate-400",
+                      inputMode === "text" && !canReply && "bg-slate-50 text-slate-400",
                 )}
-              />
+                  />
+                );
+              })()}
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-1">
                   <Popover>
@@ -826,16 +936,22 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
           </DialogHeader>
           <div className="space-y-2">
             {agents
-              .filter((a) => a.role === "cs" && a.id !== selectedCustomer?.assignedAgentId)
+              .filter(
+                (a) =>
+                  a.role === "cs" &&
+                  a.id !== getPrimaryAgentId(selectedCustomer ?? ({} as Customer)) &&
+                  (!selectedCustomer?.branchId ||
+                    getAgentBranchIds(a).includes(selectedCustomer.branchId)),
+              )
               .map((a) => {
-                const load = customers.filter((c) => c.assignedAgentId === a.id).length;
+                const load = customers.filter((c) => getPrimaryAgentId(c) === a.id).length;
                 return (
                   <button
                     key={a.id}
                     onClick={() => {
                       if (!selectedCustomer) return;
                       const oldAgent = agents.find(
-                        (a) => a.id === selectedCustomer.assignedAgentId,
+                        (x) => x.id === getPrimaryAgentId(selectedCustomer),
                       );
                       store.logAudit({
                         action: "conversation_transferred",
@@ -874,6 +990,72 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                 );
               })}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Tambah CS Bantuan dialog */}
+      <Dialog open={collabOpen} onOpenChange={setCollabOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Tambah CS Bantuan</DialogTitle>
+          </DialogHeader>
+          <p className="text-xs text-slate-500">
+            CS bantuan bisa ikut membalas percakapan ini tanpa mengubah CS utama.
+          </p>
+          <div className="mt-2 space-y-2">
+            {(() => {
+              if (!selectedCustomer) return null;
+              const primary = getPrimaryAgentId(selectedCustomer);
+              const existing = new Set(selectedCustomer.collaboratorAgentIds ?? []);
+              const eligible = agents.filter(
+                (a) =>
+                  a.role === "cs" &&
+                  a.id !== primary &&
+                  !existing.has(a.id) &&
+                  (!selectedCustomer.branchId ||
+                    getAgentBranchIds(a).includes(selectedCustomer.branchId)),
+              );
+              if (eligible.length === 0) {
+                return (
+                  <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-500">
+                    Tidak ada CS di cabang customer ini yang bisa ditambahkan.
+                  </div>
+                );
+              }
+              return eligible.map((a) => (
+                <button
+                  key={a.id}
+                  onClick={() => {
+                    store.addCollaborator(selectedCustomer.id, a.id);
+                    toast.success(
+                      `${a.name} ditambahkan sebagai CS Bantuan untuk ${selectedCustomer.name}`,
+                    );
+                  }}
+                  className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-slate-50"
+                >
+                  <Avatar
+                    name={a.name}
+                    color={a.color}
+                    initials={a.initials}
+                    size={32}
+                    online={a.isOnline}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm font-medium">{a.name}</div>
+                    <div className="text-[11px] text-slate-500">
+                      {a.isOnline ? "Online" : "Offline"}
+                    </div>
+                  </div>
+                  <span className="text-xs font-medium text-emerald-600">+ Tambah</span>
+                </button>
+              ));
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCollabOpen(false)}>
+              Tutup
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
