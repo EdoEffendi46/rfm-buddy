@@ -63,91 +63,65 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(0.974 0.003 247);
-  --foreground: oklch(0.16 0.03 256);
-  --brand: #25d366;
-  --brand-dark: #128c7e;
-  --sidebar-bg: #111b21;
-  --app-bg: #f0f2f5;
-  --surface: #ffffff;
-  --border-soft: #e2e8f0;
-  --text-primary: #1a1a1a;
-  --text-secondary: #64748b;
-  --text-tertiary: #94a3b8;
-  --text-muted: #64748b;
-  --success: #22c55e;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-  --accent-purple: #7c3aed;
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.12);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.74 0.18 152);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.74 0.18 152);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  color-scheme: dark;
+  /* Dark Premium palette (Linear/Attio style) — applied to :root so the whole app is dark by default */
+  --app-bg: #0A0A0C;
+  --sidebar-bg: #0C0C0F;
+  --surface: #101014;
+  --surface-2: #14141A;
+  --border-soft: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #F4F4F5;
+  --text-secondary: #8B8B93;
+  --text-tertiary: #6B6B72;
+  --text-muted: #8B8B93;
+  --brand: #22C55E;
+  --brand-dark: #16A34A;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #EF4444;
+  --info: #3B82F6;
+  --accent-purple: #7C3AED;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --shadow-md: 0 12px 30px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.55);
+
+  --background: oklch(0.145 0.005 260);
+  --foreground: oklch(0.97 0.005 260);
+  --card: #101014;
+  --card-foreground: #F4F4F5;
+  --popover: #101014;
+  --popover-foreground: #F4F4F5;
+  --primary: oklch(0.72 0.19 145);
+  --primary-foreground: #0A0A0C;
+  --secondary: rgba(255, 255, 255, 0.06);
+  --secondary-foreground: #F4F4F5;
+  --muted: rgba(255, 255, 255, 0.04);
+  --muted-foreground: #8B8B93;
+  --accent: rgba(255, 255, 255, 0.06);
+  --accent-foreground: #F4F4F5;
+  --destructive: oklch(0.62 0.22 27);
+  --destructive-foreground: #F4F4F5;
+  --border: rgba(255, 255, 255, 0.08);
+  --input: rgba(255, 255, 255, 0.09);
+  --ring: oklch(0.72 0.19 145);
+  --chart-1: #22C55E;
+  --chart-2: #7C3AED;
+  --chart-3: #3B82F6;
+  --chart-4: #F59E0B;
+  --chart-5: #EF4444;
+  --sidebar: #0C0C0F;
+  --sidebar-foreground: #F4F4F5;
+  --sidebar-primary: #22C55E;
+  --sidebar-primary-foreground: #0A0A0C;
+  --sidebar-accent: rgba(255, 255, 255, 0.06);
+  --sidebar-accent-foreground: #F4F4F5;
+  --sidebar-border: rgba(255, 255, 255, 0.08);
+  --sidebar-ring: oklch(0.72 0.19 145);
 }
 
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  color-scheme: dark;
 }
 
 @layer base {
@@ -157,8 +131,8 @@
 
   body {
     background-color: var(--app-bg);
-    color: var(--color-foreground);
-    font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+    color: var(--text-primary);
+    font-family: "Geist", "Inter", ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -191,7 +165,7 @@
     height: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+    background: rgba(255, 255, 255, 0.12);
     border-radius: 9999px;
   }
 }
@@ -239,7 +213,7 @@
 
 /* Skeleton shimmer */
 .skeleton {
-  background: linear-gradient(90deg, #EFEFEF 0%, #F7F7F7 50%, #EFEFEF 100%);
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 100%);
   background-size: 800px 100%;
   animation: lov-shimmer 1.4s linear infinite;
   border-radius: 6px;
@@ -252,8 +226,8 @@ button, a, [role="button"], .interactive {
 
 /* Soft hover lift */
 .hover-lift:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* ========== Receipt perforation (thermal paper tear edge) ========== */
@@ -277,14 +251,99 @@ button, a, [role="button"], .interactive {
 /* ========== Kanban drag micro-interactions (infrastructure) ========== */
 .kanban-card-dragging {
   transform: rotate(2deg) scale(1.02);
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.6);
   cursor: grabbing;
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 .kanban-column-drop-target {
-  background: color-mix(in srgb, var(--brand) 8%, transparent);
+  background: color-mix(in srgb, var(--brand) 12%, transparent);
   outline: 2px dashed var(--brand);
   outline-offset: -2px;
   transition: background 150ms ease, outline-color 150ms ease;
+}
+
+/* ========== Dark Premium Compat Layer ==========
+ * Remaps hardcoded Tailwind light-mode utilities used across existing
+ * components to the dark premium palette without touching component code.
+ * Non-invasive: only affects rendering, no structural changes.
+ */
+
+/* Surfaces */
+.bg-white { background-color: var(--surface) !important; }
+.bg-slate-50 { background-color: rgba(255, 255, 255, 0.02) !important; }
+.bg-slate-100 { background-color: rgba(255, 255, 255, 0.04) !important; }
+.bg-slate-200 { background-color: rgba(255, 255, 255, 0.06) !important; }
+.bg-slate-800, .bg-slate-900, .bg-\[\#111B21\], .bg-\[\#0F1419\] {
+  background-color: var(--sidebar-bg) !important;
+}
+.bg-\[\#F0F2F5\] { background-color: var(--app-bg) !important; }
+
+/* Text */
+.text-slate-900, .text-slate-800 { color: var(--text-primary) !important; }
+.text-slate-700, .text-slate-600 { color: var(--text-secondary) !important; }
+.text-slate-500, .text-slate-400, .text-slate-300 { color: var(--text-tertiary) !important; }
+.text-white { color: var(--text-primary) !important; }
+
+/* Borders */
+.border-slate-100, .border-slate-200, .border-slate-300,
+.divide-slate-100 > * + *, .divide-slate-200 > * + * {
+  border-color: var(--border-soft) !important;
+}
+.border-slate-700, .border-slate-800 { border-color: var(--border-strong) !important; }
+
+/* Hover surfaces used across tables/rows */
+.hover\:bg-slate-50:hover { background-color: rgba(255, 255, 255, 0.03) !important; }
+.hover\:bg-slate-100:hover { background-color: rgba(255, 255, 255, 0.05) !important; }
+
+/* Premium card surface — applied wherever .bg-white pairs with a border */
+.rounded-2xl.bg-white,
+.rounded-xl.bg-white,
+.rounded-3xl.bg-white {
+  background: linear-gradient(180deg, rgba(255,255,255,0.045), rgba(255,255,255,0.02)) !important;
+  border-color: var(--border-soft) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, var(--shadow-md);
+}
+
+/* Inputs */
+input, textarea, select {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary);
+  border-color: var(--border-soft);
+}
+input::placeholder, textarea::placeholder { color: var(--text-tertiary); }
+
+/* Brand green CTA — glow */
+.bg-\[\#16A34A\], .bg-\[\#25D366\] {
+  background: linear-gradient(180deg, #22C55E, #16A34A) !important;
+  box-shadow: 0 8px 22px rgba(22, 163, 74, 0.38), inset 0 1px 0 rgba(255,255,255,0.25);
+  color: #F4F4F5 !important;
+}
+.hover\:bg-\[\#15803D\]:hover, .hover\:bg-\[\#128C7E\]:hover {
+  background: linear-gradient(180deg, #16A34A, #15803D) !important;
+}
+.text-\[\#16A34A\], .text-\[\#15803D\], .text-\[\#128C7E\] { color: #4ADE80 !important; }
+.border-\[\#16A34A\] { border-color: #22C55E !important; }
+
+/* Sidebar / auth split panel already dark hex — keep */
+
+/* Ring focus */
+*:focus-visible {
+  outline-color: var(--brand);
+}
+
+/* KPI number gradient helper */
+.kpi-number {
+  background: linear-gradient(180deg, #FFFFFF, #B8B8C0);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in, .animate-fade-in-up, .stagger-children > *, .skeleton {
+    animation: none !important;
+  }
+  .hover-lift:hover { transform: none; }
 }
 
