@@ -221,47 +221,63 @@ function DemoPickerLogin({ onLogin }: { onLogin: (agentId: string) => void }) {
     router.navigate({ to: "/dashboard" });
   };
 
+  const ROLE_FULL: Record<Role, string> = {
+    cs: "Customer Service",
+    supervisor: "Supervisor",
+    owner: "Owner",
+  };
+  const selectedAgent = AGENTS.find((a) => a.id === selected) ?? AGENTS[0];
+  const firstName = selectedAgent.name.split(" ").slice(-1)[0];
+
   return (
-    <AuthLayout title="Masuk ke ChatCRM" subtitle="Mode demo lokal — pilih role untuk masuk.">
-      <div className="space-y-2 stagger-children">
+    <AuthLayout title="Masuk ke workspace" subtitle="Pilih akun demo untuk melanjutkan.">
+      <div className="space-y-2.5 stagger-children">
         {AGENTS.map((a) => (
           <button
             key={a.id}
             type="button"
             onClick={() => setSelected(a.id)}
             className={cn(
-              "flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all duration-150",
+              "flex w-full items-center gap-4 rounded-2xl border p-4 text-left transition-all duration-150",
               selected === a.id
-                ? "border-[#16A34A]/40 bg-[#16A34A]/5"
-                : "border-[var(--border-soft)] hover:border-slate-300 hover:bg-slate-50",
+                ? "border-[#22C55E]/60 bg-[#22C55E]/[0.06] shadow-[0_0_0_1px_rgba(34,197,94,0.35),0_12px_30px_rgba(0,0,0,0.35)]"
+                : "border-white/[0.08] bg-white/[0.02] hover:border-white/[0.14] hover:bg-white/[0.04]",
             )}
           >
-            <Avatar name={a.name} color={a.color} initials={a.initials} size={40} />
-            <div className="flex-1">
-              <div className="font-medium text-[var(--text-primary)]">{a.name}</div>
-              <div className="text-xs text-[var(--text-secondary)] mt-0.5">
-                {ROLE_DISPLAY[a.role as Role].subtitle}
+            <Avatar name={a.name} color={a.color} initials={a.initials} size={44} />
+            <div className="flex-1 min-w-0">
+              <div className="font-semibold text-[#F4F4F5] tracking-tight">{a.name}</div>
+              <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#6B6B72]">
+                {ROLE_FULL[a.role as Role]}
               </div>
             </div>
             {selected === a.id ? (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#16A34A] text-white animate-fade-in-up">
-                <Check className="h-3 w-3" strokeWidth={3} />
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-white animate-fade-in-up"
+                style={{ background: "linear-gradient(180deg,#22C55E,#16A34A)" }}
+              >
+                <Check className="h-3.5 w-3.5" strokeWidth={3} />
               </span>
             ) : (
-              <span className="text-[10px] uppercase tracking-wider text-[var(--text-tertiary)] font-medium">
-                {a.role}
-              </span>
+              <span className="h-6 w-6 shrink-0 rounded-full border border-white/[0.12]" />
             )}
           </button>
         ))}
       </div>
       <Button
         onClick={handleLogin}
-        className="mt-6 h-11 w-full bg-[#16A34A] text-base font-semibold text-white hover:bg-[#15803D]"
+        className="mt-6 h-12 w-full rounded-xl text-base font-semibold text-white"
+        style={{
+          background: "linear-gradient(180deg,#22C55E,#16A34A)",
+          boxShadow: "0 8px 22px rgba(22,163,74,0.42), inset 0 1px 0 rgba(255,255,255,0.25)",
+        }}
       >
-        Masuk
+        Masuk sebagai {firstName}
         <ArrowRight className="ml-1 h-4 w-4" />
       </Button>
+      <p className="mt-4 text-center text-xs text-[#6B6B72]">
+        Dengan masuk, Anda menyetujui Ketentuan Layanan.
+      </p>
     </AuthLayout>
   );
 }
