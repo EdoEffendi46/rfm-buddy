@@ -379,7 +379,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     db.fetchAppSnapshot(client)
       .then((snap) => {
         setAgents(snap.agents);
-        setCustomers(snap.customers);
+        setCustomers(migrateCollaborators(snap.customers));
         setMessages(snap.messages);
         setServices(snap.services);
         setTemplates(snap.templates);
