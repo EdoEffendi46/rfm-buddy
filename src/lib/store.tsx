@@ -1203,6 +1203,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setAgentBranches,
     addCollaborator,
     removeCollaborator,
+    updateCollaboratorAccessLevel,
     googleContacts,
     setGoogleContactsAutoSync,
     markCustomerGoogleSynced,
