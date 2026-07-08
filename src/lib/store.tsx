@@ -244,28 +244,64 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ),
     );
   }, []);
-  const addCollaborator = useCallback((customerId: string, agentId: string) => {
+  const addCollaborator = useCallback(
+    (
+      customerId: string,
+      agentId: string,
+      accessLevel: CollaboratorAccessLevel = "view_note_reply",
+      addedByAgentId: string = "system",
+    ) => {
+      setCustomers((p) =>
+        p.map((c) => {
+          if (c.id !== customerId) return c;
+          const existing = c.collaborators ?? [];
+          if (existing.some((col) => col.agentId === agentId)) return c;
+          const nextCollabs: Collaborator[] = [
+            ...existing,
+            {
+              agentId,
+              accessLevel,
+              addedAt: new Date().toISOString(),
+              addedByAgentId,
+            },
+          ];
+          return {
+            ...c,
+            collaborators: nextCollabs,
+            collaboratorAgentIds: nextCollabs.map((col) => col.agentId),
+          };
+        }),
+      );
+    },
+    [],
+  );
+  const removeCollaborator = useCallback((customerId: string, agentId: string) => {
     setCustomers((p) =>
       p.map((c) => {
         if (c.id !== customerId) return c;
-        const list = c.collaboratorAgentIds ?? [];
-        if (list.includes(agentId)) return c;
-        return { ...c, collaboratorAgentIds: [...list, agentId] };
+        const nextCollabs = (c.collaborators ?? []).filter((col) => col.agentId !== agentId);
+        return {
+          ...c,
+          collaborators: nextCollabs,
+          collaboratorAgentIds: nextCollabs.map((col) => col.agentId),
+        };
       }),
     );
   }, []);
-  const removeCollaborator = useCallback((customerId: string, agentId: string) => {
-    setCustomers((p) =>
-      p.map((c) =>
-        c.id === customerId
-          ? {
-              ...c,
-              collaboratorAgentIds: (c.collaboratorAgentIds ?? []).filter((id) => id !== agentId),
-            }
-          : c,
-      ),
-    );
-  }, []);
+  const updateCollaboratorAccessLevel = useCallback(
+    (customerId: string, agentId: string, newAccessLevel: CollaboratorAccessLevel) => {
+      setCustomers((p) =>
+        p.map((c) => {
+          if (c.id !== customerId) return c;
+          const nextCollabs = (c.collaborators ?? []).map((col) =>
+            col.agentId === agentId ? { ...col, accessLevel: newAccessLevel } : col,
+          );
+          return { ...c, collaborators: nextCollabs };
+        }),
+      );
+    },
+    [],
+  );
   const setGoogleContactsAutoSync = useCallback((v: boolean) => {
     setGoogleContacts((s) => ({ ...s, autoSync: v }));
   }, []);
