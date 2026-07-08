@@ -12,6 +12,10 @@ import {
   canReplyToConversation,
   getPrimaryAgentId,
   getAgentBranchIds,
+  getCollaboratorEntry,
+  getCollaboratorAgentIds,
+  canWriteInternalNote,
+  hasPermission,
 } from "@/lib/permissions";
 import { useStore } from "@/lib/store";
 import {
@@ -79,6 +83,7 @@ import type {
   OrderStatus,
   Priority,
   RFMSegment,
+  CollaboratorAccessLevel,
 } from "@/types";
 import { OrderBuilderModal } from "@/components/order/OrderBuilderModal";
 import { generateInsight } from "@/lib/aiInsight";
