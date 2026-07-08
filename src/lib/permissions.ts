@@ -297,11 +297,16 @@ export function canReplyToConversation(agent: Agent | null, c: Customer): {
   if (!canViewConversation(agent, c)) return { allowed: false, reason: "no_access" };
   const primary = getPrimaryAgentId(c);
   if (primary === agent.id) return { allowed: true };
-  if ((c.collaboratorAgentIds ?? []).includes(agent.id)) return { allowed: true };
+  const collab = getCollaboratorEntry(c, agent.id);
+  if (collab) {
+    if (collab.accessLevel === "view_note_reply") return { allowed: true };
+    // Collaborator level "view" atau "view_note" TIDAK boleh balas customer.
+    return { allowed: false, reason: "handled_by_other", handlerAgentId: primary };
+  }
   const agentBranches = getAgentBranchIds(agent);
   const sameBranch = c.branchId ? agentBranches.includes(c.branchId) : true;
   if (!primary && sameBranch) return { allowed: true };
-  if (hasPermission(agent, "reply_any_conversation")) return { allowed: true };
+  if (hasPermission(agent, "chat_reply_bypass_assignment")) return { allowed: true };
   if (primary) return { allowed: false, reason: "handled_by_other", handlerAgentId: primary };
   return { allowed: false, reason: "cross_branch" };
 }
