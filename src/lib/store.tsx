@@ -188,6 +188,25 @@ function genId(prefix = "id") {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Migrasi data lama: kalau customer masih pakai `collaboratorAgentIds` tanpa
+ *  `collaborators`, buatkan entri Collaborator dengan akses penuh (view_note_reply)
+ *  supaya tidak ada CS bantuan yang tiba-tiba kehilangan hak akses. */
+function migrateCollaborators(list: Customer[]): Customer[] {
+  const now = new Date().toISOString();
+  return list.map((c) => {
+    if (c.collaborators && c.collaborators.length) return c;
+    const ids = c.collaboratorAgentIds ?? [];
+    if (ids.length === 0) return c;
+    const collaborators: Collaborator[] = ids.map((agentId) => ({
+      agentId,
+      accessLevel: "view_note_reply",
+      addedAt: now,
+      addedByAgentId: c.primaryAgentId ?? c.assignedAgentId ?? "system",
+    }));
+    return { ...c, collaborators };
+  });
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(USE_SUPABASE);
   const [agents, setAgents] = useState<Agent[]>(USE_SUPABASE ? [] : AGENTS);
@@ -195,6 +214,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     USE_SUPABASE ? null : db.loadSessionAgentId(),
   );
   const [customers, setCustomers] = useState<Customer[]>(USE_SUPABASE ? [] : CUSTOMERS);
+  // Migrasi sekali di boot (in-memory) supaya collaborators sudah terisi.
+  useEffect(() => {
+    setCustomers((prev) => migrateCollaborators(prev));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [messages, setMessages] = useState<Message[]>(USE_SUPABASE ? [] : INITIAL_MESSAGES);
   const [services, setServices] = useState<Service[]>(USE_SUPABASE ? [] : SERVICES);
   const [templates, setTemplates] = useState<Template[]>(USE_SUPABASE ? [] : DEFAULT_TEMPLATES);
