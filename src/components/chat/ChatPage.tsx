@@ -486,7 +486,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                     {(() => {
                       const primaryId = getPrimaryAgentId(selectedCustomer);
                       const primary = agents.find((a) => a.id === primaryId);
-                      const collabIds = selectedCustomer.collaboratorAgentIds ?? [];
+                      const collabs = selectedCustomer.collaborators ?? [];
                       return (
                         <>
                           {primary && (
@@ -501,47 +501,87 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
                               CS Utama · {primary.name}
                             </span>
                           )}
-                          {collabIds.length > 0 && (
+                          {collabs.length > 0 && (
                             <Popover>
                               <PopoverTrigger asChild>
                                 <button
                                   className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-1.5 py-0.5 text-[10px] font-semibold text-sky-700 hover:bg-sky-100"
                                   title="Lihat daftar CS Bantuan"
                                 >
-                                  + {collabIds.length} CS Bantuan
+                                  + {collabs.length} CS Bantuan
                                 </button>
                               </PopoverTrigger>
-                              <PopoverContent align="start" className="w-56 p-2">
-                                <div className="mb-1 text-[11px] font-semibold text-slate-700">
+                              <PopoverContent align="start" className="w-72 p-2">
+                                <div className="mb-1.5 px-1 text-[11px] font-semibold text-slate-700">
                                   CS Bantuan
                                 </div>
                                 <ul className="space-y-1">
-                                  {collabIds.map((cid) => {
-                                    const a = agents.find((x) => x.id === cid);
+                                  {collabs.map((col) => {
+                                    const a = agents.find((x) => x.id === col.agentId);
                                     if (!a) return null;
+                                    const canEdit = canEditCustomer(agent, selectedCustomer);
                                     return (
                                       <li
-                                        key={cid}
-                                        className="flex items-center justify-between rounded px-1.5 py-1 text-xs hover:bg-slate-50"
+                                        key={col.agentId}
+                                        className="flex items-center justify-between gap-2 rounded px-1.5 py-1 text-xs hover:bg-slate-50"
                                       >
-                                        <span className="flex items-center gap-1.5">
+                                        <span className="flex min-w-0 items-center gap-1.5">
                                           <span
-                                            className="h-2 w-2 rounded-full"
+                                            className="h-2 w-2 shrink-0 rounded-full"
                                             style={{ backgroundColor: a.color }}
                                           />
-                                          {a.name}
+                                          <span className="truncate font-medium text-slate-800">
+                                            {a.name}
+                                          </span>
+                                          <AccessLevelBadge level={col.accessLevel} />
                                         </span>
-                                        {canEditCustomer(agent, selectedCustomer) && (
-                                          <button
-                                            className="text-[10px] font-medium text-red-500 hover:text-red-700"
-                                            onClick={() => {
-                                              store.removeCollaborator(selectedCustomer.id, cid);
-                                              toast.success(`${a.name} dihapus dari CS Bantuan`);
-                                            }}
-                                          >
-                                            Hapus
-                                          </button>
-                                        )}
+                                        <div className="flex shrink-0 items-center gap-1">
+                                          {canEdit ? (
+                                            <>
+                                              <Select
+                                                value={col.accessLevel}
+                                                onValueChange={(v) => {
+                                                  store.updateCollaboratorAccessLevel(
+                                                    selectedCustomer.id,
+                                                    col.agentId,
+                                                    v as CollaboratorAccessLevel,
+                                                  );
+                                                  toast.success(
+                                                    `Akses ${a.name} diperbarui`,
+                                                  );
+                                                }}
+                                              >
+                                                <SelectTrigger className="h-6 w-[110px] px-1.5 text-[10px]">
+                                                  <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                  <SelectItem value="view">Hanya Lihat</SelectItem>
+                                                  <SelectItem value="view_note">
+                                                    Lihat + Catatan
+                                                  </SelectItem>
+                                                  <SelectItem value="view_note_reply">
+                                                    Bisa Balas
+                                                  </SelectItem>
+                                                </SelectContent>
+                                              </Select>
+                                              <button
+                                                className="rounded p-1 text-red-500 hover:bg-red-50 hover:text-red-700"
+                                                title="Hapus dari CS Bantuan"
+                                                onClick={() => {
+                                                  store.removeCollaborator(
+                                                    selectedCustomer.id,
+                                                    col.agentId,
+                                                  );
+                                                  toast.success(
+                                                    `${a.name} dihapus dari CS Bantuan`,
+                                                  );
+                                                }}
+                                              >
+                                                <X className="h-3 w-3" />
+                                              </button>
+                                            </>
+                                          ) : null}
+                                        </div>
                                       </li>
                                     );
                                   })}
