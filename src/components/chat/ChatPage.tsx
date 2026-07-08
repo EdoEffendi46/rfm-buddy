@@ -328,7 +328,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               const isSelected = c.customer.id === selectedId;
               const primaryId = getPrimaryAgentId(c.customer);
               const ag = agents.find((a) => a.id === primaryId);
-              const collabCount = (c.customer.collaboratorAgentIds ?? []).length;
+              const collabCount = getCollaboratorAgentIds(c.customer).length;
               const lm = c.lastMessage;
               const customerIsLastSender = !!lm && lm.senderId === c.customer.id;
               const isUnread = c.unreadCount > 0;
