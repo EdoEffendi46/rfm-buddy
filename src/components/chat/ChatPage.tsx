@@ -793,7 +793,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               <div className="mb-2 mt-2 flex gap-1">
                 {(() => {
                   const canReply = canReplyToConversation(agent, selectedCustomer).allowed;
-                  const canNote = hasFlag(agent, "chat_write_internal_note");
+                  const canNote = canWriteInternalNote(agent, selectedCustomer);
                   return (
                     <>
                 <button
@@ -828,7 +828,7 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
               </div>
               {(() => {
                 const canReply = canReplyToConversation(agent, selectedCustomer).allowed;
-                const canNote = hasFlag(agent, "chat_write_internal_note");
+                const canNote = canWriteInternalNote(agent, selectedCustomer);
                 const disabled = inputMode === "text" ? !canReply : !canNote;
                 return (
                   <Textarea
