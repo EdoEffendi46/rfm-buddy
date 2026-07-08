@@ -26,6 +26,8 @@ import type {
   Branch,
   GoogleContactsSettings,
   GoogleContactsSyncHistory,
+  Collaborator,
+  CollaboratorAccessLevel,
 } from "@/types";
 import { AGENTS } from "@/data/agents";
 import { CUSTOMERS } from "@/data/customers";
@@ -73,8 +75,18 @@ interface StoreState {
   toggleBranchActive: (id: string) => void;
   setAgentBranch: (agentId: string, branchId: string | undefined) => void;
   setAgentBranches: (agentId: string, branchIds: string[]) => void;
-  addCollaborator: (customerId: string, agentId: string) => void;
+  addCollaborator: (
+    customerId: string,
+    agentId: string,
+    accessLevel?: CollaboratorAccessLevel,
+    addedByAgentId?: string,
+  ) => void;
   removeCollaborator: (customerId: string, agentId: string) => void;
+  updateCollaboratorAccessLevel: (
+    customerId: string,
+    agentId: string,
+    newAccessLevel: CollaboratorAccessLevel,
+  ) => void;
 
   // Google Contacts (placeholder integration)
   googleContacts: GoogleContactsSettings;
