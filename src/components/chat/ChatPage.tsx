@@ -1051,70 +1051,223 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
 
       {/* Tambah CS Bantuan dialog */}
       <Dialog open={collabOpen} onOpenChange={setCollabOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Tambah CS Bantuan</DialogTitle>
-          </DialogHeader>
-          <p className="text-xs text-slate-500">
-            CS bantuan bisa ikut membalas percakapan ini tanpa mengubah CS utama.
-          </p>
-          <div className="mt-2 space-y-2">
-            {(() => {
-              if (!selectedCustomer) return null;
-              const primary = getPrimaryAgentId(selectedCustomer);
-              const existing = new Set(selectedCustomer.collaboratorAgentIds ?? []);
-              const eligible = agents.filter(
-                (a) =>
-                  a.role === "cs" &&
-                  a.id !== primary &&
-                  !existing.has(a.id) &&
-                  (!selectedCustomer.branchId ||
-                    getAgentBranchIds(a).includes(selectedCustomer.branchId)),
-              );
-              if (eligible.length === 0) {
-                return (
-                  <div className="rounded-md bg-slate-50 p-3 text-xs text-slate-500">
-                    Tidak ada CS di cabang customer ini yang bisa ditambahkan.
-                  </div>
+        {selectedCustomer && (
+          <CollabPickerDialog
+            customer={selectedCustomer}
+            agents={agents}
+            viewer={agent}
+            branches={store.branches ?? []}
+            onClose={() => setCollabOpen(false)}
+            onAdd={(picks) => {
+              picks.forEach((p) => {
+                store.addCollaborator(
+                  selectedCustomer.id,
+                  p.agentId,
+                  p.accessLevel,
+                  agent?.id ?? "system",
                 );
-              }
-              return eligible.map((a) => (
-                <button
-                  key={a.id}
-                  onClick={() => {
-                    store.addCollaborator(selectedCustomer.id, a.id);
-                    toast.success(
-                      `${a.name} ditambahkan sebagai CS Bantuan untuk ${selectedCustomer.name}`,
-                    );
-                  }}
-                  className="flex w-full items-center gap-3 rounded-lg border p-3 text-left hover:bg-slate-50"
-                >
-                  <Avatar
-                    name={a.name}
-                    color={a.color}
-                    initials={a.initials}
-                    size={32}
-                    online={a.isOnline}
-                  />
-                  <div className="flex-1">
-                    <div className="text-sm font-medium">{a.name}</div>
-                    <div className="text-[11px] text-slate-500">
-                      {a.isOnline ? "Online" : "Offline"}
-                    </div>
-                  </div>
-                  <span className="text-xs font-medium text-emerald-600">+ Tambah</span>
-                </button>
-              ));
-            })()}
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setCollabOpen(false)}>
-              Tutup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
+              });
+              const names = picks
+                .map((p) => agents.find((a) => a.id === p.agentId)?.name)
+                .filter(Boolean)
+                .join(", ");
+              toast.success(`${picks.length} CS Bantuan ditambahkan: ${names}`);
+              setCollabOpen(false);
+            }}
+          />
+        )}
       </Dialog>
     </div>
+  );
+}
+
+const ACCESS_LEVEL_META: Record<
+  CollaboratorAccessLevel,
+  { label: string; short: string; badgeClass: string }
+> = {
+  view: {
+    label: "Hanya Lihat",
+    short: "Lihat",
+    badgeClass: "bg-slate-100 text-slate-600 border-slate-200",
+  },
+  view_note: {
+    label: "Lihat + Catatan Internal",
+    short: "Lihat+Catatan",
+    badgeClass: "bg-amber-50 text-amber-700 border-amber-200",
+  },
+  view_note_reply: {
+    label: "Lihat + Bisa Balas",
+    short: "Bisa Balas",
+    badgeClass: "bg-emerald-50 text-emerald-700 border-emerald-200",
+  },
+};
+
+function AccessLevelBadge({ level }: { level: CollaboratorAccessLevel }) {
+  const meta = ACCESS_LEVEL_META[level];
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-1.5 py-0 text-[9px] font-semibold uppercase tracking-wide",
+        meta.badgeClass,
+      )}
+      title={meta.label}
+    >
+      {meta.short}
+    </span>
+  );
+}
+
+function CollabPickerDialog({
+  customer,
+  agents,
+  viewer,
+  branches,
+  onClose,
+  onAdd,
+}: {
+  customer: Customer;
+  agents: import("@/types").Agent[];
+  viewer: import("@/types").Agent | null;
+  branches: import("@/types").Branch[];
+  onClose: () => void;
+  onAdd: (picks: { agentId: string; accessLevel: CollaboratorAccessLevel }[]) => void;
+}) {
+  const [picks, setPicks] = useState<
+    Record<string, { checked: boolean; level: CollaboratorAccessLevel }>
+  >({});
+  const primary = getPrimaryAgentId(customer);
+  const existing = new Set(customer.collaborators?.map((c) => c.agentId) ?? []);
+  const canCrossBranch = hasPermission(viewer, "branch_view_all");
+  const eligible = agents.filter((a) => {
+    if (a.role !== "cs") return false;
+    if (a.id === primary) return false;
+    if (existing.has(a.id)) return false;
+    if (!canCrossBranch && customer.branchId) {
+      return getAgentBranchIds(a).includes(customer.branchId);
+    }
+    return true;
+  });
+  const grouped = new Map<string, typeof eligible>();
+  eligible.forEach((a) => {
+    const brIds = getAgentBranchIds(a);
+    const key = brIds[0] ?? "no-branch";
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key)!.push(a);
+  });
+  const branchName = (id: string) =>
+    id === "no-branch" ? "Tanpa cabang" : (branches.find((b) => b.id === id)?.name ?? id);
+
+  const selectedCount = Object.values(picks).filter((p) => p.checked).length;
+
+  return (
+    <DialogContent className="max-w-lg">
+      <DialogHeader>
+        <DialogTitle>Tambah CS Bantuan</DialogTitle>
+      </DialogHeader>
+      <p className="text-xs text-slate-500">
+        Centang beberapa CS sekaligus dan pilih level akses untuk masing-masing. CS utama
+        tetap tidak berubah.
+      </p>
+      {eligible.length === 0 ? (
+        <div className="mt-2 rounded-md bg-slate-50 p-3 text-xs text-slate-500">
+          Tidak ada CS lain yang bisa ditambahkan.
+        </div>
+      ) : (
+        <div className="mt-2 max-h-[360px] space-y-3 overflow-y-auto pr-1">
+          {Array.from(grouped.entries()).map(([brId, list]) => (
+            <div key={brId}>
+              <div className="mb-1 px-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                {branchName(brId)}
+              </div>
+              <div className="space-y-1.5">
+                {list.map((a) => {
+                  const state = picks[a.id] ?? {
+                    checked: false,
+                    level: "view_note_reply" as CollaboratorAccessLevel,
+                  };
+                  return (
+                    <div
+                      key={a.id}
+                      className={cn(
+                        "flex items-center gap-3 rounded-lg border p-2.5 transition-colors",
+                        state.checked
+                          ? "border-emerald-300 bg-emerald-50/60"
+                          : "border-slate-200 hover:bg-slate-50",
+                      )}
+                    >
+                      <Checkbox
+                        checked={state.checked}
+                        onCheckedChange={(v) =>
+                          setPicks((p) => ({
+                            ...p,
+                            [a.id]: { ...state, checked: v === true },
+                          }))
+                        }
+                      />
+                      <Avatar
+                        name={a.name}
+                        color={a.color}
+                        initials={a.initials}
+                        size={30}
+                        online={a.isOnline}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-slate-800">
+                          {a.name}
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          {a.isOnline ? "Online" : "Offline"}
+                        </div>
+                      </div>
+                      <Select
+                        value={state.level}
+                        disabled={!state.checked}
+                        onValueChange={(v) =>
+                          setPicks((p) => ({
+                            ...p,
+                            [a.id]: {
+                              ...state,
+                              level: v as CollaboratorAccessLevel,
+                            },
+                          }))
+                        }
+                      >
+                        <SelectTrigger className="h-8 w-[150px] text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="view">Hanya Lihat</SelectItem>
+                          <SelectItem value="view_note">Lihat + Catatan</SelectItem>
+                          <SelectItem value="view_note_reply">Bisa Balas</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <DialogFooter>
+        <Button variant="ghost" onClick={onClose}>
+          Batal
+        </Button>
+        <Button
+          className="bg-[#16A34A] text-white hover:bg-[#15803D]"
+          disabled={selectedCount === 0}
+          onClick={() =>
+            onAdd(
+              Object.entries(picks)
+                .filter(([, s]) => s.checked)
+                .map(([agentId, s]) => ({ agentId, accessLevel: s.level })),
+            )
+          }
+        >
+          Tambahkan {selectedCount > 0 ? `(${selectedCount})` : ""}
+        </Button>
+      </DialogFooter>
+    </DialogContent>
   );
 }
 
