@@ -187,7 +187,7 @@ export function canAccessCustomer(agent: Agent | null, c: Customer): boolean {
   const primary = getPrimaryAgentId(c);
   if (primary === agent.id) return true;
   if (!primary) return true;
-  if ((c.collaboratorAgentIds ?? []).includes(agent.id)) return true;
+  if (getCollaboratorAgentIds(c).includes(agent.id)) return true;
   if (shareActiveFor(c, agent.id)) return true;
   return false;
 }
@@ -209,7 +209,39 @@ export function getPrimaryAgentId(c: Customer): string | undefined {
 export function isAgentInvolved(agent: Agent | null, c: Customer): boolean {
   if (!agent) return false;
   if (getPrimaryAgentId(c) === agent.id) return true;
-  return (c.collaboratorAgentIds ?? []).includes(agent.id);
+  return getCollaboratorAgentIds(c).includes(agent.id);
+}
+
+/** Ambil collaborator entry (dengan accessLevel) untuk satu agent. */
+export function getCollaboratorEntry(
+  c: Customer,
+  agentId: string,
+): Collaborator | undefined {
+  return (c.collaborators ?? []).find((col) => col.agentId === agentId);
+}
+
+/** Daftar ID collaborator - membaca `collaborators` dulu, fallback ke field lama. */
+export function getCollaboratorAgentIds(c: Customer): string[] {
+  if (c.collaborators && c.collaborators.length)
+    return c.collaborators.map((col) => col.agentId);
+  return c.collaboratorAgentIds ?? [];
+}
+
+/** True bila agent boleh menulis catatan internal pada percakapan ini.
+ *  Collaborator level "view" TIDAK boleh menulis catatan; level "view_note"
+ *  dan "view_note_reply" boleh. */
+export function canWriteInternalNote(agent: Agent | null, c: Customer): boolean {
+  if (!agent) return false;
+  if (!hasFlag(agent, "chat_write_internal_note")) return false;
+  if (!canViewConversation(agent, c)) return false;
+  const primary = getPrimaryAgentId(c);
+  if (primary === agent.id) return true;
+  const collab = getCollaboratorEntry(c, agent.id);
+  if (collab) return collab.accessLevel !== "view";
+  // Bukan primary, bukan collaborator: pakai aturan umum (unassigned / bypass).
+  if (!primary) return true;
+  if (hasPermission(agent, "chat_reply_bypass_assignment")) return true;
+  return false;
 }
 
 /**
