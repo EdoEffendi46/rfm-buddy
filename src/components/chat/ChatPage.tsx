@@ -762,9 +762,19 @@ export function ChatPage({ initialCustomerId }: { initialCustomerId?: string }) 
             <div className="border-t border-slate-200 bg-white p-3">
               {(() => {
                 const reply = canReplyToConversation(agent, selectedCustomer);
-                if (reply.allowed || inputMode !== "text") return null;
+                const noteAllowed = canWriteInternalNote(agent, selectedCustomer);
+                if (inputMode === "text" && reply.allowed) return null;
+                if (inputMode === "internal_note" && noteAllowed) return null;
                 let msg = "Anda tidak dapat membalas percakapan ini.";
-                if (reply.reason === "observation_mode") {
+                const collab = getCollaboratorEntry(selectedCustomer, agent?.id ?? "");
+                if (collab?.accessLevel === "view") {
+                  msg = "Anda memiliki akses lihat saja untuk percakapan ini.";
+                } else if (collab?.accessLevel === "view_note" && inputMode === "text") {
+                  msg =
+                    "Anda hanya bisa menulis catatan internal, tidak bisa membalas ke customer.";
+                } else if (inputMode === "internal_note" && !noteAllowed) {
+                  msg = "Anda tidak berhak menulis catatan internal untuk percakapan ini.";
+                } else if (reply.reason === "observation_mode") {
                   msg =
                     "Anda memiliki akses lihat saja untuk semua percakapan (mode observasi).";
                 } else if (reply.reason === "handled_by_other") {
