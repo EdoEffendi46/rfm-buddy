@@ -1,4 +1,11 @@
-import type { Role, Agent, Customer, PermissionFlags, PermissionFlag } from "@/types";
+import type {
+  Role,
+  Agent,
+  Customer,
+  PermissionFlags,
+  PermissionFlag,
+  Collaborator,
+} from "@/types";
 import { ROLE_DEFAULTS } from "@/data/roleDefaults";
 
 export type Permission =
@@ -41,7 +48,7 @@ export type Permission =
 const LEGACY_TO_FLAG: Record<Permission, PermissionFlag> = {
   view_all_conversations: "chat_view_all_agents",
   view_unassigned: "chat_view_unassigned",
-  reply_any_conversation: "chat_reply",
+  reply_any_conversation: "chat_reply_bypass_assignment",
   delete_own_messages: "chat_delete_own_message",
   delete_any_messages: "chat_delete_any_message",
   transfer_any_conversation: "chat_transfer",
