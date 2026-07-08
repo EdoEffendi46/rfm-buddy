@@ -180,6 +180,16 @@ export interface ManualShare {
   createdAt: string;
 }
 
+/** Level akses collaborator (CS Bantuan) untuk satu percakapan. */
+export type CollaboratorAccessLevel = "view" | "view_note" | "view_note_reply";
+
+export interface Collaborator {
+  agentId: string;
+  accessLevel: CollaboratorAccessLevel;
+  addedAt: string;
+  addedByAgentId: string;
+}
+
 export type AuditAction =
   | "customer_created"
   | "customer_edited"
