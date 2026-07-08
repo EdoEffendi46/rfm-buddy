@@ -1,4 +1,11 @@
-import type { Role, Agent, Customer, PermissionFlags, PermissionFlag } from "@/types";
+import type {
+  Role,
+  Agent,
+  Customer,
+  PermissionFlags,
+  PermissionFlag,
+  Collaborator,
+} from "@/types";
 import { ROLE_DEFAULTS } from "@/data/roleDefaults";
 
 export type Permission =
@@ -41,7 +48,7 @@ export type Permission =
 const LEGACY_TO_FLAG: Record<Permission, PermissionFlag> = {
   view_all_conversations: "chat_view_all_agents",
   view_unassigned: "chat_view_unassigned",
-  reply_any_conversation: "chat_reply",
+  reply_any_conversation: "chat_reply_bypass_assignment",
   delete_own_messages: "chat_delete_own_message",
   delete_any_messages: "chat_delete_any_message",
   transfer_any_conversation: "chat_transfer",
@@ -180,7 +187,7 @@ export function canAccessCustomer(agent: Agent | null, c: Customer): boolean {
   const primary = getPrimaryAgentId(c);
   if (primary === agent.id) return true;
   if (!primary) return true;
-  if ((c.collaboratorAgentIds ?? []).includes(agent.id)) return true;
+  if (getCollaboratorAgentIds(c).includes(agent.id)) return true;
   if (shareActiveFor(c, agent.id)) return true;
   return false;
 }
@@ -202,7 +209,39 @@ export function getPrimaryAgentId(c: Customer): string | undefined {
 export function isAgentInvolved(agent: Agent | null, c: Customer): boolean {
   if (!agent) return false;
   if (getPrimaryAgentId(c) === agent.id) return true;
-  return (c.collaboratorAgentIds ?? []).includes(agent.id);
+  return getCollaboratorAgentIds(c).includes(agent.id);
+}
+
+/** Ambil collaborator entry (dengan accessLevel) untuk satu agent. */
+export function getCollaboratorEntry(
+  c: Customer,
+  agentId: string,
+): Collaborator | undefined {
+  return (c.collaborators ?? []).find((col) => col.agentId === agentId);
+}
+
+/** Daftar ID collaborator - membaca `collaborators` dulu, fallback ke field lama. */
+export function getCollaboratorAgentIds(c: Customer): string[] {
+  if (c.collaborators && c.collaborators.length)
+    return c.collaborators.map((col) => col.agentId);
+  return c.collaboratorAgentIds ?? [];
+}
+
+/** True bila agent boleh menulis catatan internal pada percakapan ini.
+ *  Collaborator level "view" TIDAK boleh menulis catatan; level "view_note"
+ *  dan "view_note_reply" boleh. */
+export function canWriteInternalNote(agent: Agent | null, c: Customer): boolean {
+  if (!agent) return false;
+  if (!hasFlag(agent, "chat_write_internal_note")) return false;
+  if (!canViewConversation(agent, c)) return false;
+  const primary = getPrimaryAgentId(c);
+  if (primary === agent.id) return true;
+  const collab = getCollaboratorEntry(c, agent.id);
+  if (collab) return collab.accessLevel !== "view";
+  // Bukan primary, bukan collaborator: pakai aturan umum (unassigned / bypass).
+  if (!primary) return true;
+  if (hasPermission(agent, "chat_reply_bypass_assignment")) return true;
+  return false;
 }
 
 /**
@@ -258,11 +297,16 @@ export function canReplyToConversation(agent: Agent | null, c: Customer): {
   if (!canViewConversation(agent, c)) return { allowed: false, reason: "no_access" };
   const primary = getPrimaryAgentId(c);
   if (primary === agent.id) return { allowed: true };
-  if ((c.collaboratorAgentIds ?? []).includes(agent.id)) return { allowed: true };
+  const collab = getCollaboratorEntry(c, agent.id);
+  if (collab) {
+    if (collab.accessLevel === "view_note_reply") return { allowed: true };
+    // Collaborator level "view" atau "view_note" TIDAK boleh balas customer.
+    return { allowed: false, reason: "handled_by_other", handlerAgentId: primary };
+  }
   const agentBranches = getAgentBranchIds(agent);
   const sameBranch = c.branchId ? agentBranches.includes(c.branchId) : true;
   if (!primary && sameBranch) return { allowed: true };
-  if (hasPermission(agent, "reply_any_conversation")) return { allowed: true };
+  if (hasPermission(agent, "chat_reply_bypass_assignment")) return { allowed: true };
   if (primary) return { allowed: false, reason: "handled_by_other", handlerAgentId: primary };
   return { allowed: false, reason: "cross_branch" };
 }

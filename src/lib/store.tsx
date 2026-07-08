@@ -26,6 +26,8 @@ import type {
   Branch,
   GoogleContactsSettings,
   GoogleContactsSyncHistory,
+  Collaborator,
+  CollaboratorAccessLevel,
 } from "@/types";
 import { AGENTS } from "@/data/agents";
 import { CUSTOMERS } from "@/data/customers";
@@ -73,8 +75,18 @@ interface StoreState {
   toggleBranchActive: (id: string) => void;
   setAgentBranch: (agentId: string, branchId: string | undefined) => void;
   setAgentBranches: (agentId: string, branchIds: string[]) => void;
-  addCollaborator: (customerId: string, agentId: string) => void;
+  addCollaborator: (
+    customerId: string,
+    agentId: string,
+    accessLevel?: CollaboratorAccessLevel,
+    addedByAgentId?: string,
+  ) => void;
   removeCollaborator: (customerId: string, agentId: string) => void;
+  updateCollaboratorAccessLevel: (
+    customerId: string,
+    agentId: string,
+    newAccessLevel: CollaboratorAccessLevel,
+  ) => void;
 
   // Google Contacts (placeholder integration)
   googleContacts: GoogleContactsSettings;
@@ -176,6 +188,25 @@ function genId(prefix = "id") {
   return `${prefix}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+/** Migrasi data lama: kalau customer masih pakai `collaboratorAgentIds` tanpa
+ *  `collaborators`, buatkan entri Collaborator dengan akses penuh (view_note_reply)
+ *  supaya tidak ada CS bantuan yang tiba-tiba kehilangan hak akses. */
+function migrateCollaborators(list: Customer[]): Customer[] {
+  const now = new Date().toISOString();
+  return list.map((c) => {
+    if (c.collaborators && c.collaborators.length) return c;
+    const ids = c.collaboratorAgentIds ?? [];
+    if (ids.length === 0) return c;
+    const collaborators: Collaborator[] = ids.map((agentId) => ({
+      agentId,
+      accessLevel: "view_note_reply",
+      addedAt: now,
+      addedByAgentId: c.primaryAgentId ?? c.assignedAgentId ?? "system",
+    }));
+    return { ...c, collaborators };
+  });
+}
+
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(USE_SUPABASE);
   const [agents, setAgents] = useState<Agent[]>(USE_SUPABASE ? [] : AGENTS);
@@ -183,6 +214,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     USE_SUPABASE ? null : db.loadSessionAgentId(),
   );
   const [customers, setCustomers] = useState<Customer[]>(USE_SUPABASE ? [] : CUSTOMERS);
+  // Migrasi sekali di boot (in-memory) supaya collaborators sudah terisi.
+  useEffect(() => {
+    setCustomers((prev) => migrateCollaborators(prev));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [messages, setMessages] = useState<Message[]>(USE_SUPABASE ? [] : INITIAL_MESSAGES);
   const [services, setServices] = useState<Service[]>(USE_SUPABASE ? [] : SERVICES);
   const [templates, setTemplates] = useState<Template[]>(USE_SUPABASE ? [] : DEFAULT_TEMPLATES);
@@ -232,28 +268,64 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       ),
     );
   }, []);
-  const addCollaborator = useCallback((customerId: string, agentId: string) => {
+  const addCollaborator = useCallback(
+    (
+      customerId: string,
+      agentId: string,
+      accessLevel: CollaboratorAccessLevel = "view_note_reply",
+      addedByAgentId: string = "system",
+    ) => {
+      setCustomers((p) =>
+        p.map((c) => {
+          if (c.id !== customerId) return c;
+          const existing = c.collaborators ?? [];
+          if (existing.some((col) => col.agentId === agentId)) return c;
+          const nextCollabs: Collaborator[] = [
+            ...existing,
+            {
+              agentId,
+              accessLevel,
+              addedAt: new Date().toISOString(),
+              addedByAgentId,
+            },
+          ];
+          return {
+            ...c,
+            collaborators: nextCollabs,
+            collaboratorAgentIds: nextCollabs.map((col) => col.agentId),
+          };
+        }),
+      );
+    },
+    [],
+  );
+  const removeCollaborator = useCallback((customerId: string, agentId: string) => {
     setCustomers((p) =>
       p.map((c) => {
         if (c.id !== customerId) return c;
-        const list = c.collaboratorAgentIds ?? [];
-        if (list.includes(agentId)) return c;
-        return { ...c, collaboratorAgentIds: [...list, agentId] };
+        const nextCollabs = (c.collaborators ?? []).filter((col) => col.agentId !== agentId);
+        return {
+          ...c,
+          collaborators: nextCollabs,
+          collaboratorAgentIds: nextCollabs.map((col) => col.agentId),
+        };
       }),
     );
   }, []);
-  const removeCollaborator = useCallback((customerId: string, agentId: string) => {
-    setCustomers((p) =>
-      p.map((c) =>
-        c.id === customerId
-          ? {
-              ...c,
-              collaboratorAgentIds: (c.collaboratorAgentIds ?? []).filter((id) => id !== agentId),
-            }
-          : c,
-      ),
-    );
-  }, []);
+  const updateCollaboratorAccessLevel = useCallback(
+    (customerId: string, agentId: string, newAccessLevel: CollaboratorAccessLevel) => {
+      setCustomers((p) =>
+        p.map((c) => {
+          if (c.id !== customerId) return c;
+          const nextCollabs = (c.collaborators ?? []).map((col) =>
+            col.agentId === agentId ? { ...col, accessLevel: newAccessLevel } : col,
+          );
+          return { ...c, collaborators: nextCollabs };
+        }),
+      );
+    },
+    [],
+  );
   const setGoogleContactsAutoSync = useCallback((v: boolean) => {
     setGoogleContacts((s) => ({ ...s, autoSync: v }));
   }, []);
@@ -307,7 +379,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     db.fetchAppSnapshot(client)
       .then((snap) => {
         setAgents(snap.agents);
-        setCustomers(snap.customers);
+        setCustomers(migrateCollaborators(snap.customers));
         setMessages(snap.messages);
         setServices(snap.services);
         setTemplates(snap.templates);
@@ -1155,6 +1227,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setAgentBranches,
     addCollaborator,
     removeCollaborator,
+    updateCollaboratorAccessLevel,
     googleContacts,
     setGoogleContactsAutoSync,
     markCustomerGoogleSynced,

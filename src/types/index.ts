@@ -124,6 +124,10 @@ export interface Customer {
   primaryAgentId?: string;
   /** CS pembantu yang ikut bisa membalas percakapan ini. */
   collaboratorAgentIds?: string[];
+  /** CS pembantu dengan level akses per-orang (view / view_note / view_note_reply).
+   *  Sumber kebenaran baru — `collaboratorAgentIds` dipertahankan sebagai mirror
+   *  agar kode lama yang membaca list ID string tetap jalan. */
+  collaborators?: Collaborator[];
   /** Manual cadence override (days between orders) set by CS/Admin. */
   cadenceOverrideDays?: number;
   /** Manual record shares (Salesforce-style record sharing). */
@@ -178,6 +182,16 @@ export interface ManualShare {
   reason: string;
   expiresAt?: string;
   createdAt: string;
+}
+
+/** Level akses collaborator (CS Bantuan) untuk satu percakapan. */
+export type CollaboratorAccessLevel = "view" | "view_note" | "view_note_reply";
+
+export interface Collaborator {
+  agentId: string;
+  accessLevel: CollaboratorAccessLevel;
+  addedAt: string;
+  addedByAgentId: string;
 }
 
 export type AuditAction =
@@ -260,6 +274,10 @@ export interface PermissionFlags {
   chat_view_unassigned: boolean;
   chat_view_all_agents: boolean;
   chat_reply: boolean;
+  /** Bypass primary/collaborator assignment — biasanya supervisor/owner saja.
+   *  Dipisahkan dari `chat_reply` supaya CS dengan chat_reply=true tidak otomatis
+   *  bisa membalas chat yang di-assign ke agent lain. */
+  chat_reply_bypass_assignment: boolean;
   chat_write_internal_note: boolean;
   chat_delete_own_message: boolean;
   chat_delete_any_message: boolean;
